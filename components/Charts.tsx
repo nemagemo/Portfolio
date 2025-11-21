@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   AreaChart,
   Area,
@@ -141,26 +141,6 @@ const getRoiColor = (roi: number) => {
 const TreemapContent = (props: any) => {
   const { root, depth, x, y, width, height, index, name } = props;
   
-  // State to handle image fallback (SVG -> PNG -> None)
-  const [imgSrc, setImgSrc] = useState(`/images/${name}.svg`);
-  const [isImageVisible, setIsImageVisible] = useState(true);
-
-  // Reset state when the asset name changes (e.g., due to filtering or data updates)
-  useEffect(() => {
-    setImgSrc(`/images/${name}.svg`);
-    setIsImageVisible(true);
-  }, [name]);
-
-  const handleImageError = () => {
-    if (imgSrc.endsWith('.svg')) {
-      // Try PNG if SVG fails
-      setImgSrc(`/images/${name}.png`);
-    } else {
-      // If PNG also fails, hide the image entirely
-      setIsImageVisible(false);
-    }
-  };
-
   // Access ROI from data via root.children if available
   const itemData = root.children && root.children[index];
   const roi = itemData ? itemData.roi : 0;
@@ -169,10 +149,13 @@ const TreemapContent = (props: any) => {
   const fillColor = getRoiColor(roi);
   
   // Calculate logo position and size
-  // We use 50% of the smaller dimension to keep it subtle and well-positioned
+  // Use 50% of the smaller dimension for good visibility without overcrowding
   const logoSize = Math.min(width, height) * 0.5;
   const logoX = x + (width - logoSize) / 2;
   const logoY = y + (height - logoSize) / 2;
+
+  // Use relative path which typically resolves correctly from project root in standard setups
+  const imagePath = `images/${name}.svg`;
   
   return (
     <g>
@@ -191,17 +174,17 @@ const TreemapContent = (props: any) => {
       />
 
       {/* Asset Logo (Watermark style) */}
-      {/* Rendered above background but below text */}
-      {width > 40 && height > 40 && isImageVisible && (
+      {width > 30 && height > 30 && (
         <image
-          href={imgSrc} 
+          href={imagePath}
+          xlinkHref={imagePath} // Fallback for legacy SVG support
           x={logoX}
           y={logoY}
           height={logoSize}
           width={logoSize}
           preserveAspectRatio="xMidYMid meet"
-          style={{ opacity: 0.25, pointerEvents: 'none' }} // Low opacity to ensure text readability
-          onError={handleImageError}
+          opacity="0.5"
+          style={{ pointerEvents: 'none' }} 
         />
       )}
 
@@ -214,7 +197,7 @@ const TreemapContent = (props: any) => {
           fill="#fff"
           fontSize={Math.min(14, width / 5)}
           fontWeight="bold"
-          style={{ textShadow: '0px 1px 2px rgba(0,0,0,0.3)' }}
+          style={{ textShadow: '0px 1px 2px rgba(0,0,0,0.3)', pointerEvents: 'none' }}
         >
           {name}
         </text>
@@ -229,6 +212,7 @@ const TreemapContent = (props: any) => {
           fill="rgba(255,255,255,0.9)"
           fontSize={11}
           fontWeight="medium"
+          style={{ pointerEvents: 'none' }}
         >
           {roi > 0 ? '+' : ''}{roi.toFixed(1)}%
         </text>
@@ -429,7 +413,6 @@ export const GlobalPerformanceChart: React.FC<{ data: any[] }> = ({ data }) => {
 // 3. Portfolio Allocation History Chart (Stacked Area)
 export const PortfolioAllocationHistoryChart: React.FC<{ data: any[] }> = ({ data }) => {
   // Filter data to start from the first point where there is actual value
-  // This prevents the chart from showing empty space on the left if the dates started before investment.
   const startIndex = data.findIndex(item => (item.totalValue || 0) > 0);
   const activeData = startIndex !== -1 ? data.slice(startIndex) : [];
 
