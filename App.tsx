@@ -6,9 +6,7 @@ import {
   TrendingUp, 
   Building2, 
   Landmark, 
-  Upload, 
   FileText,
-  Download,
   CheckCircle2,
   AlertTriangle,
   XCircle,
@@ -283,20 +281,6 @@ const App: React.FC = () => {
       });
     }
   }, [csvSources, portfolioType]);
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const text = e.target?.result;
-        if (typeof text === 'string') {
-          setCsvSources(prev => ({ ...prev, [portfolioType]: text }));
-        }
-      };
-      reader.readAsText(file);
-    }
-  };
 
   // --- GLOBAL HISTORY DATA (For OMF Chart) ---
   // Merges PPK, Crypto, and IKE timelines
@@ -705,14 +689,6 @@ const App: React.FC = () => {
               <PiggyBank size={16} className="mr-2 hidden sm:block" />
               IKE
             </button>
-          </div>
-
-          <div className="flex items-center space-x-4">
-             <label className="cursor-pointer inline-flex items-center px-4 py-2 border border-slate-300 text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 transition-colors">
-                <Upload className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Wgraj CSV ({portfolioType})</span>
-                <input type="file" className="hidden" accept=".csv,.txt" onChange={handleFileUpload} />
-             </label>
           </div>
         </div>
       </header>
