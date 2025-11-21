@@ -36,7 +36,7 @@ import { DEFAULT_CSV_DATA, DEFAULT_CRYPTO_DATA, DEFAULT_IKE_DATA, DEFAULT_OMF_DA
 import { parseCSV, validateOMFIntegrity } from './utils/parser';
 import { AnyDataRow, SummaryStats, ValidationReport, PortfolioType, PPKDataRow, CryptoDataRow, IKEDataRow, OMFValidationReport, OMFDataRow } from './types';
 import { StatsCard } from './components/StatsCard';
-import { ValueCompositionChart, ROIChart, ContributionComparisonChart, CryptoValueChart, CryptoProfitChart, OMFAllocationChart, GlobalSummaryChart, GlobalPerformanceChart, OMFStructureChart, OMFTreemapChart } from './components/Charts';
+import { ValueCompositionChart, ROIChart, ContributionComparisonChart, CryptoValueChart, CryptoProfitChart, OMFAllocationChart, GlobalSummaryChart, GlobalPerformanceChart, OMFStructureChart, OMFTreemapChart, PortfolioAllocationHistoryChart } from './components/Charts';
 import { HistoryTable } from './components/HistoryTable';
 import { ReturnsHeatmap } from './components/ReturnsHeatmap';
 
@@ -303,8 +303,6 @@ const App: React.FC = () => {
     let lastIKE = { inv: 0, profit: 0 };
     
     // Variables for Cumulative TWR Calculation (Crypto + IKE Only)
-    // Logic mimics ReturnsHeatmap: Period return r = (V_end - V_start - Flow) / (V_start + Flow)
-    // Cumulative = Product(1+r) - 1
     let twrProduct = 1;
     let prevTwrVal = 0;
     let prevTwrInv = 0;
@@ -317,6 +315,7 @@ const App: React.FC = () => {
       // Global Totals (Including PPK)
       const totalInvestment = lastPPK.inv + lastCrypto.inv + lastIKE.inv;
       const totalProfit = lastPPK.profit + lastCrypto.profit + lastIKE.profit;
+      const totalValue = totalInvestment + totalProfit;
       
       // --- Cumulative TWR Calculation (Strictly Crypto + IKE, No PPK) ---
       const currCrypto = cryptoMap.get(date) || lastCrypto;
@@ -331,7 +330,6 @@ const App: React.FC = () => {
          const flow = currTwrInv - prevTwrInv;
          
          // TWR Assumption: Cash flows occur at the BEGINNING of the period (Flow at Start).
-         // This matches the ReturnsHeatmap logic: denominator = StartValue + Flow
          const denominator = prevTwrVal + flow;
          
          if (denominator !== 0) {
@@ -344,13 +342,27 @@ const App: React.FC = () => {
       // Update 'prev' pointers for next iteration
       prevTwrVal = currTwrVal;
       prevTwrInv = currTwrInv;
+
+      // For Allocation Chart
+      // Calculate Value for each component to determine share
+      const ppkVal = lastPPK.inv + lastPPK.profit;
+      const cryptoVal = lastCrypto.inv + lastCrypto.profit;
+      const ikeVal = lastIKE.inv + lastIKE.profit;
       
+      const sumVal = ppkVal + cryptoVal + ikeVal;
+
       return {
         date,
         investment: totalInvestment,
         profit: totalProfit,
+        totalValue: totalValue, // Store for calculation checks
         roi: totalInvestment > 0 ? (totalProfit / totalInvestment) * 100 : 0,
-        cumulativeTwr: (twrProduct - 1) * 100 // (1+r1)*(1+r2)... - 1
+        cumulativeTwr: (twrProduct - 1) * 100,
+        
+        // Shares
+        ppkShare: sumVal > 0 ? ppkVal / sumVal : 0,
+        cryptoShare: sumVal > 0 ? cryptoVal / sumVal : 0,
+        ikeShare: sumVal > 0 ? ikeVal / sumVal : 0,
       };
     });
 
@@ -539,24 +551,43 @@ const App: React.FC = () => {
     if (portfolioType !== 'OMF' || omfActiveAssets.length === 0) return [];
     
     let cryptoRestValue = 0;
-    const result: { name: string; value: number; }[] = [];
+    let cryptoRestPurchaseValue = 0;
+    const result: { name: string; value: number; roi: number; }[] = [];
 
     omfActiveAssets.forEach(asset => {
       // Check specifically for Krypto portfolio
       if (asset.portfolio === 'Krypto' || asset.portfolio === 'CRYPTO') {
          if (asset.currentValue > 1000) {
-           result.push({ name: asset.symbol, value: asset.currentValue });
+           result.push({ 
+             name: asset.symbol, 
+             value: asset.currentValue,
+             roi: asset.roi 
+            });
          } else {
            cryptoRestValue += asset.currentValue;
+           cryptoRestPurchaseValue += asset.purchaseValue;
          }
       } else {
          // Add all non-crypto open assets individually
-         result.push({ name: asset.symbol, value: asset.currentValue });
+         result.push({ 
+           name: asset.symbol, 
+           value: asset.currentValue,
+           roi: asset.roi
+          });
       }
     });
 
     if (cryptoRestValue > 0) {
-      result.push({ name: 'Reszta Krypto', value: cryptoRestValue });
+      // Calculate aggregated ROI for "Reszta Krypto"
+      const aggRoi = cryptoRestPurchaseValue > 0 
+        ? ((cryptoRestValue - cryptoRestPurchaseValue) / cryptoRestPurchaseValue) * 100 
+        : 0;
+
+      result.push({ 
+        name: 'Reszta Krypto', 
+        value: cryptoRestValue,
+        roi: aggRoi 
+      });
     }
 
     // Sort by value descending
@@ -775,7 +806,7 @@ const App: React.FC = () => {
               <OMFTreemapChart data={omfStructureData} />
             </div>
 
-            {/* Heatmap (Replaces Allocation Charts) */}
+            {/* Heatmap */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 overflow-x-auto">
               <div className="flex items-center justify-between mb-6 min-w-[600px]">
                 <div>
@@ -787,6 +818,20 @@ const App: React.FC = () => {
                 </div>
               </div>
               <ReturnsHeatmap data={heatmapHistoryData} />
+            </div>
+
+            {/* Portfolio Allocation History Chart (New) */}
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-lg font-bold text-slate-800">Historia Alokacji Portfela</h3>
+                  <p className="text-sm text-slate-500">Zmiana udziału procentowego PPK, Crypto i IKE w czasie</p>
+                </div>
+                <div className="p-2 bg-blue-50 rounded-lg">
+                  <PieChart className="text-blue-600" size={20} />
+                </div>
+              </div>
+              <PortfolioAllocationHistoryChart data={globalHistoryData} />
             </div>
 
             {/* Tables */}

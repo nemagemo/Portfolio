@@ -48,26 +48,6 @@ const EXTENDED_COLORS = [
   '#14b8a6', '#f97316', '#a855f7', '#ef4444', '#22c55e', '#3b82f6'
 ];
 
-// Shades of Blue/Indigo for Treemap (Darkest to Lightest)
-const MONOCHROME_COLORS = [
-  '#1e3a8a', // Darkest Blue (Highest Value)
-  '#1e40af',
-  '#1d4ed8',
-  '#2563eb',
-  '#3b82f6',
-  '#60a5fa',
-  '#93c5fd', // Lightest Blue (Lowest Value)
-];
-
-// Mapping of Symbols to Logo Files (Assumes files are in public/ folder)
-const ASSET_LOGOS: Record<string, string> = {
-  'MSFT': '/microsoft.png',
-  'AMZN': '/amazon.png',
-  'USDC': '/usdc.png',
-  'CDR': '/cd_projekt_red.png',
-  'GAW': '/warhammer.png', // Games Workshop -> Warhammer
-};
-
 export const OMFAllocationChart: React.FC<OMFAllocationProps> = ({ data, title }) => {
   return (
     <div className="h-80 w-full flex flex-col items-center">
@@ -137,31 +117,39 @@ export const OMFStructureChart: React.FC<OMFAllocationProps> = ({ data }) => {
   );
 };
 
+// Helper to determine color based on ROI
+const getRoiColor = (roi: number) => {
+  if (roi === undefined || roi === null || isNaN(roi)) return '#64748b'; // Slate 500 (Neutral)
+
+  if (roi > 0) {
+    if (roi >= 50) return '#047857'; // Emerald 700
+    if (roi >= 20) return '#059669'; // Emerald 600
+    if (roi >= 10) return '#10b981'; // Emerald 500
+    return '#34d399'; // Emerald 400
+  } else if (roi < 0) {
+    if (roi <= -50) return '#b91c1c'; // Red 700
+    if (roi <= -20) return '#dc2626'; // Red 600
+    if (roi <= -10) return '#ef4444'; // Red 500
+    return '#f87171'; // Red 400
+  }
+  
+  return '#64748b'; // Zero ROI
+};
+
 // Custom Content for Treemap
 const TreemapContent = (props: any) => {
-  const { root, depth, x, y, width, height, index, name, value } = props;
+  const { root, depth, x, y, width, height, index, name } = props;
   
-  // Calculate Percentage: Value / Total Root Value
-  const total = root.value || 0;
-  const percent = total > 0 ? (value / total) * 100 : 0;
+  // Access ROI from data via root.children if available
+  const itemData = root.children && root.children[index];
+  const roi = itemData ? itemData.roi : 0;
 
-  // Calculate Color Scale based on Rank
-  // Ensure largest items (index 0) get darkest color, smallest items (last index) get lightest color
-  const totalNodes = root.children ? root.children.length : 1;
+  // Calculate Color based on ROI
+  const fillColor = getRoiColor(roi);
   
-  // Map index to color range
-  const colorIndex = Math.min(
-    Math.floor((index / totalNodes) * MONOCHROME_COLORS.length),
-    MONOCHROME_COLORS.length - 1
-  );
-  const fillColor = MONOCHROME_COLORS[colorIndex];
-
-  // Check for Logo
-  const logoSrc = ASSET_LOGOS[name];
-
   return (
     <g>
-      {/* Background Color */}
+      {/* Background Rectangle */}
       <rect
         x={x}
         y={y}
@@ -174,48 +162,33 @@ const TreemapContent = (props: any) => {
           strokeOpacity: 1 / (depth + 1e-10),
         }}
       />
-      
-      {/* Watermark Logo (If available) */}
-      {logoSrc && width > 30 && height > 30 && (
-        <image
-          href={logoSrc}
-          x={x + width * 0.15} // 15% padding from left
-          y={y + height * 0.15} // 15% padding from top
-          width={width * 0.7} // 70% width
-          height={height * 0.7} // 70% height
-          opacity={0.15} // Very subtle transparency
-          preserveAspectRatio="xMidYMid meet"
-          style={{ pointerEvents: 'none' }}
-        />
-      )}
 
-      {/* Text Label */}
+      {/* Asset Symbol */}
       {width > 40 && height > 30 && (
         <text
           x={x + width / 2}
-          y={y + height / 2 - 4}
+          y={y + height / 2 - 8}
           textAnchor="middle"
           fill="#fff"
           fontSize={Math.min(14, width / 5)}
           fontWeight="bold"
-          style={{ textShadow: '0px 1px 2px rgba(0,0,0,0.5)' }}
+          style={{ textShadow: '0px 1px 2px rgba(0,0,0,0.3)' }}
         >
           {name}
         </text>
       )}
       
-      {/* Percentage Label */}
-      {width > 40 && height > 50 && (
-        <text
+      {/* ROI Percentage */}
+      {width > 40 && height > 50 && roi !== undefined && (
+         <text
           x={x + width / 2}
-          y={y + height / 2 + 14}
+          y={y + height / 2 + 12}
           textAnchor="middle"
           fill="rgba(255,255,255,0.9)"
-          fontSize={12}
-          fontWeight="500"
-          style={{ textShadow: '0px 1px 2px rgba(0,0,0,0.3)' }}
+          fontSize={11}
+          fontWeight="medium"
         >
-          {percent.toFixed(1)}%
+          {roi > 0 ? '+' : ''}{roi.toFixed(1)}%
         </text>
       )}
     </g>
@@ -235,7 +208,11 @@ export const OMFTreemapChart: React.FC<{ data: any[] }> = ({ data }) => {
           content={<TreemapContent />}
         >
           <Tooltip 
-             formatter={(value: number) => [`${(value || 0).toLocaleString('pl-PL')} zł`, 'Wartość']}
+             formatter={(value: number, name: string, props: any) => {
+                const roi = props.payload.roi;
+                const roiText = roi !== undefined ? ` (ROI: ${roi > 0 ? '+' : ''}${roi.toFixed(2)}%)` : '';
+                return [`${(value || 0).toLocaleString('pl-PL')} zł${roiText}`, 'Wartość'];
+             }}
              contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }}
           />
         </Treemap>
@@ -402,6 +379,77 @@ export const GlobalPerformanceChart: React.FC<{ data: any[] }> = ({ data }) => {
             dot={false}
           />
         </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+// 3. Portfolio Allocation History Chart (Stacked Area)
+export const PortfolioAllocationHistoryChart: React.FC<{ data: any[] }> = ({ data }) => {
+  // Filter data to start from the first point where there is actual value
+  // This prevents the chart from showing empty space on the left if the dates started before investment.
+  const startIndex = data.findIndex(item => (item.totalValue || 0) > 0);
+  const activeData = startIndex !== -1 ? data.slice(startIndex) : [];
+
+  return (
+    <div className="h-80 w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart
+          data={activeData}
+          stackOffset="expand"
+          margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+          <XAxis 
+            dataKey="date" 
+            tickFormatter={formatDate} 
+            tick={{fontSize: 12, fontWeight: 500, fill: '#64748b'}} 
+            axisLine={false} 
+            tickLine={false} 
+            minTickGap={40}
+          />
+          <YAxis 
+            tickFormatter={(val) => `${(val * 100).toFixed(0)}%`} 
+            axisLine={false} 
+            tickLine={false}
+            tick={{fill: '#64748b', fontSize: 12}}
+          />
+          
+          <Tooltip 
+            labelFormatter={formatDate}
+            formatter={(value: number, name: string) => [`${(value * 100).toFixed(2)}%`, name]}
+            contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+          />
+          <Legend verticalAlign="top" height={36}/>
+          
+          <Area 
+            type="monotone" 
+            dataKey="ppkShare" 
+            name="PPK" 
+            stackId="1"
+            stroke="#6366f1" // Indigo
+            fill="#6366f1"
+            fillOpacity={0.8}
+          />
+          <Area
+            type="monotone" 
+            dataKey="cryptoShare" 
+            name="Krypto" 
+            stackId="1"
+            stroke="#8b5cf6" // Violet
+            fill="#8b5cf6"
+            fillOpacity={0.8}
+          />
+          <Area
+            type="monotone" 
+            dataKey="ikeShare" 
+            name="IKE" 
+            stackId="1"
+            stroke="#06b6d4" // Cyan
+            fill="#06b6d4"
+            fillOpacity={0.8}
+          />
+        </AreaChart>
       </ResponsiveContainer>
     </div>
   );
