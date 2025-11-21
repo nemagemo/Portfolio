@@ -45,8 +45,21 @@ export interface OMFDataRow {
   roi: number;          // ROI
 }
 
+// Structure for Global History Aggregation
+export interface GlobalHistoryRow {
+  date: string;
+  investment: number;
+  profit: number;
+  totalValue: number;
+  roi: number;
+  cumulativeTwr: number;
+  ppkShare: number;
+  cryptoShare: number;
+  ikeShare: number;
+}
+
 // Union type for general usage in tables/charts where applicable
-export type AnyDataRow = PPKDataRow | CryptoDataRow | IKEDataRow | OMFDataRow;
+export type AnyDataRow = PPKDataRow | CryptoDataRow | IKEDataRow | OMFDataRow | GlobalHistoryRow;
 
 export interface SummaryStats {
   totalValue: number;
