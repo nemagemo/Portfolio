@@ -25,6 +25,7 @@ import { PPKDataRow, CryptoDataRow, AnyDataRow } from '../types';
 
 interface ChartProps {
   data: AnyDataRow[];
+  className?: string; // Added className prop for flexibility
 }
 
 const formatCurrency = (value: number | undefined) => `${(value || 0).toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł`;
@@ -481,6 +482,11 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data }) => {
               <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
               <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
             </linearGradient>
+            {/* NEW TAX DEF for area fill */}
+            <linearGradient id="colorTax" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8}/>
+              <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+            </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
           <XAxis dataKey="date" tickFormatter={formatDate} tick={{fontSize: 12, fill: '#64748b'}} axisLine={false} tickLine={false} minTickGap={30} />
@@ -494,14 +500,15 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data }) => {
           {/* Use fundProfit for correct stacking summation */}
           <Area type="monotone" dataKey="fundProfit" name="Zysk Funduszu" stackId="1" stroke="#10b981" fill="url(#colorFundProfit)" />
           
-          {/* New Tax Line */}
-          <Line 
-            type="monotone" 
-            dataKey="tax" 
-            name="Podatek" 
-            stroke="#ef4444" 
-            strokeWidth={2} 
-            dot={false} 
+          {/* REPLACED Line WITH Area for Tax to create "poświata" (fill) effect towards zero */}
+          <Area
+            type="monotone"
+            dataKey="tax"
+            name="Podatek"
+            stroke="#ef4444"
+            fill="url(#colorTax)"
+            strokeWidth={2}
+            // No stackId, so it renders independently below the axis (negative values)
           />
         </ComposedChart>
       </ResponsiveContainer>
@@ -509,7 +516,48 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data }) => {
   );
 };
 
-export const ContributionComparisonChart: React.FC<ChartProps> = ({ data }) => {
+export const CapitalStructureHistoryChart: React.FC<ChartProps> = ({ data }) => {
+  return (
+    <div className="h-80 w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart
+          data={data}
+          stackOffset="expand"
+          margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+          <XAxis 
+             dataKey="date" 
+             tickFormatter={formatDate} 
+             tick={{fontSize: 12, fill: '#64748b'}} 
+             axisLine={false} 
+             tickLine={false} 
+             minTickGap={30} 
+          />
+          <YAxis 
+             tickFormatter={(val) => `${(val * 100).toFixed(0)}%`} 
+             tick={{fontSize: 12, fill: '#64748b'}} 
+             axisLine={false} 
+             tickLine={false} 
+          />
+          <Tooltip 
+             formatter={(value: number) => [`${(value * 100).toFixed(2)}%`, '']} 
+             labelFormatter={formatDate} 
+             contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }} 
+          />
+          <Legend verticalAlign="top" height={36} iconType="circle" />
+          
+          <Area type="monotone" dataKey="employeeContribution" name="Wkład własny" stackId="1" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.8} />
+          <Area type="monotone" dataKey="employerContribution" name="Pracodawca" stackId="1" stroke="#6366f1" fill="#6366f1" fillOpacity={0.8} />
+          <Area type="monotone" dataKey="stateContribution" name="Dopłaty Państwa" stackId="1" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.8} />
+          <Area type="monotone" dataKey="fundProfit" name="Zysk Funduszu" stackId="1" stroke="#10b981" fill="#10b981" fillOpacity={0.8} />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+export const ContributionComparisonChart: React.FC<ChartProps> = ({ data, className }) => {
   const latest = data[data.length - 1] as PPKDataRow;
   if (!latest) return null;
 
@@ -521,14 +569,14 @@ export const ContributionComparisonChart: React.FC<ChartProps> = ({ data }) => {
   ];
 
   return (
-    <div className="h-80 w-full">
+    <div className={className || "h-80 w-full"}>
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={compData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }} layout="vertical">
+        <BarChart data={compData} margin={{ top: 20, right: 10, left: 10, bottom: 5 }} layout="vertical">
           <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0"/>
           <XAxis type="number" hide />
-          <YAxis dataKey="name" type="category" tick={{fontSize: 14, fill: '#1e293b', fontWeight: 500}} width={120} axisLine={false} tickLine={false} />
+          <YAxis dataKey="name" type="category" tick={{fontSize: 11, fill: '#1e293b', fontWeight: 500}} width={90} axisLine={false} tickLine={false} />
           <Tooltip cursor={{fill: 'transparent'}} formatter={(value: number) => [`${(value || 0).toLocaleString('pl-PL')} zł`, 'Wartość']} contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
-          <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={40} />
+          <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={24} />
         </BarChart>
       </ResponsiveContainer>
     </div>

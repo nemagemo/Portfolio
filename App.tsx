@@ -32,11 +32,10 @@ import {
   Calendar,
   LayoutTemplate
 } from 'lucide-react';
-import { DEFAULT_CSV_DATA, DEFAULT_CRYPTO_DATA, DEFAULT_IKE_DATA, DEFAULT_OMF_DATA } from './constants/defaultData';
 import { parseCSV, validateOMFIntegrity } from './utils/parser';
 import { AnyDataRow, SummaryStats, ValidationReport, PortfolioType, PPKDataRow, CryptoDataRow, IKEDataRow, OMFValidationReport, OMFDataRow } from './types';
 import { StatsCard } from './components/StatsCard';
-import { ValueCompositionChart, ROIChart, ContributionComparisonChart, CryptoValueChart, CryptoProfitChart, OMFAllocationChart, GlobalSummaryChart, GlobalPerformanceChart, OMFStructureChart, OMFTreemapChart, PortfolioAllocationHistoryChart } from './components/Charts';
+import { ValueCompositionChart, ROIChart, ContributionComparisonChart, CryptoValueChart, CryptoProfitChart, OMFAllocationChart, GlobalSummaryChart, GlobalPerformanceChart, OMFStructureChart, OMFTreemapChart, PortfolioAllocationHistoryChart, CapitalStructureHistoryChart } from './components/Charts';
 import { HistoryTable } from './components/HistoryTable';
 import { ReturnsHeatmap } from './components/ReturnsHeatmap';
 
@@ -199,11 +198,13 @@ const OMFIntegrityStatus: React.FC<{ report: OMFValidationReport }> = ({ report 
 
 const App: React.FC = () => {
   const [portfolioType, setPortfolioType] = useState<PortfolioType>('PPK');
+  
+  // Initialize CSV sources with empty strings (loaded via fetch on mount)
   const [csvSources, setCsvSources] = useState({
-    PPK: DEFAULT_CSV_DATA,
-    CRYPTO: DEFAULT_CRYPTO_DATA,
-    IKE: DEFAULT_IKE_DATA,
-    OMF: DEFAULT_OMF_DATA
+    PPK: '',
+    CRYPTO: '',
+    IKE: '',
+    OMF: ''
   });
 
   const [data, setData] = useState<AnyDataRow[]>([]);
@@ -215,6 +216,31 @@ const App: React.FC = () => {
   const [omfActiveAssets, setOmfActiveAssets] = useState<OMFDataRow[]>([]);
   const [omfClosedAssets, setOmfClosedAssets] = useState<OMFDataRow[]>([]);
   const [isClosedHistoryExpanded, setIsClosedHistoryExpanded] = useState(false);
+
+  // Fetch CSV Files on Mount
+  useEffect(() => {
+    const fetchCsvs = async () => {
+        try {
+            const [ppk, krypto, ike, omf] = await Promise.all([
+                fetch('CSV/PPK.csv').then(res => res.ok ? res.text() : ''),
+                fetch('CSV/Krypto.csv').then(res => res.ok ? res.text() : ''),
+                fetch('CSV/IKE.csv').then(res => res.ok ? res.text() : ''),
+                fetch('CSV/OMF.csv').then(res => res.ok ? res.text() : '')
+            ]);
+            
+            setCsvSources({
+                PPK: ppk,
+                CRYPTO: krypto,
+                IKE: ike,
+                OMF: omf
+            });
+        } catch (error) {
+            console.error("Failed to load CSV files", error);
+        }
+    };
+    
+    fetchCsvs();
+  }, []);
 
   useEffect(() => {
     try {
@@ -666,7 +692,7 @@ const App: React.FC = () => {
               }`}
             >
               <Coins size={16} className="mr-2 hidden sm:block" />
-              Crypto
+              Krypto
             </button>
             <button
               onClick={() => setPortfolioType('IKE')}
@@ -870,7 +896,7 @@ const App: React.FC = () => {
           <>
             {/* Stats Grid */}
             {stats && (
-              <div className={`grid grid-cols-1 gap-6 mb-8 ${portfolioType === 'PPK' ? 'lg:grid-cols-3' : 'lg:grid-cols-4'}`}>
+              <div className={`grid grid-cols-1 gap-6 mb-8 ${portfolioType === 'PPK' ? 'lg:grid-cols-3 xl:grid-cols-4' : 'lg:grid-cols-4'}`}>
                 <StatsCard 
                   title="Wartość Całkowita" 
                   value={`${(stats.totalValue || 0).toLocaleString('pl-PL')} zł`} 
@@ -960,17 +986,21 @@ const App: React.FC = () => {
                 {portfolioType === 'PPK' ? (
                   /* PPK Visualizations */
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    {/* Make Value Chart Full Width */}
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
                       <h3 className="text-lg font-bold text-slate-800 mb-6">Wzrost Wartości Portfela</h3>
                       <ValueCompositionChart data={data} />
                     </div>
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                      <h3 className="text-lg font-bold text-slate-800 mb-6">Struktura Kapitału (Ostatni Miesiąc)</h3>
-                      <ContributionComparisonChart data={data} />
-                    </div>
+                    
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
                       <h3 className="text-lg font-bold text-slate-800 mb-6">ROI w czasie</h3>
                       <ROIChart data={data} />
+                    </div>
+
+                    {/* New Capital Structure History Chart (Full Width below ROI) */}
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
+                      <h3 className="text-lg font-bold text-slate-800 mb-6">Struktura Kapitału w czasie</h3>
+                      <CapitalStructureHistoryChart data={data} />
                     </div>
                   </div>
                 ) : (
