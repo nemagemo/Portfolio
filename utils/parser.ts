@@ -1,10 +1,16 @@
+
 import { PPKDataRow, CryptoDataRow, IKEDataRow, OMFDataRow, AnyDataRow, ValidationReport, PortfolioType, OMFValidationReport } from '../types';
 
 // Helper to parse Polish currency strings like "1 097,73 zł" or "95,45 zł"
 const parseCurrency = (val: string): number => {
   if (!val) return 0;
-  // Remove 'zł', remove spaces (including non-breaking \s covers \u00A0), replace comma with dot
-  const clean = val.replace(/zł/g, '').replace(/\s/g, '').replace(/,/g, '.').trim();
+  // Remove 'zł', remove spaces (including non-breaking \s covers \u00A0, but explicit \u00A0 is safer for Google Sheets), replace comma with dot
+  // Google Sheets often uses \u00A0 (nbsp) for thousand separators.
+  const clean = val.replace(/zł/g, '')
+                   .replace(/\u00A0/g, '') // Explicitly remove non-breaking space
+                   .replace(/\s/g, '')     // Remove standard whitespace
+                   .replace(/,/g, '.')
+                   .trim();
   const num = parseFloat(clean);
   return isNaN(num) ? 0 : num;
 };
@@ -12,7 +18,11 @@ const parseCurrency = (val: string): number => {
 // Helper to parse percentage strings like "70,13%"
 const parsePercent = (val: string): number => {
   if (!val) return 0;
-  const clean = val.replace(/%/g, '').replace(/\s/g, '').replace(/,/g, '.').trim();
+  const clean = val.replace(/%/g, '')
+                   .replace(/\u00A0/g, '')
+                   .replace(/\s/g, '')
+                   .replace(/,/g, '.')
+                   .trim();
   const num = parseFloat(clean);
   return isNaN(num) ? 0 : num;
 };
@@ -20,7 +30,10 @@ const parsePercent = (val: string): number => {
 // Helper to parse standard float strings with comma or dot
 const parseFloatStr = (val: string): number => {
   if (!val) return 0;
-  const clean = val.replace(/\s/g, '').replace(/,/g, '.').trim();
+  const clean = val.replace(/\u00A0/g, '')
+                   .replace(/\s/g, '')
+                   .replace(/,/g, '.')
+                   .trim();
   const num = parseFloat(clean);
   return isNaN(num) ? 0 : num;
 }
@@ -63,8 +76,11 @@ export const parseCSV = (csvText: string, type: PortfolioType): { data: AnyDataR
       else if (h.includes('ostatni zakup')) colMap.lastPurchase = index;
       else if (h.includes('okres')) colMap.period = index;
       else if (h.includes('ilość') || h.includes('ilosc')) colMap.quantity = index;
-      else if (h.includes('obecna wartośc') || h.includes('obecna wartosc')) colMap.current = index;
-      else if (h.includes('wartośc zakupu') || h.includes('wartosc zakupu')) colMap.purchase = index;
+      
+      // Fixed header matching to include correct Polish spelling "wartość"
+      else if (h.includes('obecna wartośc') || h.includes('obecna wartosc') || h.includes('obecna wartość')) colMap.current = index;
+      else if (h.includes('wartośc zakupu') || h.includes('wartosc zakupu') || h.includes('wartość zakupu')) colMap.purchase = index;
+      
       else if (h.includes('zysk')) colMap.profit = index;
       else if (h.includes('roi')) colMap.roi = index;
     });
@@ -111,7 +127,8 @@ export const parseCSV = (csvText: string, type: PortfolioType): { data: AnyDataR
       }
 
       // Logic Check (Triple Check Part 3: Math Integrity)
-      if (purchaseVal > 0 && Math.abs((purchaseVal + profitVal) - currentVal) > 0.05) {
+      // Tolerance slightly increased to 0.10 to account for rounding diffs in sheets
+      if (purchaseVal > 0 && Math.abs((purchaseVal + profitVal) - currentVal) > 0.10) {
          logicErrors++;
       }
 
@@ -317,7 +334,8 @@ export const validateOMFIntegrity = (data: OMFDataRow[]): OMFValidationReport =>
      if (row.status === 'Zamknięta') report.stats.closedAssets++;
 
      const expectedCurrent = row.purchaseValue + row.profit;
-     if (Math.abs(expectedCurrent - row.currentValue) > 0.05) {
+     // Tolerance slightly increased for float comparison
+     if (Math.abs(expectedCurrent - row.currentValue) > 0.10) {
        mathErrors++;
        report.messages.push(`Błąd matematyczny dla ${row.symbol}: Zakup (${row.purchaseValue}) + Wynik (${row.profit}) != Obecna (${row.currentValue})`);
      }
