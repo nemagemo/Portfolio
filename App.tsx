@@ -28,8 +28,7 @@ import {
   BarChart4,
   Timer,
   Calendar,
-  LayoutTemplate,
-  Upload
+  LayoutTemplate
 } from 'lucide-react';
 import { parseCSV, validateOMFIntegrity } from './utils/parser';
 import { AnyDataRow, SummaryStats, ValidationReport, PortfolioType, PPKDataRow, CryptoDataRow, IKEDataRow, OMFValidationReport, OMFDataRow } from './types';
@@ -263,21 +262,6 @@ const App: React.FC = () => {
       });
     }
   }, [csvSources, portfolioType]);
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const text = e.target?.result;
-        if (typeof text === 'string') {
-          // Override the default data for the current portfolio type
-          setCsvSources(prev => ({ ...prev, [portfolioType]: text }));
-        }
-      };
-      reader.readAsText(file);
-    }
-  };
 
   // --- GLOBAL HISTORY DATA (For OMF Chart) ---
   // Merges PPK, Crypto, and IKE timelines
@@ -632,8 +616,8 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-slate-50 text-slate-900 pb-12">
       {/* Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-start">
+          <div className="flex items-center space-x-3 mr-8">
             <div className={`p-2 rounded-lg transition-colors ${getColorClass(portfolioType)}`}>
               <Wallet className="text-white w-6 h-6" />
             </div>
@@ -686,14 +670,6 @@ const App: React.FC = () => {
               <PiggyBank size={16} className="mr-2 hidden sm:block" />
               IKE
             </button>
-          </div>
-
-          <div className="flex items-center space-x-4">
-             <label className="cursor-pointer inline-flex items-center px-4 py-2 border border-slate-300 text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 transition-colors">
-                <Upload className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Wgraj CSV ({portfolioType})</span>
-                <input type="file" className="hidden" accept=".csv,.txt" onChange={handleFileUpload} />
-             </label>
           </div>
         </div>
       </header>
