@@ -37,6 +37,12 @@ import { ValueCompositionChart, ROIChart, ContributionComparisonChart, CryptoVal
 import { HistoryTable } from './components/HistoryTable';
 import { ReturnsHeatmap } from './components/ReturnsHeatmap';
 
+// Import data directly to ensure bundling (avoids 404s on static hosts like Netlify)
+import { PPK_DATA } from './CSV/PPK';
+import { KRYPTO_DATA } from './CSV/Krypto';
+import { IKE_DATA } from './CSV/IKE';
+import { OMF_DATA } from './CSV/OMF';
+
 const DataStatus: React.FC<{ report: ValidationReport }> = ({ report }) => {
   const [expanded, setExpanded] = useState(false);
   
@@ -197,12 +203,12 @@ const OMFIntegrityStatus: React.FC<{ report: OMFValidationReport }> = ({ report 
 const App: React.FC = () => {
   const [portfolioType, setPortfolioType] = useState<PortfolioType>('PPK');
   
-  // Initialize CSV sources with empty strings (loaded via fetch on mount)
-  const [csvSources, setCsvSources] = useState({
-    PPK: '',
-    CRYPTO: '',
-    IKE: '',
-    OMF: ''
+  // Initialize CSV sources with imported strings
+  const [csvSources] = useState({
+    PPK: PPK_DATA,
+    CRYPTO: KRYPTO_DATA,
+    IKE: IKE_DATA,
+    OMF: OMF_DATA
   });
 
   const [data, setData] = useState<AnyDataRow[]>([]);
@@ -214,31 +220,6 @@ const App: React.FC = () => {
   const [omfActiveAssets, setOmfActiveAssets] = useState<OMFDataRow[]>([]);
   const [omfClosedAssets, setOmfClosedAssets] = useState<OMFDataRow[]>([]);
   const [isClosedHistoryExpanded, setIsClosedHistoryExpanded] = useState(false);
-
-  // Fetch CSV Files on Mount
-  useEffect(() => {
-    const fetchCsvs = async () => {
-        try {
-            const [ppk, krypto, ike, omf] = await Promise.all([
-                fetch('CSV/PPK.csv').then(res => res.ok ? res.text() : ''),
-                fetch('CSV/Krypto.csv').then(res => res.ok ? res.text() : ''),
-                fetch('CSV/IKE.csv').then(res => res.ok ? res.text() : ''),
-                fetch('CSV/OMF.csv').then(res => res.ok ? res.text() : '')
-            ]);
-            
-            setCsvSources({
-                PPK: ppk,
-                CRYPTO: krypto,
-                IKE: ike,
-                OMF: omf
-            });
-        } catch (error) {
-            console.error("Failed to load CSV files", error);
-        }
-    };
-    
-    fetchCsvs();
-  }, []);
 
   useEffect(() => {
     try {
