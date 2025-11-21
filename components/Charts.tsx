@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   AreaChart,
   Area,
@@ -141,12 +141,38 @@ const getRoiColor = (roi: number) => {
 const TreemapContent = (props: any) => {
   const { root, depth, x, y, width, height, index, name } = props;
   
+  // State to handle image fallback (SVG -> PNG -> None)
+  const [imgSrc, setImgSrc] = useState(`/images/${name}.svg`);
+  const [isImageVisible, setIsImageVisible] = useState(true);
+
+  // Reset state when the asset name changes (e.g., due to filtering or data updates)
+  useEffect(() => {
+    setImgSrc(`/images/${name}.svg`);
+    setIsImageVisible(true);
+  }, [name]);
+
+  const handleImageError = () => {
+    if (imgSrc.endsWith('.svg')) {
+      // Try PNG if SVG fails
+      setImgSrc(`/images/${name}.png`);
+    } else {
+      // If PNG also fails, hide the image entirely
+      setIsImageVisible(false);
+    }
+  };
+
   // Access ROI from data via root.children if available
   const itemData = root.children && root.children[index];
   const roi = itemData ? itemData.roi : 0;
 
   // Calculate Color based on ROI
   const fillColor = getRoiColor(roi);
+  
+  // Calculate logo position and size
+  // We use 50% of the smaller dimension to keep it subtle and well-positioned
+  const logoSize = Math.min(width, height) * 0.5;
+  const logoX = x + (width - logoSize) / 2;
+  const logoY = y + (height - logoSize) / 2;
   
   return (
     <g>
@@ -163,6 +189,21 @@ const TreemapContent = (props: any) => {
           strokeOpacity: 1 / (depth + 1e-10),
         }}
       />
+
+      {/* Asset Logo (Watermark style) */}
+      {/* Rendered above background but below text */}
+      {width > 40 && height > 40 && isImageVisible && (
+        <image
+          href={imgSrc} 
+          x={logoX}
+          y={logoY}
+          height={logoSize}
+          width={logoSize}
+          preserveAspectRatio="xMidYMid meet"
+          style={{ opacity: 0.25, pointerEvents: 'none' }} // Low opacity to ensure text readability
+          onError={handleImageError}
+        />
+      )}
 
       {/* Asset Symbol */}
       {width > 40 && height > 30 && (
@@ -541,7 +582,13 @@ export const CapitalStructureHistoryChart: React.FC<ChartProps> = ({ data }) => 
              tickLine={false} 
           />
           <Tooltip 
-             formatter={(value: number) => [`${(value * 100).toFixed(2)}%`, '']} 
+             formatter={(value: number, name: string, props: any) => {
+                const row = props.payload as PPKDataRow;
+                // Calculate total from the stacked components
+                const total = (row.employeeContribution || 0) + (row.employerContribution || 0) + (row.stateContribution || 0) + (row.fundProfit || 0);
+                const percent = total !== 0 ? (value / total) * 100 : 0;
+                return [`${percent.toFixed(2)}%`, name];
+             }} 
              labelFormatter={formatDate} 
              contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }} 
           />
