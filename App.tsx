@@ -28,7 +28,8 @@ import {
   BarChart4,
   Timer,
   Calendar,
-  LayoutTemplate
+  LayoutTemplate,
+  Upload
 } from 'lucide-react';
 import { parseCSV, validateOMFIntegrity } from './utils/parser';
 import { AnyDataRow, SummaryStats, ValidationReport, PortfolioType, PPKDataRow, CryptoDataRow, IKEDataRow, OMFValidationReport, OMFDataRow } from './types';
@@ -45,10 +46,41 @@ import { OMF_DATA } from './CSV/OMF';
 
 const DataStatus: React.FC<{ report: ValidationReport }> = ({ report }) => {
   const [expanded, setExpanded] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [isFading, setIsFading] = useState(false);
+
+  useEffect(() => {
+    if (report.isValid && report.errors.length === 0) {
+      // Reset states for successful validation
+      setIsVisible(true);
+      setIsFading(false);
+
+      // Start fade out after 2 seconds
+      const fadeTimer = setTimeout(() => {
+        setIsFading(true);
+      }, 2000);
+
+      // Remove from DOM after fade out (2s + 500ms transition)
+      const removeTimer = setTimeout(() => {
+        setIsVisible(false);
+      }, 2500);
+
+      return () => {
+        clearTimeout(fadeTimer);
+        clearTimeout(removeTimer);
+      };
+    } else {
+      // Always show if there are errors
+      setIsVisible(true);
+      setIsFading(false);
+    }
+  }, [report]);
   
+  if (!isVisible) return null;
+
   if (report.isValid && report.errors.length === 0) {
     return (
-      <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6">
+      <div className={`bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6 transition-opacity duration-500 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="bg-emerald-100 p-2 rounded-full">
@@ -123,12 +155,40 @@ const DataStatus: React.FC<{ report: ValidationReport }> = ({ report }) => {
 
 const OMFIntegrityStatus: React.FC<{ report: OMFValidationReport }> = ({ report }) => {
   const [expanded, setExpanded] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [isFading, setIsFading] = useState(false);
+  
   const isPerfect = report.isConsistent && report.messages.length === 0;
   const isCritical = !report.isConsistent;
 
+  useEffect(() => {
+    if (isPerfect) {
+      setIsVisible(true);
+      setIsFading(false);
+      
+      const fadeTimer = setTimeout(() => {
+        setIsFading(true);
+      }, 2000);
+
+      const removeTimer = setTimeout(() => {
+        setIsVisible(false);
+      }, 2500);
+
+      return () => {
+        clearTimeout(fadeTimer);
+        clearTimeout(removeTimer);
+      };
+    } else {
+      setIsVisible(true);
+      setIsFading(false);
+    }
+  }, [isPerfect, report]);
+
+  if (!isVisible) return null;
+
   if (isPerfect) {
     return (
-      <div className="bg-slate-800 border border-slate-700 rounded-lg p-4 mb-6 text-white shadow-md">
+      <div className={`bg-slate-800 border border-slate-700 rounded-lg p-4 mb-6 text-white shadow-md transition-opacity duration-500 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="bg-emerald-500 p-2 rounded-full">
@@ -201,10 +261,10 @@ const OMFIntegrityStatus: React.FC<{ report: OMFValidationReport }> = ({ report 
 };
 
 const App: React.FC = () => {
-  const [portfolioType, setPortfolioType] = useState<PortfolioType>('PPK');
+  const [portfolioType, setPortfolioType] = useState<PortfolioType>('OMF');
   
-  // Initialize CSV sources with imported strings
-  const [csvSources] = useState({
+  // Initialize CSV sources with imported strings to handle overrides
+  const [csvSources, setCsvSources] = useState({
     PPK: PPK_DATA,
     CRYPTO: KRYPTO_DATA,
     IKE: IKE_DATA,
@@ -262,6 +322,21 @@ const App: React.FC = () => {
       });
     }
   }, [csvSources, portfolioType]);
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target?.result;
+        if (typeof text === 'string') {
+          // Override the default data for the current portfolio type
+          setCsvSources(prev => ({ ...prev, [portfolioType]: text }));
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
 
   // --- GLOBAL HISTORY DATA (For OMF Chart) ---
   // Merges PPK, Crypto, and IKE timelines
@@ -670,6 +745,14 @@ const App: React.FC = () => {
               <PiggyBank size={16} className="mr-2 hidden sm:block" />
               IKE
             </button>
+          </div>
+
+          <div className="flex items-center space-x-4">
+             <label className="cursor-pointer inline-flex items-center px-4 py-2 border border-slate-300 text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 transition-colors">
+                <Upload className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Wgraj CSV ({portfolioType})</span>
+                <input type="file" className="hidden" accept=".csv,.txt" onChange={handleFileUpload} />
+             </label>
           </div>
         </div>
       </header>
