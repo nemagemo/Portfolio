@@ -170,7 +170,10 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({ data, type, omfVaria
           </tr>
         </thead>
         <tbody>
-          {sortedData.map((row, index) => {
+          {sortedData.map((rowItem, index) => {
+            // Because we handled OMF type above with an early return, 
+            // we can safely cast the rows here to exclude OMFDataRow
+            const row = rowItem as PPKDataRow | CryptoDataRow | IKEDataRow;
             const isPPK = type === 'PPK';
             
             // Determine investment value based on type

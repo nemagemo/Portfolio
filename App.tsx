@@ -37,11 +37,24 @@ import { ValueCompositionChart, ROIChart, ContributionComparisonChart, CryptoVal
 import { HistoryTable } from './components/HistoryTable';
 import { ReturnsHeatmap } from './components/ReturnsHeatmap';
 
-// Import data directly to ensure bundling (avoids 404s on static hosts like Netlify)
+// Import local data as fallback
 import { PPK_DATA } from './CSV/PPK';
 import { KRYPTO_DATA } from './CSV/Krypto';
 import { IKE_DATA } from './CSV/IKE';
 import { OMF_DATA } from './CSV/OMF';
+
+// --- GOOGLE SHEETS CONFIGURATION ---
+// Instrukcja:
+// 1. W Google Sheets wejdź w Plik -> Udostępnij -> Opublikuj w internecie.
+// 2. Wybierz odpowiedni arkusz i format "Wartości oddzielone przecinkami (.csv)".
+// 3. Skopiuj link i wklej go poniżej w odpowiednie miejsce.
+// Jeśli link pozostanie pusty (""), aplikacja użyje danych lokalnych z plików .ts.
+const GOOGLE_SHEET_URLS = {
+  OMF: "https://docs.google.com/spreadsheets/d/e/2PACX-1vS7p1b_z69_W5vbjwuA-FI_1J2FOPU-iPTXNwOyVkO_NCr7DJ6SPgyn1n2lnK8_fqPMU3mhZonDhR5U/pub?gid=1842953590&single=true&output=csv",
+  PPK: "https://docs.google.com/spreadsheets/d/e/2PACX-1vS7p1b_z69_W5vbjwuA-FI_1J2FOPU-iPTXNwOyVkO_NCr7DJ6SPgyn1n2lnK8_fqPMU3mhZonDhR5U/pub?gid=2039918761&single=true&output=csv",
+  CRYPTO: "https://docs.google.com/spreadsheets/d/e/2PACX-1vS7p1b_z69_W5vbjwuA-FI_1J2FOPU-iPTXNwOyVkO_NCr7DJ6SPgyn1n2lnK8_fqPMU3mhZonDhR5U/pub?gid=924747651&single=true&output=csv",
+  IKE: "https://docs.google.com/spreadsheets/d/e/2PACX-1vS7p1b_z69_W5vbjwuA-FI_1J2FOPU-iPTXNwOyVkO_NCr7DJ6SPgyn1n2lnK8_fqPMU3mhZonDhR5U/pub?gid=622379915&single=true&output=csv"
+};
 
 const DataStatus: React.FC<{ report: ValidationReport }> = ({ report }) => {
   const [expanded, setExpanded] = useState(false);
@@ -203,7 +216,7 @@ const OMFIntegrityStatus: React.FC<{ report: OMFValidationReport }> = ({ report 
 const App: React.FC = () => {
   const [portfolioType, setPortfolioType] = useState<PortfolioType>('OMF');
   
-  // Initialize CSV sources with imported strings to handle overrides
+  // Initialize with local TS data, but can be overridden by Google Sheets fetch
   const [csvSources, setCsvSources] = useState({
     PPK: PPK_DATA,
     CRYPTO: KRYPTO_DATA,
@@ -220,6 +233,39 @@ const App: React.FC = () => {
   const [omfActiveAssets, setOmfActiveAssets] = useState<OMFDataRow[]>([]);
   const [omfClosedAssets, setOmfClosedAssets] = useState<OMFDataRow[]>([]);
   const [isClosedHistoryExpanded, setIsClosedHistoryExpanded] = useState(false);
+
+  // Fetch data from Google Sheets if URLs are configured
+  useEffect(() => {
+    const fetchSheetData = async () => {
+      const newSources = { ...csvSources };
+      let hasUpdates = false;
+
+      const fetchPromises = Object.entries(GOOGLE_SHEET_URLS).map(async ([key, url]) => {
+        if (url && url.trim() !== "") {
+          try {
+            const response = await fetch(url);
+            if (response.ok) {
+              const text = await response.text();
+              newSources[key as keyof typeof csvSources] = text;
+              hasUpdates = true;
+            } else {
+              console.error(`Failed to fetch ${key} data: ${response.status}`);
+            }
+          } catch (error) {
+            console.error(`Error fetching ${key} data:`, error);
+          }
+        }
+      });
+
+      await Promise.all(fetchPromises);
+
+      if (hasUpdates) {
+        setCsvSources(newSources);
+      }
+    };
+
+    fetchSheetData();
+  }, []); // Run once on mount
 
   useEffect(() => {
     try {
@@ -616,14 +662,7 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-slate-50 text-slate-900 pb-12">
       {/* Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-start">
-          <div className="flex items-center space-x-3 mr-8">
-            <div className={`p-2 rounded-lg transition-colors ${getColorClass(portfolioType)}`}>
-              <Wallet className="text-white w-6 h-6" />
-            </div>
-            <h1 className="text-xl font-bold text-slate-900 hidden sm:block">Mój Portfel</h1>
-          </div>
-          
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-center">
           {/* Portfolio Switcher */}
           <div className="bg-slate-100 p-1 rounded-lg flex space-x-1 overflow-x-auto">
             <button
