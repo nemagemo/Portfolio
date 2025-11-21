@@ -149,7 +149,7 @@ const OMFIntegrityStatus: React.FC<{ report: OMFValidationReport }> = ({ report 
             </div>
             <div>
               <h3 className="text-sm font-semibold text-emerald-400">Raport Integralności OMF</h3>
-              <p className="text-xs text-slate-300">Potrójna weryfikacja: Struktura OK • Typy OK • Matematyka (Zakup+Zysk) OK</p>
+              <p className="text-xs text-slate-300">Potrójna weryfikacja: Struktura OK • Format OK • Logika OK</p>
             </div>
           </div>
           <div className="text-xs font-medium text-white bg-emerald-600 px-3 py-1 rounded-full">
@@ -178,7 +178,7 @@ const OMFIntegrityStatus: React.FC<{ report: OMFValidationReport }> = ({ report 
                  </span>
                  <span className="flex items-center">
                     {report.checks.mathIntegrity ? <CheckCircle2 size={12} className="mr-1 text-emerald-600"/> : <AlertTriangle size={12} className="mr-1 text-amber-600"/>}
-                    Matematyka
+                    Logika
                  </span>
               </div>
             </div>
@@ -233,6 +233,7 @@ const App: React.FC = () => {
   const [omfActiveAssets, setOmfActiveAssets] = useState<OMFDataRow[]>([]);
   const [omfClosedAssets, setOmfClosedAssets] = useState<OMFDataRow[]>([]);
   const [isClosedHistoryExpanded, setIsClosedHistoryExpanded] = useState(false);
+  const [isActivePositionsExpanded, setIsActivePositionsExpanded] = useState(false);
 
   // Fetch data from Google Sheets if URLs are configured
   useEffect(() => {
@@ -859,13 +860,25 @@ const App: React.FC = () => {
             {/* Tables */}
             <div className="space-y-8">
               <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                {/* Active Positions: Title is passed to component to handle dynamic count */}
-                <HistoryTable 
-                  data={omfActiveAssets} 
-                  type="OMF" 
-                  omfVariant="active" 
-                  title="Aktywne Pozycje" 
-                />
+                <div 
+                  className="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors"
+                  onClick={() => setIsActivePositionsExpanded(!isActivePositionsExpanded)}
+                >
+                  <div className="flex items-center space-x-2">
+                     <h3 className="text-lg font-bold text-slate-800">Aktywne Pozycje</h3>
+                     {isActivePositionsExpanded ? <ChevronUp size={20} className="text-slate-400"/> : <ChevronDown size={20} className="text-slate-400"/>}
+                  </div>
+                  <span className="text-xs font-medium bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full">
+                    {omfActiveAssets.length} pozycji
+                  </span>
+                </div>
+                {isActivePositionsExpanded && (
+                  <HistoryTable 
+                    data={omfActiveAssets} 
+                    type="OMF" 
+                    omfVariant="active" 
+                  />
+                )}
               </div>
 
               <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
