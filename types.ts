@@ -1,4 +1,5 @@
 
+
 export type PortfolioType = 'PPK' | 'CRYPTO' | 'IKE' | 'OMF';
 
 export interface PPKDataRow {
@@ -69,6 +70,7 @@ export interface SummaryStats {
 
 export interface ValidationReport {
   isValid: boolean;
+  source?: 'Online' | 'Offline'; // Source of data (Google Sheets vs Local TS)
   checks: {
     structure: boolean; // Headers and column count
     dataTypes: boolean; // Number and Date parsing
@@ -84,6 +86,7 @@ export interface ValidationReport {
 // Updated OMF Validation Report for the new logic
 export interface OMFValidationReport {
   isConsistent: boolean;
+  source?: 'Online' | 'Offline'; // Added source field
   checks: {
     structure: boolean;
     mathIntegrity: boolean; // Purchase + Profit == Current

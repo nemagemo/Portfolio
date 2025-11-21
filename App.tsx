@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   LayoutDashboard, 
@@ -37,24 +38,40 @@ import { ValueCompositionChart, ROIChart, ContributionComparisonChart, CryptoVal
 import { HistoryTable } from './components/HistoryTable';
 import { ReturnsHeatmap } from './components/ReturnsHeatmap';
 
-// Import local data as fallback
+// Import local data
 import { PPK_DATA } from './CSV/PPK';
 import { KRYPTO_DATA } from './CSV/Krypto';
 import { IKE_DATA } from './CSV/IKE';
 import { OMF_DATA } from './CSV/OMF';
 
-// --- GOOGLE SHEETS CONFIGURATION ---
-// Instrukcja:
-// 1. W Google Sheets wejdź w Plik -> Udostępnij -> Opublikuj w internecie.
-// 2. Wybierz odpowiedni arkusz i format "Wartości oddzielone przecinkami (.csv)".
-// 3. Skopiuj link i wklej go poniżej w odpowiednie miejsce.
-// Jeśli link pozostanie pusty (""), aplikacja użyje danych lokalnych z plików .ts.
-const GOOGLE_SHEET_URLS = {
-  OMF: "https://docs.google.com/spreadsheets/d/e/2PACX-1vS7p1b_z69_W5vbjwuA-FI_1J2FOPU-iPTXNwOyVkO_NCr7DJ6SPgyn1n2lnK8_fqPMU3mhZonDhR5U/pub?gid=1842953590&single=true&output=csv",
-  PPK: "https://docs.google.com/spreadsheets/d/e/2PACX-1vS7p1b_z69_W5vbjwuA-FI_1J2FOPU-iPTXNwOyVkO_NCr7DJ6SPgyn1n2lnK8_fqPMU3mhZonDhR5U/pub?gid=2039918761&single=true&output=csv",
-  CRYPTO: "https://docs.google.com/spreadsheets/d/e/2PACX-1vS7p1b_z69_W5vbjwuA-FI_1J2FOPU-iPTXNwOyVkO_NCr7DJ6SPgyn1n2lnK8_fqPMU3mhZonDhR5U/pub?gid=924747651&single=true&output=csv",
-  IKE: "https://docs.google.com/spreadsheets/d/e/2PACX-1vS7p1b_z69_W5vbjwuA-FI_1J2FOPU-iPTXNwOyVkO_NCr7DJ6SPgyn1n2lnK8_fqPMU3mhZonDhR5U/pub?gid=622379915&single=true&output=csv"
-};
+/**
+ * ============================================================================
+ * ARCHITECTURAL CONTEXT FOR AI DEVELOPERS
+ * ============================================================================
+ * 
+ * 1. DATA SOURCE: OFFLINE FIRST
+ *    We explicitly switched from fetching CSVs via URL (Google Sheets) to importing
+ *    local .ts files containing CSV strings (in folder `CSV/`).
+ *    Reason: Netlify/Vite build process does not bundle raw .csv files by default,
+ *    causing 404 errors in production. Using .ts modules ensures data is bundled.
+ * 
+ * 2. PARSING LOGIC: ROBUST & AGGRESSIVE
+ *    The `utils/parser.ts` contains very aggressive regex to clean currency strings.
+ *    Reason: Google Sheets exports often contain non-breaking spaces (\u00A0) or
+ *    narrow spaces (\u202F) as thousand separators, which `parseFloat` cannot handle.
+ *    We strip everything except digits, minus sign, and decimal separator.
+ * 
+ * 3. CALCULATIONS: TWR & HEATMAP ALIGNMENT
+ *    - CAGR, LTM, YTD metrics are calculated using TWR (Time-Weighted Return).
+ *    - Heatmap Logic: The return shown in column "May" represents the period 
+ *      ending in May (April 1st -> May 1st).
+ *    - Calculations for metrics strictly follow this "shifted" logic to match the visual heatmap.
+ * 
+ * 4. UI DECISIONS:
+ *    - Menu is centered. Logo removed.
+ *    - Data integrity messages persist (no auto-hide) to ensure visibility of issues.
+ *    - OMF is the default starting tab.
+ */
 
 const DataStatus: React.FC<{ report: ValidationReport }> = ({ report }) => {
   const [expanded, setExpanded] = useState(false);
@@ -72,8 +89,15 @@ const DataStatus: React.FC<{ report: ValidationReport }> = ({ report }) => {
               <p className="text-xs text-emerald-600">Potrójne sprawdzanie: Struktura OK • Formaty OK • Logika OK</p>
             </div>
           </div>
-          <div className="text-xs font-medium text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full">
-            Zaimportowano {report.stats.validRows} wierszy
+          <div className="flex items-center space-x-2">
+             <div className="text-xs font-medium text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full">
+               Zaimportowano {report.stats.validRows} wierszy
+             </div>
+             {report.source && (
+               <span className="text-[10px] uppercase font-bold text-emerald-600 border border-emerald-200 px-2 py-0.5 rounded bg-white/50">
+                 {report.source}
+               </span>
+             )}
           </div>
         </div>
       </div>
@@ -105,6 +129,7 @@ const DataStatus: React.FC<{ report: ValidationReport }> = ({ report }) => {
               <span className="flex items-center">
                 {report.checks.logic ? <CheckCircle2 size={12} className="mr-1 text-emerald-600"/> : <XCircle size={12} className="mr-1"/>} 
                 Logika
+                {report.source && <span className="ml-1 font-bold opacity-75">• {report.source}</span>}
               </span>
             </div>
           </div>
@@ -152,8 +177,15 @@ const OMFIntegrityStatus: React.FC<{ report: OMFValidationReport }> = ({ report 
               <p className="text-xs text-slate-300">Potrójna weryfikacja: Struktura OK • Format OK • Logika OK</p>
             </div>
           </div>
-          <div className="text-xs font-medium text-white bg-emerald-600 px-3 py-1 rounded-full">
-            Spójność 100%
+          <div className="flex items-center space-x-2">
+            <div className="text-xs font-medium text-white bg-emerald-600 px-3 py-1 rounded-full">
+              Spójność 100%
+            </div>
+            {report.source && (
+              <span className="text-[10px] uppercase font-bold text-slate-300 border border-slate-500 px-2 py-0.5 rounded bg-slate-700">
+                {report.source}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -179,6 +211,7 @@ const OMFIntegrityStatus: React.FC<{ report: OMFValidationReport }> = ({ report 
                  <span className="flex items-center">
                     {report.checks.mathIntegrity ? <CheckCircle2 size={12} className="mr-1 text-emerald-600"/> : <AlertTriangle size={12} className="mr-1 text-amber-600"/>}
                     Logika
+                    {report.source && <span className="ml-1 font-bold opacity-75">• {report.source}</span>}
                  </span>
               </div>
             </div>
@@ -216,8 +249,8 @@ const OMFIntegrityStatus: React.FC<{ report: OMFValidationReport }> = ({ report 
 const App: React.FC = () => {
   const [portfolioType, setPortfolioType] = useState<PortfolioType>('OMF');
   
-  // Initialize with local TS data, but can be overridden by Google Sheets fetch
-  const [csvSources, setCsvSources] = useState({
+  // Use local TS data exclusively (OFFLINE MODE)
+  const [csvSources] = useState({
     PPK: PPK_DATA,
     CRYPTO: KRYPTO_DATA,
     IKE: IKE_DATA,
@@ -235,50 +268,17 @@ const App: React.FC = () => {
   const [isClosedHistoryExpanded, setIsClosedHistoryExpanded] = useState(false);
   const [isActivePositionsExpanded, setIsActivePositionsExpanded] = useState(false);
 
-  // Fetch data from Google Sheets if URLs are configured
-  useEffect(() => {
-    const fetchSheetData = async () => {
-      const newSources = { ...csvSources };
-      let hasUpdates = false;
-
-      const fetchPromises = Object.entries(GOOGLE_SHEET_URLS).map(async ([key, url]) => {
-        if (url && url.trim() !== "") {
-          try {
-            const response = await fetch(url);
-            if (response.ok) {
-              const text = await response.text();
-              newSources[key as keyof typeof csvSources] = text;
-              hasUpdates = true;
-            } else {
-              console.error(`Failed to fetch ${key} data: ${response.status}`);
-            }
-          } catch (error) {
-            console.error(`Error fetching ${key} data:`, error);
-          }
-        }
-      });
-
-      await Promise.all(fetchPromises);
-
-      if (hasUpdates) {
-        setCsvSources(newSources);
-      }
-    };
-
-    fetchSheetData();
-  }, []); // Run once on mount
-
   useEffect(() => {
     try {
-      // Universal Parse
-      const result = parseCSV(csvSources[portfolioType], portfolioType);
+      // Universal Parse with Source Indication ('Offline' because we use local TS files)
+      const result = parseCSV(csvSources[portfolioType], portfolioType, 'Offline');
       
       if (portfolioType === 'OMF') {
         // Special Handling for OMF
         const omfData = result.data as OMFDataRow[];
         
-        // Run OMF Integrity Check
-        const integrity = validateOMFIntegrity(omfData);
+        // Run OMF Integrity Check with Source
+        const integrity = validateOMFIntegrity(omfData, 'Offline');
         
         // Standard Validation Report is also available from parseCSV, but we prioritize OMFIntegrity
         setOmfReport(integrity); 
@@ -303,6 +303,7 @@ const App: React.FC = () => {
       console.error("Failed to parse CSV", e);
       setReport({
         isValid: false,
+        source: 'Offline',
         checks: { structure: false, dataTypes: false, logic: false },
         errors: ["Krytyczny błąd aplikacji podczas parsowania."],
         stats: { totalRows: 0, validRows: 0 }
@@ -313,9 +314,9 @@ const App: React.FC = () => {
   // --- GLOBAL HISTORY DATA (For OMF Chart) ---
   // Merges PPK, Crypto, and IKE timelines
   const globalHistoryData = useMemo(() => {
-    const ppkRes = parseCSV(csvSources.PPK, 'PPK');
-    const cryptoRes = parseCSV(csvSources.CRYPTO, 'CRYPTO');
-    const ikeRes = parseCSV(csvSources.IKE, 'IKE');
+    const ppkRes = parseCSV(csvSources.PPK, 'PPK', 'Offline');
+    const cryptoRes = parseCSV(csvSources.CRYPTO, 'CRYPTO', 'Offline');
+    const ikeRes = parseCSV(csvSources.IKE, 'IKE', 'Offline');
 
     const ppkData = ppkRes.data as PPKDataRow[];
     const cryptoData = cryptoRes.data as CryptoDataRow[];
@@ -412,8 +413,8 @@ const App: React.FC = () => {
     if (portfolioType !== 'OMF') return [];
 
     // Only parse Crypto and IKE
-    const cryptoRes = parseCSV(csvSources.CRYPTO, 'CRYPTO');
-    const ikeRes = parseCSV(csvSources.IKE, 'IKE');
+    const cryptoRes = parseCSV(csvSources.CRYPTO, 'CRYPTO', 'Offline');
+    const ikeRes = parseCSV(csvSources.IKE, 'IKE', 'Offline');
 
     const cryptoData = cryptoRes.data as CryptoDataRow[];
     const ikeData = ikeRes.data as IKEDataRow[];
