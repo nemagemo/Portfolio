@@ -209,7 +209,7 @@ const AssetLogo: React.FC<AssetLogoProps> = ({ name, x, y, width, height }) => {
     y: logoY,
     width: size,
     height: size,
-    opacity: 0.5, // Increased visibility (from 0.3 to 0.5)
+    opacity: 0.6, // Increased visibility (from 0.5 to 0.6)
     style: { pointerEvents: 'none' as const }
   };
 
