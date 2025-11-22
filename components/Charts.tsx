@@ -360,112 +360,148 @@ export const OMFTreemapChart: React.FC<OMFTreemapChartProps> = ({ data }) => {
 
 // --- Standard Charts ---
 
-export const ValueCompositionChart: React.FC<ChartProps> = ({ data }) => (
-  <div className="h-80 w-full">
-    <ResponsiveContainer width="100%" height="100%">
-      <AreaChart data={data as any[]}>
-        <defs>
-          <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.8}/>
-            <stop offset="95%" stopColor="#4f46e5" stopOpacity={0}/>
-          </linearGradient>
-          <linearGradient id="colorInvest" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.5}/>
-            <stop offset="95%" stopColor="#94a3b8" stopOpacity={0}/>
-          </linearGradient>
-        </defs>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-        <XAxis 
-          dataKey="date" 
-          tickFormatter={formatDate} 
-          stroke="#94a3b8" 
-          fontSize={12}
-          tickMargin={10}
-        />
-        <YAxis 
-          tickFormatter={(val) => `${(val/1000).toFixed(0)}k`} 
-          stroke="#94a3b8" 
-          fontSize={12}
-        />
-        <Tooltip 
-          formatter={(value: number) => [`${value.toLocaleString('pl-PL')} zł`]}
-          labelFormatter={formatDate}
-          contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }}
-        />
-        <Legend verticalAlign="top" height={36} />
-        <Area 
-          type="monotone" 
-          dataKey="totalValue" 
-          name="Wartość Całkowita" 
-          stroke="#4f46e5" 
-          fillOpacity={1} 
-          fill="url(#colorValue)" 
-          strokeWidth={2}
-        />
-        {data.length > 0 && 'investment' in data[0] && (
-           <Area 
-             type="monotone" 
-             dataKey="investment" 
-             name="Wkład Własny" 
-             stroke="#94a3b8" 
-             fillOpacity={1} 
-             fill="url(#colorInvest)" 
-             strokeWidth={2}
-             strokeDasharray="5 5"
-           />
-        )}
-        {data.length > 0 && 'employeeContribution' in data[0] && (
-           <Area 
-             type="monotone" 
-             dataKey="employeeContribution" 
-             name="Wkład Własny" 
-             stroke="#94a3b8" 
-             fillOpacity={1} 
-             fill="url(#colorInvest)" 
-             strokeWidth={2}
-             strokeDasharray="5 5"
-           />
-        )}
-      </AreaChart>
-    </ResponsiveContainer>
-  </div>
-);
+export const ValueCompositionChart: React.FC<ChartProps> = ({ data }) => {
+  if (data.length === 0) return null;
+  const isPPK = 'employeeContribution' in data[0];
 
-export const ROIChart: React.FC<ChartProps> = ({ data }) => (
-  <div className="h-80 w-full">
-    <ResponsiveContainer width="100%" height="100%">
-      <LineChart data={data as any[]}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-        <XAxis 
-          dataKey="date" 
-          tickFormatter={formatDate} 
-          stroke="#94a3b8" 
-          fontSize={12}
-          tickMargin={10}
-        />
-        <YAxis 
-          stroke="#94a3b8" 
-          fontSize={12} 
-          unit="%" 
-        />
-        <Tooltip 
-          formatter={(value: number) => [`${value.toFixed(2)}%`, 'ROI']}
-          labelFormatter={formatDate}
-          contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }}
-        />
-        <ReferenceLine y={0} stroke="#ef4444" strokeDasharray="3 3" />
-        <Line 
-          type="monotone" 
-          dataKey="roi" 
-          stroke="#10b981" 
-          strokeWidth={2} 
-          dot={false} 
-          activeDot={{ r: 6 }} 
-        />
-      </LineChart>
-    </ResponsiveContainer>
-  </div>
-);
+  return (
+    <div className="h-80 w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={data as any[]}>
+          <defs>
+            <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.8}/>
+              <stop offset="95%" stopColor="#4f46e5" stopOpacity={0}/>
+            </linearGradient>
+            <linearGradient id="colorInvest" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.5}/>
+              <stop offset="95%" stopColor="#94a3b8" stopOpacity={0}/>
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+          <XAxis 
+            dataKey="date" 
+            tickFormatter={formatDate} 
+            stroke="#94a3b8" 
+            fontSize={12}
+            tickMargin={10}
+          />
+          <YAxis 
+            tickFormatter={(val) => `${(val/1000).toFixed(0)}k`} 
+            stroke="#94a3b8" 
+            fontSize={12}
+          />
+          <Tooltip 
+            formatter={(value: number, name: string) => {
+              const nameMap: Record<string, string> = {
+                totalValue: 'Wartość Całkowita',
+                investment: 'Wkład Własny',
+                employeeContribution: 'Pracownik',
+                employerContribution: 'Pracodawca',
+                stateContribution: 'Państwo',
+                fundProfit: 'Zysk Funduszu'
+              };
+              return [`${value.toLocaleString('pl-PL')} zł`, nameMap[name] || name];
+            }}
+            labelFormatter={formatDate}
+            contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+          />
+          <Legend verticalAlign="top" height={36} />
+          
+          {isPPK ? (
+            // PPK Stacked View: Employee + Employer + State + FundProfit
+            <>
+              <Area type="monotone" dataKey="employeeContribution" name="Pracownik" stackId="1" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.9} />
+              <Area type="monotone" dataKey="employerContribution" name="Pracodawca" stackId="1" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.9} />
+              <Area type="monotone" dataKey="stateContribution" name="Państwo" stackId="1" stroke="#ec4899" fill="#ec4899" fillOpacity={0.9} />
+              <Area type="monotone" dataKey="fundProfit" name="Zysk Funduszu" stackId="1" stroke="#10b981" fill="#10b981" fillOpacity={0.9} />
+            </>
+          ) : (
+            // Generic View (Crypto/IKE)
+            <>
+              <Area 
+                type="monotone" 
+                dataKey="totalValue" 
+                name="Wartość Całkowita" 
+                stroke="#4f46e5" 
+                fillOpacity={1} 
+                fill="url(#colorValue)" 
+                strokeWidth={2}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="investment" 
+                name="Wkład Własny" 
+                stroke="#94a3b8" 
+                fillOpacity={1} 
+                fill="url(#colorInvest)" 
+                strokeWidth={2}
+                strokeDasharray="5 5"
+              />
+            </>
+          )}
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+export const ROIChart: React.FC<ChartProps> = ({ data }) => {
+  const hasExitRoi = data.length > 0 && 'exitRoi' in data[0];
+
+  return (
+    <div className="h-80 w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data as any[]}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+          <XAxis 
+            dataKey="date" 
+            tickFormatter={formatDate} 
+            stroke="#94a3b8" 
+            fontSize={12}
+            tickMargin={10}
+          />
+          <YAxis 
+            stroke="#94a3b8" 
+            fontSize={12} 
+            unit="%" 
+          />
+          <Tooltip 
+            formatter={(value: number, name: string) => [
+              `${value.toFixed(2)}%`, 
+              name === 'exitRoi' ? 'Exit ROI' : 'ROI'
+            ]}
+            labelFormatter={formatDate}
+            contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+          />
+          <Legend verticalAlign="top" height={36} />
+          <ReferenceLine y={0} stroke="#ef4444" strokeDasharray="3 3" />
+          <Line 
+            type="monotone" 
+            dataKey="roi" 
+            name="ROI"
+            stroke="#10b981" 
+            strokeWidth={2} 
+            dot={false} 
+            activeDot={{ r: 6 }} 
+          />
+          {hasExitRoi && (
+            <Line 
+              type="monotone" 
+              dataKey="exitRoi" 
+              name="Exit ROI"
+              stroke="#f59e0b" 
+              strokeWidth={2} 
+              strokeDasharray="5 5"
+              dot={false} 
+              activeDot={{ r: 6 }} 
+            />
+          )}
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
 
 export const ContributionComparisonChart: React.FC<ChartProps> = ({ data }) => (
   <div className="h-80 w-full">
@@ -810,6 +846,11 @@ export const PortfolioAllocationHistoryChart: React.FC<ChartProps> = ({ data }) 
 export const CapitalStructureHistoryChart: React.FC<ChartProps> = ({ data }) => {
   if (data.length === 0 || !('employeeContribution' in data[0])) return null;
 
+  // Mapping logic update:
+  // Previous: profit = r.profit (Total User Profit = Employer + State + FundProfit).
+  // Issue: If we stack Employee + Employer + State + TotalUserProfit, we double count Employer and State.
+  // Fix: Use r.fundProfit for the profit layer. The combination of Employee + Employer + State + FundProfit equals Total Value.
+  
   const chartData = data.map(row => {
     const r = row as PPKDataRow;
     return {
@@ -817,7 +858,7 @@ export const CapitalStructureHistoryChart: React.FC<ChartProps> = ({ data }) => 
       employee: r.employeeContribution,
       employer: r.employerContribution,
       state: r.stateContribution,
-      profit: r.profit,
+      profit: r.fundProfit, // Use raw Fund Profit for correct stacking
       total: r.totalValue
     };
   });
@@ -842,12 +883,20 @@ export const CapitalStructureHistoryChart: React.FC<ChartProps> = ({ data }) => 
           <Tooltip 
             formatter={(value: number, name: string, item: any) => {
                const payload = item.payload;
+               // Calculate total dynamically to ensure percentage is based on the stack
                const total = payload.employee + payload.employer + payload.state + payload.profit;
                const percent = total !== 0 ? (value / total) * 100 : 0;
                
+               const nameMap: Record<string, string> = {
+                 employee: 'Wkład Własny',
+                 employer: 'Pracodawca',
+                 state: 'Państwo',
+                 profit: 'Zysk Funduszu' // Correct label
+               };
+
                return [
                  `${percent.toFixed(1)}% (${value.toLocaleString('pl-PL')} zł)`, 
-                 name
+                 nameMap[name] || name
                ];
             }}
             labelFormatter={formatDate}
@@ -857,7 +906,7 @@ export const CapitalStructureHistoryChart: React.FC<ChartProps> = ({ data }) => 
           <Area type="monotone" dataKey="employee" name="Wkład Własny" stackId="1" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.9} />
           <Area type="monotone" dataKey="employer" name="Pracodawca" stackId="1" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.9} />
           <Area type="monotone" dataKey="state" name="Państwo" stackId="1" stroke="#ec4899" fill="#ec4899" fillOpacity={0.9} />
-          <Area type="monotone" dataKey="profit" name="Zysk/Strata" stackId="1" stroke="#10b981" fill="#10b981" fillOpacity={0.9} />
+          <Area type="monotone" dataKey="profit" name="Zysk Funduszu" stackId="1" stroke="#10b981" fill="#10b981" fillOpacity={0.9} />
         </AreaChart>
       </ResponsiveContainer>
     </div>

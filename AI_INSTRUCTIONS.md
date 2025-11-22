@@ -5,6 +5,16 @@ Ten plik służy do zachowania ciągłości pracy nad projektem pomiędzy sesjam
 
 ---
 
+## Ważne Definicje Danych
+
+### Struktura Danych PPK
+W plikach CSV oraz logice aplikacji dla portfela PPK obowiązuje następująca definicja zysku:
+*   **Całkowity Zysk (Profit)** = Zysk z Funduszu + Wpłaty Pracodawcy + Dopłaty Państwa.
+*   Oznacza to, że "Całkowity Zysk" to wszystko, co użytkownik posiada ponad swój własny wkład ("Pracownik").
+*   Przy wizualizacji struktury kapitału (np. wykresy skumulowane), aby składniki sumowały się do 100% Wartości Portfela, należy używać: **Wkład Pracownika + Wkład Pracodawcy + Dopłaty Państwa + Zysk Funduszu**. Nie należy używać "Całkowitego Zysku" jako osobnej warstwy w sumowaniu, ponieważ zawiera on już w sobie Pracodawcę i Państwo.
+
+---
+
 ## Polecenie: `ChangeLogos`
 
 **Wyzwalacz:** Użytkownik pisze "Wykonaj polecenie ChangeLogos" (lub podobne).
@@ -43,3 +53,34 @@ Ten plik służy do zachowania ciągłości pracy nad projektem pomiędzy sesjam
 4.  **Raport:**
     *   Poinformuj użytkownika krótko, które logotypy zostały przetworzone (np. "Przekształcono KLE.svg na KLELogo.tsx").
     *   Przypomnij użytkownikowi o ręcznym usunięciu plików źródłowych SVG, aby zachować porządek w folderze.
+
+---
+
+## Polecenie: `UpdateCSV`
+
+**Wyzwalacz:** Użytkownik pisze "Wykonaj polecenie UpdateCSV" lub dostarcza pliki `.csv` z prośbą o aktualizację.
+
+**Cel:** Synchronizacja surowych danych CSV z plikami TypeScript używanymi przez aplikację (tryb offline).
+
+**Procedura (Algorytm):**
+
+1.  **Skanowanie:**
+    *   Sprawdź czy użytkownik dostarczył treść plików `.csv` lub czy znajdują się one w folderze `CSV/`.
+
+2.  **Konwersja:**
+    *   Dla każdego pliku CSV (np. `Dane.csv`) utwórz lub zaktualizuj odpowiadający mu plik `.ts` (np. `Dane.ts`) w folderze `CSV/`.
+    *   Nazwa zmiennej eksportowanej powinna być w formacie `UPPER_SNAKE_CASE` z sufiksem `_DATA`.
+        *   `PPK.csv` -> `export const PPK_DATA = ...`
+        *   `Krypto.csv` -> `export const KRYPTO_DATA = ...` (Uwaga: zachowaj spójność nazewnictwa, jeśli plik TS nazywa się `Krypto.ts`, zmienna to `KRYPTO_DATA`).
+        *   `IKE.csv` -> `export const IKE_DATA = ...`
+        *   `OMF.csv` -> `export const OMF_DATA = ...`
+
+3.  **Szablon Pliku TS:**
+    *   Zawartość pliku `.ts` powinna wyglądać następująco (użyj backticks `` ` `` do objęcia stringa):
+
+    ```typescript
+    export const NAZWA_PLIKU_DATA = `[TUTAJ WKLEJ CAŁĄ ZAWARTOŚĆ PLIKU CSV]`;
+    ```
+
+4.  **Weryfikacja:**
+    *   Upewnij się, że wklejona zawartość CSV jest kompletna i zawiera nagłówki.
