@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   AreaChart,
@@ -40,6 +39,16 @@ import { LPPLogo } from '../logos/LPPLogo';
 import { KRULogo } from '../logos/KRULogo';
 import { PLWLogo } from '../logos/PLWLogo';
 import { ROLLogo } from '../logos/ROLLogo';
+import { NUKL_DELogo } from '../logos/NUKL_DELogo';
+import { NDIA_LLogo } from '../logos/NDIA_LLogo';
+import { IUIT_LLogo } from '../logos/IUIT_LLogo';
+import { SFDLogo } from '../logos/SFDLogo';
+import { FASTLogo } from '../logos/FASTLogo';
+import { FROLogo } from '../logos/FROLogo';
+import { ACNLogo } from '../logos/ACNLogo';
+import { PLNLogo } from '../logos/PLNLogo';
+import { ResztaKryptoLogo } from '../logos/ResztaKryptoLogo';
+import { ETFBS80TRLogo } from '../logos/ETFBS80TRLogo';
 
 interface ChartProps {
   data: AnyDataRow[];
@@ -153,7 +162,17 @@ const LOGO_MAP: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
   LPP: LPPLogo,
   KRU: KRULogo,
   PLW: PLWLogo,
-  ROL: ROLLogo
+  ROL: ROLLogo,
+  'NUKL.DE': NUKL_DELogo,
+  'NDIA.L': NDIA_LLogo,
+  'IUIT.L': IUIT_LLogo,
+  SFD: SFDLogo,
+  FAST: FASTLogo,
+  FRO: FROLogo,
+  ACN: ACNLogo,
+  PLN: PLNLogo,
+  'Reszta Krypto': ResztaKryptoLogo,
+  ETFBS80TR: ETFBS80TRLogo
 };
 
 interface AssetLogoProps {
@@ -190,7 +209,7 @@ const AssetLogo: React.FC<AssetLogoProps> = ({ name, x, y, width, height }) => {
     y: logoY,
     width: size,
     height: size,
-    opacity: 0.3, // Increased transparency so text pops more
+    opacity: 0.5, // Increased visibility (from 0.3 to 0.5)
     style: { pointerEvents: 'none' as const }
   };
 
@@ -235,19 +254,18 @@ const TreemapContent = (props: any) => {
   const name = nameProp || dataItem.name || '';
   const roi = props.roi !== undefined ? props.roi : dataItem.roi;
 
-  // Calculate center for text
-  const cx = x + width / 2;
-  const cy = y + height / 2;
-
-  // Font Sizing Logic - Toned down for a cleaner look
-  // Max font size reduced to 14px for name, 11px for ROI
-  const fontSizeName = Math.max(10, Math.min(width / 6, 14));
+  // Font Sizing Logic - REDUCED per user request
+  // Reduced max size from 14 to 12, and increased divisor slightly
+  const fontSizeName = Math.max(9, Math.min(width / 7, 12));
   const fontSizeRoi = Math.max(9, fontSizeName * 0.8);
 
   const color = getHeatmapColor(roi);
 
   // Hide text if the box is too small
   const showText = width > 40 && height > 30;
+  
+  // Padding for text in corners
+  const padding = 5;
 
   return (
     <g>
@@ -264,14 +282,13 @@ const TreemapContent = (props: any) => {
       
       {showText && name && (
         <text
-          x={cx}
-          y={cy}
-          dy={-3} // Moved up slightly
-          textAnchor="middle"
+          x={x + padding}
+          y={y + padding + fontSizeName * 0.8} // Top-Left
+          textAnchor="start"
           fill="#fff"
           fontSize={fontSizeName}
           fontWeight="700"
-          style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)', pointerEvents: 'none' }}
+          style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9)', pointerEvents: 'none' }}
         >
           {name}
         </text>
@@ -279,14 +296,13 @@ const TreemapContent = (props: any) => {
       
       {showText && roi !== undefined && (
         <text
-          x={cx}
-          y={cy}
-          dy={fontSizeName + 1} // Spaced relative to name
-          textAnchor="middle"
+          x={x + width - padding}
+          y={y + height - padding} // Bottom-Right
+          textAnchor="end"
           fill="#fff" // Always white for better contrast against colored backgrounds
           fontSize={fontSizeRoi}
           fontWeight="500"
-          style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)', pointerEvents: 'none', opacity: 0.9 }}
+          style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9)', pointerEvents: 'none', opacity: 0.95 }}
         >
           {roi > 0 ? '+' : ''}{Number(roi).toFixed(1)}%
         </text>
