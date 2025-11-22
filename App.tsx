@@ -1,5 +1,4 @@
 
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   LayoutDashboard, 
@@ -46,14 +45,14 @@ import { OMF_DATA } from './CSV/OMF';
 
 /**
  * ============================================================================
- * ARCHITECTURAL CONTEXT FOR AI DEVELOPERS
+ * ARCHITECTURAL CONTEXT FOR AI DEVELOPERS & MAINTAINERS
  * ============================================================================
  * 
  * 1. DATA SOURCE: OFFLINE FIRST
  *    We explicitly switched from fetching CSVs via URL (Google Sheets) to importing
  *    local .ts files containing CSV strings (in folder `CSV/`).
  *    Reason: Netlify/Vite build process does not bundle raw .csv files by default,
- *    causing 404 errors in production. Using .ts modules ensures data is bundled.
+ *    causing 404 errors in production. Using .ts modules ensures data is bundled correctly.
  * 
  * 2. PARSING LOGIC: ROBUST & AGGRESSIVE
  *    The `utils/parser.ts` contains very aggressive regex to clean currency strings.
@@ -67,10 +66,10 @@ import { OMF_DATA } from './CSV/OMF';
  *      ending in May (April 1st -> May 1st).
  *    - Calculations for metrics strictly follow this "shifted" logic to match the visual heatmap.
  * 
- * 4. UI DECISIONS:
- *    - Menu is centered. Logo removed.
- *    - Data integrity messages persist (no auto-hide) to ensure visibility of issues.
- *    - OMF is the default starting tab.
+ * 4. UI STRUCTURE:
+ *    - Menu is centered. Logo removed for cleaner look.
+ *    - Data integrity messages persist (no auto-hide) to ensure issues with source files are visible.
+ *    - OMF is the default starting tab as it aggregates everything.
  */
 
 const DataStatus: React.FC<{ report: ValidationReport }> = ({ report }) => {
@@ -313,6 +312,7 @@ const App: React.FC = () => {
 
   // --- GLOBAL HISTORY DATA (For OMF Chart) ---
   // Merges PPK, Crypto, and IKE timelines
+  // This is the most complex logic block: it unifies time-series data from 3 sources
   const globalHistoryData = useMemo(() => {
     const ppkRes = parseCSV(csvSources.PPK, 'PPK', 'Offline');
     const cryptoRes = parseCSV(csvSources.CRYPTO, 'CRYPTO', 'Offline');
@@ -322,6 +322,7 @@ const App: React.FC = () => {
     const cryptoData = cryptoRes.data as CryptoDataRow[];
     const ikeData = ikeRes.data as IKEDataRow[];
 
+    // Create Map lookup for O(1) access by date
     const ppkMap = new Map<string, { inv: number, profit: number }>();
     ppkData.forEach(row => ppkMap.set(row.date, { 
       inv: row.totalValue - row.profit,
@@ -334,9 +335,11 @@ const App: React.FC = () => {
     const ikeMap = new Map<string, { inv: number, profit: number }>();
     ikeData.forEach(row => ikeMap.set(row.date, { inv: row.investment, profit: row.profit }));
 
+    // Union of all dates across portfolios
     const allDates = new Set([...ppkMap.keys(), ...cryptoMap.keys(), ...ikeMap.keys()]);
     const sortedDates = Array.from(allDates).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
 
+    // State variables to hold "last known value" to fill gaps (Forward Fill logic)
     let lastPPK = { inv: 0, profit: 0 };
     let lastCrypto = { inv: 0, profit: 0 };
     let lastIKE = { inv: 0, profit: 0 };
@@ -382,8 +385,7 @@ const App: React.FC = () => {
       prevTwrVal = currTwrVal;
       prevTwrInv = currTwrInv;
 
-      // For Allocation Chart
-      // Calculate Value for each component to determine share
+      // For Allocation Chart - Calculate Shares
       const ppkVal = lastPPK.inv + lastPPK.profit;
       const cryptoVal = lastCrypto.inv + lastCrypto.profit;
       const ikeVal = lastIKE.inv + lastIKE.profit;
@@ -409,6 +411,7 @@ const App: React.FC = () => {
   }, [csvSources]);
 
   // --- HEATMAP DATA (OMF - Crypto + IKE only) ---
+  // Separated logic because Heatmap ignores PPK
   const heatmapHistoryData = useMemo(() => {
     if (portfolioType !== 'OMF') return [];
 
@@ -479,8 +482,6 @@ const App: React.FC = () => {
          }
 
          // --- PERFORMANCE METRICS (CAGR, LTM, YTD) ---
-         // Updated Request: Use GLOBAL data (including PPK) but keep the TWR Logic + Real ROI for CAGR.
-         
          // Use globalHistoryData which includes PPK + Crypto + IKE
          const perfData = globalHistoryData;
          
@@ -596,6 +597,7 @@ const App: React.FC = () => {
     omfActiveAssets.forEach(asset => {
       // Check specifically for Krypto portfolio
       if (asset.portfolio === 'Krypto' || asset.portfolio === 'CRYPTO') {
+         // Group small crypto positions (< 1000 PLN) to avoid cluttering the Treemap
          if (asset.currentValue > 1000) {
            result.push({ 
              name: asset.symbol, 

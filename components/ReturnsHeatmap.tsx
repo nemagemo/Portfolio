@@ -17,12 +17,17 @@ const formatPercent = (val: number | null) => {
   return `${val > 0 ? '+' : ''}${val.toFixed(2)}%`;
 };
 
-// Helper to calculate Monthly Return
-// Using TWR approximation (Flow at Start)
-// R = (V_end - V_start - Flow) / (V_start + Flow)
+/**
+ * Calculates Monthly Return using TWR (Time-Weighted Return) Approximation.
+ * 
+ * Formula: R = (V_end - V_start - Flow) / (V_start + Flow)
+ * 
+ * Assumption: Cash flows (investments/withdrawals) occur at the BEGINNING of the period.
+ * This matches the logic used in standard portfolio tracking where a monthly contribution
+ * is considered the baseline for that month's performance.
+ */
 const calculateMonthlyReturn = (startVal: number, endVal: number, netFlow: number) => {
   const gain = endVal - startVal - netFlow;
-  // TWR assumption: Cash flows occur at the beginning of the period
   const denominator = startVal + netFlow; 
   
   if (denominator === 0) return 0;
@@ -42,7 +47,7 @@ const getColorClass = (val: number | null) => {
 
 export const ReturnsHeatmap: React.FC<HeatmapProps> = ({ data }) => {
   const processedData = useMemo(() => {
-    // robust string-based date parsing to avoid timezone shifts
+    // Robust string-based date parsing to avoid timezone shifts that occur with new Date()
     const parseDateKey = (dateStr: string) => {
       const parts = dateStr.split('-'); // Expects YYYY-MM-DD
       if (parts.length < 2) return null;
@@ -78,11 +83,12 @@ export const ReturnsHeatmap: React.FC<HeatmapProps> = ({ data }) => {
       const monthlyReturns: (number | null)[] = Array(12).fill(null);
 
       for (let month = 0; month < 12; month++) {
-        // LOGIC SHIFT:
-        // We want the return GENERATED in Month X-1 (e.g. April) to appear in column Month X (e.g. May).
-        // This means Column May (index 4) shows the change from April 1st to May 1st.
+        // === CRITICAL VISUAL LOGIC ===
+        // The user expects the column "May" to represent the performance achieved *during* May.
+        // This means calculating the change from the State at End of April (prevKey) -> State at End of May (currentKey).
+        // In our data model, rows are snapshots at specific dates.
         
-        const currentKey = `${year}-${month}`; // e.g. May 1st
+        const currentKey = `${year}-${month}`; // e.g. May 1st (End of April/Start of May)
 
         let prevYear = year;
         let prevMonth = month - 1;

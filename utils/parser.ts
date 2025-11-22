@@ -1,19 +1,26 @@
 
-
 import { PPKDataRow, CryptoDataRow, IKEDataRow, OMFDataRow, AnyDataRow, ValidationReport, PortfolioType, OMFValidationReport } from '../types';
 
 /**
  * ARCHITECTURAL NOTE FOR AI CONTEXT:
+ * ==================================
  * 
- * 1. Aggressive Currency Parsing:
- *    We use an extremely aggressive regex `/[^0-9.,-]/g` to strip ALL non-numeric characters.
- *    This is CRITICAL because data comes from Google Sheets CSV exports which often contain
- *    invisible characters like Non-Breaking Spaces (\u00A0) or Narrow No-Break Spaces (\u202F)
- *    as thousand separators. Standard `parseFloat` fails on these.
+ * 1. Aggressive Currency Parsing Strategy:
+ *    We use an extremely aggressive regex `/[^0-9.,-]/g` inside `parseCurrency`.
+ *    WHY? Data often comes from Google Sheets CSV exports or localized Excel files.
+ *    These formats frequently contain "invisible" characters like:
+ *    - Non-Breaking Space (\u00A0)
+ *    - Narrow No-Break Space (\u202F) used as thousand separators in PL locale.
+ *    - Currency symbols (zł, $)
+ *    
+ *    Standard `parseFloat` or `Number()` FAILS on these characters (NaN).
+ *    Our regex strips EVERYTHING that isn't a digit, dot, comma, or minus sign before parsing.
  * 
  * 2. Triple Check Validation:
- *    Especially for OMF, we perform a math integrity check (Purchase + Profit == Current Value).
- *    We use a tolerance of 1.00 PLN to account for rounding differences between source systems.
+ *    We don't just parse; we validate.
+ *    - Structure: Check for required headers.
+ *    - DataTypes: Check if numbers are numbers.
+ *    - Logic/Integrity: Especially for OMF, we check if (Purchase + Profit == Current Value).
  */
 
 // Helper to parse Polish currency strings like "1 097,73 zł" or "95,45 zł"
@@ -41,7 +48,7 @@ const parsePercent = (val: string): number => {
   return isNaN(num) ? 0 : num;
 };
 
-// Helper to parse standard float strings with comma or dot
+// Helper to parse standard float strings with comma or dot (quantity etc)
 const parseFloatStr = (val: string): number => {
   if (!val) return 0;
   const clean = val.replace(/[^0-9.,-]/g, '')
@@ -66,6 +73,7 @@ export const parseCSV = (csvText: string, type: PortfolioType, source: 'Online' 
     return { data: [], report };
   }
 
+  // Regex to split by comma ONLY if not inside quotes
   const splitCSVLine = (line: string) => line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
   const headers = splitCSVLine(lines[0]).map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
   
@@ -80,6 +88,7 @@ export const parseCSV = (csvText: string, type: PortfolioType, source: 'Online' 
       period: -1, quantity: -1, current: -1, purchase: -1, profit: -1, roi: -1
     };
 
+    // Flexible header matching (tolerant to case and slight variations)
     headers.forEach((h, index) => {
       if (h.includes('status')) colMap.status = index;
       else if (h.includes('portfel')) colMap.portfolio = index;
@@ -90,7 +99,7 @@ export const parseCSV = (csvText: string, type: PortfolioType, source: 'Online' 
       else if (h.includes('okres')) colMap.period = index;
       else if (h.includes('ilość') || h.includes('ilosc')) colMap.quantity = index;
       
-      // Fixed header matching to include correct Polish spelling "wartość" and variants
+      // Handle "Wartość" vs "Wartośc" typos in source files
       else if (h.includes('obecna wartośc') || h.includes('obecna wartosc') || h.includes('obecna wartość')) colMap.current = index;
       else if (h.includes('wartośc zakupu') || h.includes('wartosc zakupu') || h.includes('wartość zakupu')) colMap.purchase = index;
       
@@ -202,13 +211,8 @@ export const parseCSV = (csvText: string, type: PortfolioType, source: 'Online' 
       const employee = parseCurrency(row[columnMap.employee]);
       const employer = parseCurrency(row[columnMap.employer]);
       const state = columnMap.state !== -1 ? parseCurrency(row[columnMap.state]) : 0;
-      
-      // fundProfit is "Zysk Funduszu"
       const fundProfit = columnMap.fundProfit !== -1 ? parseCurrency(row[columnMap.fundProfit]) : 0;
-      
-      // totalUserProfit is "Całkowity Zysk"
       const totalUserProfit = columnMap.totalUserProfit !== -1 ? parseCurrency(row[columnMap.totalUserProfit]) : 0;
-      
       const tax = columnMap.tax !== -1 ? -Math.abs(parseCurrency(row[columnMap.tax])) : 0;
       const roi = columnMap.roi !== -1 ? parsePercent(row[columnMap.roi]) : 0;
       const exitRoi = columnMap.exitRoi !== -1 ? parsePercent(row[columnMap.exitRoi]) : 0;
@@ -331,7 +335,10 @@ export const parseCSV = (csvText: string, type: PortfolioType, source: 'Online' 
   return { data, report };
 };
 
-// Special OMF Integrity Check Function
+/**
+ * Specialized OMF Integrity Check.
+ * Unlike standard parsing, this looks at the semantic consistency of the portfolio.
+ */
 export const validateOMFIntegrity = (data: OMFDataRow[], source: 'Online' | 'Offline' = 'Offline'): OMFValidationReport => {
    const report: OMFValidationReport = {
      isConsistent: true,

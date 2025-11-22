@@ -1,93 +1,124 @@
 
+/**
+ * DATA TYPE DEFINITIONS
+ * =====================
+ * This file contains all the interfaces used throughout the application.
+ * 
+ * Key Concepts:
+ * 1. Raw Data (CSV) -> Parsed Data (Row Interfaces) -> Aggregated Stats.
+ * 2. 'AnyDataRow' is a discriminated union used for generic components like HistoryTable.
+ */
 
 export type PortfolioType = 'PPK' | 'CRYPTO' | 'IKE' | 'OMF';
 
+/**
+ * Represents a single month of PPK data.
+ * Derived from CSV/PPK.ts.
+ */
 export interface PPKDataRow {
   date: string;
   dateObj: Date;
   employeeContribution: number;
   employerContribution: number;
   stateContribution: number;
-  fundProfit: number; // Zysk z funduszu (CSV column)
-  profit: number;     // Total User Profit (Total Value - Employee Contribution)
-  tax: number;
-  roi: number;
-  exitRoi: number;
-  totalValue: number; // Calculated field
+  fundProfit: number; // "Zysk z funduszu" from CSV - raw fund performance
+  profit: number;     // "Całkowity Zysk" - User's Net Profit (Total Value - User Contribution)
+  tax: number;        // Potential capital gains tax
+  roi: number;        // Return on Investment (Profit / Contribution)
+  exitRoi: number;    // ROI if money is withdrawn immediately (penalties applied)
+  totalValue: number; // Calculated: Employee + Employer + State + FundProfit
 }
 
+/**
+ * Represents a single month of Crypto or IKE history.
+ * Generic structure for simple Time-Series data.
+ */
 export interface CryptoDataRow {
   date: string;
   dateObj: Date;
-  investment: number; // Wkład
-  profit: number; // Zysk
+  investment: number; // Net Capital Invested ("Wkład")
+  profit: number;     // Net Profit/Loss ("Zysk")
   roi: number;
-  totalValue: number; // Calculated (Investment + Profit)
+  totalValue: number; // Calculated: Investment + Profit
 }
 
 export interface IKEDataRow extends CryptoDataRow {
-  // Same structure as Crypto for now
+  // Identical structure to Crypto, kept separate for future extensibility
 }
 
-// New OMF Data Structure based on provided CSV
+/**
+ * Represents a specific Asset in the OMF (One More Fund?) portfolio.
+ * Unlike PPK/Crypto which are time-series, this is a snapshot of current positions.
+ */
 export interface OMFDataRow {
-  status: string;       // Status pozycji (Otwarta, Zamknięta, etc.)
-  portfolio: string;    // Portfel (PPK, IKE, Krypto, Gotówka)
-  type: string;         // Typ (ETF, Akcje, etc.)
-  symbol: string;       // Symbol (AMZN, BTC, PLN)
-  sector: string;       // Sektor
-  lastPurchaseDate: string; // Ostatni zakup
-  investmentPeriod: string; // Okres inwestycji (dni/lata)
-  quantity: number;     // Ilość
-  currentValue: number; // Obecna wartośc
-  purchaseValue: number;// Wartośc zakupu
-  profit: number;       // Zysk/Strata
-  roi: number;          // ROI
+  status: string;       // e.g., 'Otwarta' (Open), 'Zamknięta' (Closed), 'Gotówka' (Cash)
+  portfolio: string;    // Sub-portfolio: 'PPK', 'IKE', 'Krypto', 'Gotówka'
+  type: string;         // Asset Class: 'ETF', 'Akcje' (Stocks), etc.
+  symbol: string;       // Ticker: 'AMZN', 'BTC', 'PLN'
+  sector: string;       // e.g., 'Technology', 'Consumer Discretionary'
+  lastPurchaseDate: string; 
+  investmentPeriod: string; // Duration held in days/years
+  quantity: number;     
+  currentValue: number; // Market Value in PLN
+  purchaseValue: number;// Cost Basis in PLN
+  profit: number;       // Absolute PnL
+  roi: number;          // Percentage Return
 }
 
-// Structure for Global History Aggregation
+/**
+ * Aggregated Data for the Global Chart.
+ * Merges PPK, Crypto, and IKE data into a single timeline.
+ */
 export interface GlobalHistoryRow {
   date: string;
-  investment: number;
-  profit: number;
-  totalValue: number;
-  roi: number;
-  cumulativeTwr: number;
-  ppkShare: number;
-  cryptoShare: number;
-  ikeShare: number;
+  investment: number;   // Sum of all invested capital
+  profit: number;       // Sum of all profits
+  totalValue: number;   // Sum of all market values
+  roi: number;          // Global ROI
+  cumulativeTwr: number;// Time-Weighted Return (Geometric linking) for Crypto+IKE parts
+  ppkShare: number;     // 0.0 - 1.0 ratio of PPK in total portfolio
+  cryptoShare: number;  // 0.0 - 1.0 ratio of Crypto in total portfolio
+  ikeShare: number;     // 0.0 - 1.0 ratio of IKE in total portfolio
 }
 
-// Union type for general usage in tables/charts where applicable
+// Union type for general usage in generic Tables/Charts
 export type AnyDataRow = PPKDataRow | CryptoDataRow | IKEDataRow | OMFDataRow | GlobalHistoryRow;
 
+/**
+ * Summary Statistics displayed in top cards.
+ */
 export interface SummaryStats {
   totalValue: number;
   totalProfit: number;
   currentRoi: number;
-  profitTrend?: number; // Month-over-Month profit trend
+  profitTrend?: number; // Month-over-Month profit trend percentage
   
-  // Performance Metrics
-  cagr?: number;
-  ltm?: number; // Last Twelve Months
-  ytd?: number; // Year To Date
+  // Performance Metrics (Time-Weighted)
+  cagr?: number; // Compound Annual Growth Rate
+  ltm?: number;  // Last Twelve Months Return
+  ytd?: number;  // Year To Date Return
 
-  // PPK Specific
+  // PPK Specific Breakdown
   totalEmployee?: number;
   totalEmployer?: number;
   totalState?: number;
   currentExitRoi?: number;
+  
   // Crypto/IKE Specific
   totalInvestment?: number;
 }
 
+/**
+ * Generic Data Validation Report.
+ * Generated by parseCSV.
+ */
 export interface ValidationReport {
   isValid: boolean;
-  source?: 'Online' | 'Offline'; // Source of data (Google Sheets vs Local TS)
+  source?: 'Online' | 'Offline'; // 'Online' = fetched, 'Offline' = local .ts file
   checks: {
-    structure: boolean; // Headers and column count
-    dataTypes: boolean; // Number and Date parsing
-    logic: boolean;     // Sanity checks (e.g. positive values where expected)
+    structure: boolean; // Are headers correct?
+    dataTypes: boolean; // Can we parse numbers/dates?
+    logic: boolean;     // Are values non-negative where expected?
   };
   errors: string[];
   stats: {
@@ -96,13 +127,16 @@ export interface ValidationReport {
   };
 }
 
-// Updated OMF Validation Report for the new logic
+/**
+ * Specific Validation for OMF Portfolio.
+ * Includes Math Integrity checks (Purchase + Profit ~= Current Value).
+ */
 export interface OMFValidationReport {
   isConsistent: boolean;
-  source?: 'Online' | 'Offline'; // Added source field
+  source?: 'Online' | 'Offline';
   checks: {
     structure: boolean;
-    mathIntegrity: boolean; // Purchase + Profit == Current
+    mathIntegrity: boolean; // Crucial check: Purchase + Profit should equal Current Value (within tolerance)
   };
   messages: string[];
   stats: {
