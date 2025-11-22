@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   AreaChart,
@@ -209,7 +210,8 @@ const AssetLogo: React.FC<AssetLogoProps> = ({ name, x, y, width, height }) => {
     y: logoY,
     width: size,
     height: size,
-    opacity: 0.6, // Increased visibility (from 0.5 to 0.6)
+    opacity: 0.8, // Increased visibility to 0.8 per user request
+    stroke: "none", // Explicitly disable inherited stroke from Treemap parent
     style: { pointerEvents: 'none' as const }
   };
 
