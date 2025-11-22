@@ -591,34 +591,18 @@ export const CryptoProfitChart: React.FC<ChartProps> = ({ data }) => (
 );
 
 export const GlobalSummaryChart: React.FC<ChartProps> = ({ data }) => {
-  const processedData = data.map(row => {
-    const r = row as any; 
-    const total = r.totalValue || 0;
-
-    return {
-      ...row,
-      ppkValue: total * (r.ppkShare || 0),
-      cryptoValue: total * (r.cryptoShare || 0),
-      ikeValue: total * (r.ikeShare || 0),
-    };
-  });
-
   return (
     <div className="h-96 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={processedData}>
+        <AreaChart data={data as any[]}>
           <defs>
-            <linearGradient id="colorPPK" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.8}/>
-              <stop offset="95%" stopColor="#4f46e5" stopOpacity={0.1}/>
+            <linearGradient id="colorInvestGlobal" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+              <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
             </linearGradient>
-            <linearGradient id="colorCrypto" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8}/>
-              <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.1}/>
-            </linearGradient>
-            <linearGradient id="colorIKE" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.8}/>
-              <stop offset="95%" stopColor="#06b6d4" stopOpacity={0.1}/>
+            <linearGradient id="colorProfitGlobal" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
+              <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
@@ -635,41 +619,28 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data }) => {
             fontSize={12}
           />
           <Tooltip 
-            formatter={(value: number, name: string) => {
-               const labels: Record<string, string> = {
-                 ppkValue: 'PPK',
-                 cryptoValue: 'Krypto',
-                 ikeValue: 'IKE'
-               };
-               return [`${value.toLocaleString('pl-PL')} zł`, labels[name] || name];
-            }}
+            formatter={(value: number, name: string) => [`${value.toLocaleString('pl-PL')} zł`, name]}
             labelFormatter={formatDate}
             contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }}
           />
           <Legend verticalAlign="top" height={36} />
+          
           <Area 
             type="monotone" 
-            dataKey="ppkValue" 
-            name="PPK" 
+            dataKey="investment" 
+            name="Wkład Łączny" 
             stackId="1" 
-            stroke="#4f46e5" 
-            fill="url(#colorPPK)" 
+            stroke="#3b82f6" 
+            fill="url(#colorInvestGlobal)" 
           />
+          
           <Area 
             type="monotone" 
-            dataKey="cryptoValue" 
-            name="Krypto" 
+            dataKey="profit" 
+            name="Zysk Łączny" 
             stackId="1" 
-            stroke="#8b5cf6" 
-            fill="url(#colorCrypto)" 
-          />
-          <Area 
-            type="monotone" 
-            dataKey="ikeValue" 
-            name="IKE" 
-            stackId="1" 
-            stroke="#06b6d4" 
-            fill="url(#colorIKE)" 
+            stroke="#10b981" 
+            fill="url(#colorProfitGlobal)" 
           />
         </AreaChart>
       </ResponsiveContainer>
@@ -678,59 +649,117 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data }) => {
 };
 
 export const GlobalPerformanceChart: React.FC<ChartProps> = ({ data }) => {
-  const chartData = data.filter((d, i) => i > 0 || (d.roi !== 0 && d.roi !== undefined));
+  const [showSP500, setShowSP500] = useState(false);
+  const [showWIG20, setShowWIG20] = useState(false);
+
+  // Include first month if it has meaningful data, otherwise filter as usual
+  const chartData = data.filter((d, i) => i >= 0);
 
   return (
-    <div className="h-80 w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={chartData as any[]}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-          <XAxis 
-            dataKey="date" 
-            tickFormatter={formatDate} 
-            stroke="#94a3b8" 
-            fontSize={12}
-            tickMargin={10}
-          />
-          <YAxis 
-            stroke="#94a3b8" 
-            fontSize={12} 
-            unit="%" 
-          />
-          <Tooltip 
-            formatter={(value: number, name: string) => {
-               const labels: Record<string, string> = {
-                 roi: 'ROI (Skumulowane)',
-                 cumulativeTwr: 'TWR (Portfel bez PPK)'
-               };
-               return [`${value.toFixed(2)}%`, labels[name] || name];
-            }}
-            labelFormatter={formatDate}
-            contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }}
-          />
-          <Legend verticalAlign="top" height={36} />
-          <ReferenceLine y={0} stroke="#64748b" strokeDasharray="3 3" />
-          
-          <Line 
-            type="monotone" 
-            dataKey="roi" 
-            name="ROI (Całość)" 
-            stroke="#10b981" 
-            strokeWidth={2} 
-            dot={false} 
-          />
-          
-          <Line 
-            type="monotone" 
-            dataKey="cumulativeTwr" 
-            name="TWR (Inwestycje)" 
-            stroke="#f59e0b" 
-            strokeWidth={2} 
-            strokeDasharray="5 5"
-            dot={false} 
-          />
-        </ComposedChart>
-      </ResponsiveContainer>
+    <div className="w-full">
+      {/* Toggles */}
+      <div className="flex justify-end space-x-3 mb-2 px-2">
+        <button
+          onClick={() => setShowSP500(!showSP500)}
+          className={`px-3 py-1 text-xs font-medium rounded-full transition-all ${
+            showSP500 
+              ? 'bg-slate-700 text-white ring-2 ring-slate-700 ring-offset-1' 
+              : 'bg-white border border-slate-300 text-slate-600 hover:bg-slate-50'
+          }`}
+        >
+          S&P 500
+        </button>
+        <button
+          onClick={() => setShowWIG20(!showWIG20)}
+          className={`px-3 py-1 text-xs font-medium rounded-full transition-all ${
+            showWIG20 
+              ? 'bg-purple-800 text-white ring-2 ring-purple-800 ring-offset-1' 
+              : 'bg-white border border-slate-300 text-slate-600 hover:bg-slate-50'
+          }`}
+        >
+          WIG20
+        </button>
+      </div>
+
+      <div className="h-80 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart data={chartData as any[]}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+            <XAxis 
+              dataKey="date" 
+              tickFormatter={formatDate} 
+              stroke="#94a3b8" 
+              fontSize={12}
+              tickMargin={10}
+            />
+            <YAxis 
+              stroke="#94a3b8" 
+              fontSize={12} 
+              unit="%" 
+            />
+            <Tooltip 
+              formatter={(value: number, name: string) => {
+                 const labels: Record<string, string> = {
+                   roi: 'ROI',
+                   cumulativeTwr: 'TWR',
+                   sp500Return: 'S&P 500',
+                   wig20Return: 'WIG20'
+                 };
+                 // Only format if value is valid number
+                 if (typeof value !== 'number') return [value, name];
+                 return [`${value.toFixed(2)}%`, labels[name] || name];
+              }}
+              labelFormatter={formatDate}
+              contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+            />
+            <Legend verticalAlign="top" height={36} />
+            <ReferenceLine y={0} stroke="#64748b" strokeDasharray="3 3" />
+            
+            <Line 
+              type="monotone" 
+              dataKey="roi" 
+              name="ROI" 
+              stroke="#10b981" 
+              strokeWidth={2} 
+              dot={false} 
+            />
+            
+            <Line 
+              type="monotone" 
+              dataKey="cumulativeTwr" 
+              name="TWR" 
+              stroke="#f59e0b" 
+              strokeWidth={2} 
+              strokeDasharray="5 5"
+              dot={false} 
+            />
+
+            {showSP500 && (
+              <Line 
+                type="monotone" 
+                dataKey="sp500Return" 
+                name="S&P 500" 
+                stroke="#475569" 
+                strokeWidth={1.5} 
+                strokeOpacity={0.7}
+                dot={false} 
+              />
+            )}
+
+            {showWIG20 && (
+              <Line 
+                type="monotone" 
+                dataKey="wig20Return" 
+                name="WIG20" 
+                stroke="#6b21a8" 
+                strokeWidth={1.5} 
+                strokeOpacity={0.7}
+                dot={false} 
+              />
+            )}
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 };

@@ -42,6 +42,8 @@ import { PPK_DATA } from './CSV/PPK';
 import { KRYPTO_DATA } from './CSV/Krypto';
 import { IKE_DATA } from './CSV/IKE';
 import { OMF_DATA } from './CSV/OMF';
+// Import benchmarks
+import { SP500_DATA, WIG20_DATA } from './constants/benchmarks';
 
 /**
  * ============================================================================
@@ -349,6 +351,17 @@ const App: React.FC = () => {
     let prevTwrVal = 0;
     let prevTwrInv = 0;
 
+    // Benchmarks Baseline
+    // Find the first available price for SP500 and WIG20 closest to the start date
+    let startSP500 = 0;
+    let startWIG20 = 0;
+    
+    if (sortedDates.length > 0) {
+       const firstDate = sortedDates[0];
+       startSP500 = SP500_DATA[firstDate] || Object.values(SP500_DATA)[0];
+       startWIG20 = WIG20_DATA[firstDate] || Object.values(WIG20_DATA)[0];
+    }
+
     const history = sortedDates.map((date, index) => {
       if (ppkMap.has(date)) lastPPK = ppkMap.get(date)!;
       if (cryptoMap.has(date)) lastCrypto = cryptoMap.get(date)!;
@@ -367,7 +380,7 @@ const App: React.FC = () => {
       const currTwrProfit = currCrypto.profit + currIKE.profit;
       const currTwrVal = currTwrInv + currTwrProfit; // Total Value = Inv + Profit
 
-      // Calculate period return if not the first point
+      // Calculate period return
       if (index > 0) {
          const flow = currTwrInv - prevTwrInv;
          
@@ -377,6 +390,13 @@ const App: React.FC = () => {
          if (denominator !== 0) {
              const gain = currTwrVal - prevTwrVal - flow;
              const r = gain / denominator;
+             twrProduct *= (1 + r);
+         }
+      } else {
+         // Handle first month (Index 0)
+         // If there is investment in the first month, calculate initial return from 0 state
+         if (currTwrInv > 0) {
+             const r = currTwrProfit / currTwrInv;
              twrProduct *= (1 + r);
          }
       }
@@ -392,6 +412,27 @@ const App: React.FC = () => {
       
       const sumVal = ppkVal + cryptoVal + ikeVal;
 
+      // Benchmarks Calculation
+      // We shift lookup to the NEXT month key (End of Month) because the portfolio data for '2023-04-01'
+      // represents the result at the END of April. 
+      // benchmarks.ts keys like '2023-05-01' represent the Close of April / Start of May.
+      
+      const [yStr, mStr, dStr] = date.split('-');
+      let nextY = parseInt(yStr);
+      let nextM = parseInt(mStr) + 1;
+      if (nextM > 12) {
+        nextM = 1;
+        nextY++;
+      }
+      const nextDateKey = `${nextY}-${String(nextM).padStart(2, '0')}-${dStr}`;
+
+      const currentSP500 = SP500_DATA[nextDateKey];
+      const currentWIG20 = WIG20_DATA[nextDateKey];
+      
+      // Calculate % growth since start
+      const sp500Return = currentSP500 && startSP500 ? ((currentSP500 - startSP500) / startSP500) * 100 : undefined;
+      const wig20Return = currentWIG20 && startWIG20 ? ((currentWIG20 - startWIG20) / startWIG20) * 100 : undefined;
+
       return {
         date,
         investment: totalInvestment,
@@ -404,6 +445,10 @@ const App: React.FC = () => {
         ppkShare: sumVal > 0 ? ppkVal / sumVal : 0,
         cryptoShare: sumVal > 0 ? cryptoVal / sumVal : 0,
         ikeShare: sumVal > 0 ? ikeVal / sumVal : 0,
+
+        // Benchmarks
+        sp500Return,
+        wig20Return
       };
     });
 
@@ -794,8 +839,8 @@ const App: React.FC = () => {
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-lg font-bold text-slate-800">Globalna Historia Portfela</h3>
-                  <p className="text-sm text-slate-500">Symulacja skumulowanego majątku w czasie (PPK + Crypto + IKE)</p>
+                  <h3 className="text-lg font-bold text-slate-800">Historia Old Man Fund</h3>
+                  <p className="text-sm text-slate-500">Wkład Łączny vs Zysk Łączny (PPK + Krypto + IKE)</p>
                 </div>
                 <div className="p-2 bg-indigo-50 rounded-lg">
                   <Activity className="text-indigo-600" size={20} />
@@ -808,7 +853,7 @@ const App: React.FC = () => {
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-lg font-bold text-slate-800">Efektywność Inwestycyjna</h3>
+                  <h3 className="text-lg font-bold text-slate-800">Efektywność Old Man Fund</h3>
                   <p className="text-sm text-slate-500">Analiza stopy zwrotu (ROI) oraz TWR w czasie</p>
                 </div>
                 <div className="p-2 bg-purple-50 rounded-lg">

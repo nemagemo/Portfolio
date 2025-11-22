@@ -79,6 +79,10 @@ export interface GlobalHistoryRow {
   ppkShare: number;     // 0.0 - 1.0 ratio of PPK in total portfolio
   cryptoShare: number;  // 0.0 - 1.0 ratio of Crypto in total portfolio
   ikeShare: number;     // 0.0 - 1.0 ratio of IKE in total portfolio
+  
+  // Benchmarks (Normalized Percentage Return)
+  sp500Return?: number;
+  wig20Return?: number;
 }
 
 // Union type for general usage in generic Tables/Charts

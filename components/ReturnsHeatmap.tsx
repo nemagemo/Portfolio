@@ -83,12 +83,16 @@ export const ReturnsHeatmap: React.FC<HeatmapProps> = ({ data }) => {
       const monthlyReturns: (number | null)[] = Array(12).fill(null);
 
       for (let month = 0; month < 12; month++) {
-        // === CRITICAL VISUAL LOGIC ===
-        // The user expects the column "May" to represent the performance achieved *during* May.
-        // This means calculating the change from the State at End of April (prevKey) -> State at End of May (currentKey).
-        // In our data model, rows are snapshots at specific dates.
+        // === UPDATED VISUAL LOGIC ===
+        // The user specifies that a row for a specific month (e.g., 2023-04-01) contains
+        // the results FOR that month.
+        // 
+        // If April 2023 exists in data, we treat it as the result for April.
+        // We compare it to March 2023 (startState).
+        // IF March 2023 does NOT exist (first month of investment), we calculate simple ROI 
+        // based on the current month's totals.
         
-        const currentKey = `${year}-${month}`; // e.g. May 1st (End of April/Start of May)
+        const currentKey = `${year}-${month}`; // e.g. April (index 3)
 
         let prevYear = year;
         let prevMonth = month - 1;
@@ -96,20 +100,31 @@ export const ReturnsHeatmap: React.FC<HeatmapProps> = ({ data }) => {
           prevMonth = 11;
           prevYear = year - 1;
         }
-        const prevKey = `${prevYear}-${prevMonth}`; // e.g. April 1st
+        const prevKey = `${prevYear}-${prevMonth}`; // e.g. March (index 2)
 
-        const startState = dataMap.get(prevKey);
         const endState = dataMap.get(currentKey);
+        const startState = dataMap.get(prevKey);
 
-        if (startState && endState) {
-          const startVal = startState.totalValue || (startState.investment + startState.profit);
-          const endVal = endState.totalValue || (endState.investment + endState.profit);
-          
-          const startInv = startState.investment;
-          const endInv = endState.investment;
-          const netFlow = endInv - startInv; 
+        if (endState) {
+          if (startState) {
+            // Standard TWR: Difference between End of Prev Month and End of Current Month
+            const startVal = startState.totalValue || (startState.investment + startState.profit);
+            const endVal = endState.totalValue || (endState.investment + endState.profit);
+            
+            const startInv = startState.investment;
+            const endInv = endState.investment;
+            const netFlow = endInv - startInv; 
 
-          monthlyReturns[month] = calculateMonthlyReturn(startVal, endVal, netFlow);
+            monthlyReturns[month] = calculateMonthlyReturn(startVal, endVal, netFlow);
+          } else {
+            // First Month Logic (No previous state)
+            // Treat the entire investment as new flow, calculate simple ROI
+            if (endState.investment !== 0) {
+               monthlyReturns[month] = (endState.profit / endState.investment) * 100;
+            } else {
+               monthlyReturns[month] = 0;
+            }
+          }
         }
       }
 
