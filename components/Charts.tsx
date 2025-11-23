@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   AreaChart,
@@ -24,8 +23,6 @@ import {
 import { PPKDataRow, CryptoDataRow, AnyDataRow, GlobalHistoryRow } from '../types';
 
 // Logo Imports
-// Each logo is a separate React Component wrapping an SVG.
-// This prevents "broken image" icons found when using <img> tags with relative paths in some hosted envs.
 import { PPKLogo } from '../logos/PPKLogo';
 import { GAWLogo } from '../logos/GAWLogo';
 import { AMZNLogo } from '../logos/AMZNLogo';
@@ -184,24 +181,16 @@ interface AssetLogoProps {
   height: number;
 }
 
-/**
- * Renders a logo centered within a treemap tile.
- * Chooses an SVG component if available in LOGO_MAP.
- * If no logo is found, renders nothing (no image fallback).
- */
 const AssetLogo: React.FC<AssetLogoProps> = ({ name, x, y, width, height }) => {
   const LogoComponent = LOGO_MAP[name];
   
-  // Safety check for dimensions to prevent rendering errors
   if (!width || !height || width <= 0 || height <= 0) return null;
 
-  // Calculate size for the logo to fit nicely (e.g., 60% of the smallest dimension)
   const padding = Math.min(width, height) * 0.2;
   const size = Math.max(0, Math.min(width, height) - (padding * 2));
   
   if (size <= 0) return null;
 
-  // Center the logo
   const logoX = x + (width - size) / 2;
   const logoY = y + (height - size) / 2;
 
@@ -210,8 +199,8 @@ const AssetLogo: React.FC<AssetLogoProps> = ({ name, x, y, width, height }) => {
     y: logoY,
     width: size,
     height: size,
-    opacity: 0.8, // Increased visibility to 0.8 per user request
-    stroke: "none", // Explicitly disable inherited stroke from Treemap parent
+    opacity: 0.8, 
+    stroke: "none", 
     style: { pointerEvents: 'none' as const }
   };
 
@@ -219,54 +208,36 @@ const AssetLogo: React.FC<AssetLogoProps> = ({ name, x, y, width, height }) => {
     return <LogoComponent {...commonProps} />;
   }
 
-  // Fallback removed: if no logo component exists, render nothing.
   return null;
 };
 
-/**
- * Returns a background color based on ROI.
- * Green for positive, Red for negative.
- * Darker shades for higher absolute values to allow white text to pop.
- */
 const getHeatmapColor = (roi: number | undefined): string => {
-  if (roi === undefined) return '#475569'; // Slate 600 (Neutral)
+  if (roi === undefined) return '#475569'; 
 
-  // Positive ROI (Greens)
-  if (roi >= 50) return '#064e3b'; // Emerald 900
-  if (roi >= 20) return '#047857'; // Emerald 700
-  if (roi >= 0) return '#059669'; // Emerald 600
+  if (roi >= 50) return '#064e3b'; 
+  if (roi >= 20) return '#047857'; 
+  if (roi >= 0) return '#059669'; 
 
-  // Negative ROI (Reds)
-  if (roi <= -30) return '#881337'; // Rose 900
-  if (roi <= -10) return '#be123c'; // Rose 700
-  return '#e11d48'; // Rose 600
+  if (roi <= -30) return '#881337'; 
+  if (roi <= -10) return '#be123c'; 
+  return '#e11d48'; 
 };
 
-// Extracted Content Component for Treemap
-// NOTE: This must be passed as a function `(props) => <TreemapContent ... />` 
-// to the Treemap `content` prop to ensure Recharts passes the dynamic layout props (x, y, width, height).
 const TreemapContent = (props: any) => {
   const { x, y, width, height, index, payload, name: nameProp } = props;
   
-  // Ensure we have valid coordinates and dimensions
   if (x === undefined || y === undefined || width === undefined || height === undefined) return null;
 
-  // Robust data extraction - Recharts can pass data in different ways depending on nesting
   const dataItem = payload || {};
   const name = nameProp || dataItem.name || '';
   const roi = props.roi !== undefined ? props.roi : dataItem.roi;
 
-  // Font Sizing Logic - REDUCED per user request
-  // Reduced max size from 14 to 12, and increased divisor slightly
   const fontSizeName = Math.max(9, Math.min(width / 7, 12));
   const fontSizeRoi = Math.max(9, fontSizeName * 0.8);
 
   const color = getHeatmapColor(roi);
 
-  // Hide text if the box is too small
   const showText = width > 40 && height > 30;
-  
-  // Padding for text in corners
   const padding = 5;
 
   return (
@@ -285,7 +256,7 @@ const TreemapContent = (props: any) => {
       {showText && name && (
         <text
           x={x + padding}
-          y={y + padding + fontSizeName * 0.8} // Top-Left
+          y={y + padding + fontSizeName * 0.8} 
           textAnchor="start"
           fill="#fff"
           fontSize={fontSizeName}
@@ -299,9 +270,9 @@ const TreemapContent = (props: any) => {
       {showText && roi !== undefined && (
         <text
           x={x + width - padding}
-          y={y + height - padding} // Bottom-Right
+          y={y + height - padding} 
           textAnchor="end"
-          fill="#fff" // Always white for better contrast against colored backgrounds
+          fill="#fff" 
           fontSize={fontSizeRoi}
           fontWeight="500"
           style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9)', pointerEvents: 'none', opacity: 0.95 }}
@@ -328,7 +299,6 @@ export const OMFTreemapChart: React.FC<OMFTreemapChartProps> = ({ data }) => {
           aspectRatio={4 / 3}
           stroke="#fff"
           fill="#8884d8"
-          // Using a render function here is critical for passing props down to custom SVG content
           content={(props) => <TreemapContent {...props} />}
         >
           <Tooltip 
@@ -409,7 +379,6 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data }) => {
           <Legend verticalAlign="top" height={36} />
           
           {isPPK ? (
-            // PPK Stacked View: Employee + Employer + State + FundProfit
             <>
               <Area type="monotone" dataKey="employeeContribution" name="Pracownik" stackId="1" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.9} />
               <Area type="monotone" dataKey="employerContribution" name="Pracodawca" stackId="1" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.9} />
@@ -417,7 +386,6 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data }) => {
               <Area type="monotone" dataKey="fundProfit" name="Zysk Funduszu" stackId="1" stroke="#10b981" fill="#10b981" fillOpacity={0.9} />
             </>
           ) : (
-            // Generic View (Crypto/IKE)
             <>
               <Area 
                 type="monotone" 
@@ -630,7 +598,7 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data }) => {
   return (
     <div className="h-96 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data as any[]}>
+        <ComposedChart data={data as any[]}>
           <defs>
             <linearGradient id="colorInvestGlobal" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
@@ -655,7 +623,14 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data }) => {
             fontSize={12}
           />
           <Tooltip 
-            formatter={(value: number, name: string) => [`${value.toLocaleString('pl-PL')} zł`, name]}
+            formatter={(value: number, name: string) => {
+                const labels: Record<string, string> = {
+                    investment: 'Wkład Łączny',
+                    profit: 'Zysk Łączny',
+                    projectedValue: 'Prognoza (Droga do Miliona)'
+                };
+                return [`${value.toLocaleString('pl-PL')} zł`, labels[name] || name];
+            }}
             labelFormatter={formatDate}
             contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }}
           />
@@ -678,7 +653,18 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data }) => {
             stroke="#10b981" 
             fill="url(#colorProfitGlobal)" 
           />
-        </AreaChart>
+
+          <Line 
+            type="monotone" 
+            dataKey="projectedValue" 
+            name="Prognoza" 
+            stroke="#d97706" 
+            strokeWidth={2} 
+            strokeDasharray="5 5"
+            dot={false} 
+            activeDot={{ r: 6 }}
+          />
+        </ComposedChart>
       </ResponsiveContainer>
     </div>
   );
@@ -688,12 +674,10 @@ export const GlobalPerformanceChart: React.FC<ChartProps> = ({ data }) => {
   const [showSP500, setShowSP500] = useState(false);
   const [showWIG20, setShowWIG20] = useState(false);
 
-  // Include first month if it has meaningful data, otherwise filter as usual
   const chartData = data.filter((d, i) => i >= 0);
 
   return (
     <div className="w-full">
-      {/* Toggles */}
       <div className="flex justify-end space-x-3 mb-2 px-2">
         <button
           onClick={() => setShowSP500(!showSP500)}
@@ -741,7 +725,6 @@ export const GlobalPerformanceChart: React.FC<ChartProps> = ({ data }) => {
                    sp500Return: 'S&P 500',
                    wig20Return: 'WIG20'
                  };
-                 // Only format if value is valid number
                  if (typeof value !== 'number') return [value, name];
                  return [`${value.toFixed(2)}%`, labels[name] || name];
               }}
@@ -846,11 +829,6 @@ export const PortfolioAllocationHistoryChart: React.FC<ChartProps> = ({ data }) 
 export const CapitalStructureHistoryChart: React.FC<ChartProps> = ({ data }) => {
   if (data.length === 0 || !('employeeContribution' in data[0])) return null;
 
-  // Mapping logic update:
-  // Previous: profit = r.profit (Total User Profit = Employer + State + FundProfit).
-  // Issue: If we stack Employee + Employer + State + TotalUserProfit, we double count Employer and State.
-  // Fix: Use r.fundProfit for the profit layer. The combination of Employee + Employer + State + FundProfit equals Total Value.
-  
   const chartData = data.map(row => {
     const r = row as PPKDataRow;
     return {
@@ -858,7 +836,7 @@ export const CapitalStructureHistoryChart: React.FC<ChartProps> = ({ data }) => 
       employee: r.employeeContribution,
       employer: r.employerContribution,
       state: r.stateContribution,
-      profit: r.fundProfit, // Use raw Fund Profit for correct stacking
+      profit: r.fundProfit, 
       total: r.totalValue
     };
   });
@@ -883,7 +861,6 @@ export const CapitalStructureHistoryChart: React.FC<ChartProps> = ({ data }) => 
           <Tooltip 
             formatter={(value: number, name: string, item: any) => {
                const payload = item.payload;
-               // Calculate total dynamically to ensure percentage is based on the stack
                const total = payload.employee + payload.employer + payload.state + payload.profit;
                const percent = total !== 0 ? (value / total) * 100 : 0;
                
@@ -891,7 +868,7 @@ export const CapitalStructureHistoryChart: React.FC<ChartProps> = ({ data }) => 
                  employee: 'Wkład Własny',
                  employer: 'Pracodawca',
                  state: 'Państwo',
-                 profit: 'Zysk Funduszu' // Correct label
+                 profit: 'Zysk Funduszu' 
                };
 
                return [
@@ -909,6 +886,178 @@ export const CapitalStructureHistoryChart: React.FC<ChartProps> = ({ data }) => 
           <Area type="monotone" dataKey="profit" name="Zysk Funduszu" stackId="1" stroke="#10b981" fill="#10b981" fillOpacity={0.9} />
         </AreaChart>
       </ResponsiveContainer>
+    </div>
+  );
+};
+
+export const SeasonalityChart: React.FC<{ data: any[] }> = ({ data }) => {
+  if (data.length < 2) return null;
+
+  const sorted = [...data].sort((a, b) => a.date.localeCompare(b.date));
+  const dataMap = new Map<string, any>();
+  
+  const parseDateKey = (dateStr: string) => {
+      const parts = dateStr.split('-');
+      const y = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10) - 1; 
+      return { y, m, key: `${y}-${m}` };
+  };
+
+  sorted.forEach(row => {
+      const { key } = parseDateKey(row.date);
+      dataMap.set(key, row);
+  });
+
+  const monthReturns: number[][] = Array(12).fill(null).map(() => []);
+
+  const startYear = parseDateKey(sorted[0].date).y;
+  const endYear = parseDateKey(sorted[sorted.length - 1].date).y;
+
+  for (let y = startYear; y <= endYear; y++) {
+      for (let m = 0; m < 12; m++) {
+          const currentKey = `${y}-${m}`;
+          
+          let prevY = y;
+          let prevM = m - 1;
+          if (prevM < 0) { prevM = 11; prevY = y - 1; }
+          const prevKey = `${prevY}-${prevM}`;
+
+          const curr = dataMap.get(currentKey);
+          const prev = dataMap.get(prevKey);
+
+          if (curr) {
+              let r = 0;
+              if (prev) {
+                  const startVal = prev.totalValue ?? (prev.investment + prev.profit);
+                  const endVal = curr.totalValue ?? (curr.investment + curr.profit);
+                  const flow = curr.investment - prev.investment;
+                  const denom = startVal + flow;
+                  if (denom !== 0) {
+                      r = ((endVal - startVal - flow) / denom) * 100;
+                  }
+              } else {
+                  if (curr.investment !== 0) {
+                      r = (curr.profit / curr.investment) * 100;
+                  }
+              }
+              monthReturns[m].push(r);
+          }
+      }
+  }
+
+  const monthNames = ['Sty', 'Lut', 'Mar', 'Kwi', 'Maj', 'Cze', 'Lip', 'Sie', 'Wrz', 'Paź', 'Lis', 'Gru'];
+  const chartData = monthNames.map((name, idx) => {
+      const returns = monthReturns[idx];
+      const avg = returns.length > 0 
+          ? returns.reduce((a, b) => a + b, 0) / returns.length 
+          : 0;
+      return { name, value: avg, count: returns.length };
+  });
+
+  return (
+    <div className="h-64 w-full">
+        <h4 className="text-sm font-semibold text-slate-500 mb-4">Sezonowość (Średnia miesięczna stopa zwrotu)</h4>
+        <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickMargin={5} />
+                <YAxis stroke="#94a3b8" fontSize={12} unit="%" />
+                <Tooltip 
+                    formatter={(value: number) => [`${value.toFixed(2)}%`, 'Średnia stopa zwrotu']}
+                    contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                />
+                <ReferenceLine y={0} stroke="#64748b" />
+                <Bar dataKey="value" name="Średnia Stopa Zwrotu">
+                    {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.value >= 0 ? '#10b981' : '#ef4444'} />
+                    ))}
+                </Bar>
+            </BarChart>
+        </ResponsiveContainer>
+    </div>
+  );
+};
+
+interface PPKWaterfallItem {
+  name: string;
+  value: number;
+  fill: string;
+  isTotal?: boolean;
+}
+
+export const PPKWaterfallChart: React.FC<{ data: PPKWaterfallItem[] }> = ({ data }) => {
+  let accumulated = 0;
+  const chartData = data.map(item => {
+      if (item.isTotal) {
+          return {
+              name: item.name,
+              uv: item.value, 
+              placeholder: 0,
+              fill: item.fill,
+              displayValue: item.value,
+              isTotal: true
+          };
+      }
+      
+      const val = item.value;
+      let placeholder = 0;
+      let barSize = 0;
+
+      if (val >= 0) {
+          placeholder = accumulated;
+          barSize = val;
+          accumulated += val;
+      } else {
+          accumulated += val; 
+          placeholder = accumulated;
+          barSize = Math.abs(val);
+      }
+
+      return {
+          name: item.name,
+          uv: barSize,
+          placeholder: placeholder,
+          fill: item.fill,
+          displayValue: val, 
+          isTotal: false
+      };
+  });
+
+  return (
+    <div className="h-full w-full">
+        <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} tickMargin={5} />
+                <YAxis stroke="#94a3b8" fontSize={12} tickFormatter={(val) => `${(val/1000).toFixed(0)}k`} />
+                <Tooltip 
+                    formatter={(value: number, name: string, props: any) => {
+                        // Safe access: check if payload and displayValue exist
+                        const realValue = props?.payload?.displayValue;
+                        if (realValue !== undefined) {
+                            return [`${realValue.toLocaleString('pl-PL')} zł`, 'Wartość'];
+                        }
+                        return [`${value.toLocaleString('pl-PL')} zł`, 'Wartość'];
+                    }}
+                    contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                    cursor={{fill: 'transparent'}}
+                />
+                <Bar dataKey="placeholder" stackId="a" fill="transparent" />
+                <Bar dataKey="uv" stackId="a" radius={[4, 4, 4, 4]}>
+                    {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                    <LabelList 
+                        dataKey="displayValue" 
+                        position="top" 
+                        formatter={(val: number) => {
+                            return val !== 0 ? `${(val/1000).toFixed(1)}k` : '';
+                        }} 
+                        style={{fontSize: '10px', fill: '#64748b'}} 
+                    />
+                </Bar>
+            </BarChart>
+        </ResponsiveContainer>
     </div>
   );
 };

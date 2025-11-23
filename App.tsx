@@ -28,12 +28,13 @@ import {
   BarChart4,
   Timer,
   Calendar,
-  LayoutTemplate
+  LayoutTemplate,
+  Milestone
 } from 'lucide-react';
 import { parseCSV, validateOMFIntegrity } from './utils/parser';
-import { AnyDataRow, SummaryStats, ValidationReport, PortfolioType, PPKDataRow, CryptoDataRow, IKEDataRow, OMFValidationReport, OMFDataRow } from './types';
+import { AnyDataRow, SummaryStats, ValidationReport, PortfolioType, PPKDataRow, CryptoDataRow, IKEDataRow, OMFValidationReport, OMFDataRow, GlobalHistoryRow } from './types';
 import { StatsCard } from './components/StatsCard';
-import { ValueCompositionChart, ROIChart, ContributionComparisonChart, CryptoValueChart, CryptoProfitChart, OMFAllocationChart, GlobalSummaryChart, GlobalPerformanceChart, OMFStructureChart, OMFTreemapChart, PortfolioAllocationHistoryChart, CapitalStructureHistoryChart } from './components/Charts';
+import { ValueCompositionChart, ROIChart, ContributionComparisonChart, CryptoValueChart, CryptoProfitChart, OMFAllocationChart, GlobalSummaryChart, GlobalPerformanceChart, OMFStructureChart, OMFTreemapChart, PortfolioAllocationHistoryChart, CapitalStructureHistoryChart, SeasonalityChart, PPKWaterfallChart } from './components/Charts';
 import { HistoryTable } from './components/HistoryTable';
 import { ReturnsHeatmap } from './components/ReturnsHeatmap';
 
@@ -269,6 +270,10 @@ const App: React.FC = () => {
   const [isClosedHistoryExpanded, setIsClosedHistoryExpanded] = useState(false);
   const [isActivePositionsExpanded, setIsActivePositionsExpanded] = useState(false);
 
+  // Road to Million State
+  const [showProjection, setShowProjection] = useState(false);
+  const [projectionMethod, setProjectionMethod] = useState<'LTM' | 'CAGR'>('LTM');
+
   useEffect(() => {
     try {
       // Universal Parse with Source Indication ('Offline' because we use local TS files)
@@ -314,8 +319,7 @@ const App: React.FC = () => {
 
   // --- GLOBAL HISTORY DATA (For OMF Chart) ---
   // Merges PPK, Crypto, and IKE timelines
-  // This is the most complex logic block: it unifies time-series data from 3 sources
-  const globalHistoryData = useMemo(() => {
+  const globalHistoryData = useMemo<GlobalHistoryRow[]>(() => {
     const ppkRes = parseCSV(csvSources.PPK, 'PPK', 'Offline');
     const cryptoRes = parseCSV(csvSources.CRYPTO, 'CRYPTO', 'Offline');
     const ikeRes = parseCSV(csvSources.IKE, 'IKE', 'Offline');
@@ -352,7 +356,6 @@ const App: React.FC = () => {
     let prevTwrInv = 0;
 
     // Benchmarks Baseline
-    // Find the first available price for SP500 and WIG20 closest to the start date
     let startSP500 = 0;
     let startWIG20 = 0;
     
@@ -394,18 +397,16 @@ const App: React.FC = () => {
          }
       } else {
          // Handle first month (Index 0)
-         // If there is investment in the first month, calculate initial return from 0 state
          if (currTwrInv > 0) {
              const r = currTwrProfit / currTwrInv;
              twrProduct *= (1 + r);
          }
       }
 
-      // Update 'prev' pointers for next iteration
       prevTwrVal = currTwrVal;
       prevTwrInv = currTwrInv;
 
-      // For Allocation Chart - Calculate Shares
+      // For Allocation Chart
       const ppkVal = lastPPK.inv + lastPPK.profit;
       const cryptoVal = lastCrypto.inv + lastCrypto.profit;
       const ikeVal = lastIKE.inv + lastIKE.profit;
@@ -413,10 +414,6 @@ const App: React.FC = () => {
       const sumVal = ppkVal + cryptoVal + ikeVal;
 
       // Benchmarks Calculation
-      // We shift lookup to the NEXT month key (End of Month) because the portfolio data for '2023-04-01'
-      // represents the result at the END of April. 
-      // benchmarks.ts keys like '2023-05-01' represent the Close of April / Start of May.
-      
       const [yStr, mStr, dStr] = date.split('-');
       let nextY = parseInt(yStr);
       let nextM = parseInt(mStr) + 1;
@@ -429,7 +426,6 @@ const App: React.FC = () => {
       const currentSP500 = SP500_DATA[nextDateKey];
       const currentWIG20 = WIG20_DATA[nextDateKey];
       
-      // Calculate % growth since start
       const sp500Return = currentSP500 && startSP500 ? ((currentSP500 - startSP500) / startSP500) * 100 : undefined;
       const wig20Return = currentWIG20 && startWIG20 ? ((currentWIG20 - startWIG20) / startWIG20) * 100 : undefined;
 
@@ -437,16 +433,14 @@ const App: React.FC = () => {
         date,
         investment: totalInvestment,
         profit: totalProfit,
-        totalValue: totalValue, // Store for calculation checks
+        totalValue: totalValue, 
         roi: totalInvestment > 0 ? (totalProfit / totalInvestment) * 100 : 0,
         cumulativeTwr: (twrProduct - 1) * 100,
         
-        // Shares
         ppkShare: sumVal > 0 ? ppkVal / sumVal : 0,
         cryptoShare: sumVal > 0 ? cryptoVal / sumVal : 0,
         ikeShare: sumVal > 0 ? ikeVal / sumVal : 0,
 
-        // Benchmarks
         sp500Return,
         wig20Return
       };
@@ -455,8 +449,159 @@ const App: React.FC = () => {
     return history;
   }, [csvSources]);
 
+  // --- ROAD TO MILLION PROJECTION LOGIC ---
+  const chartDataWithProjection = useMemo(() => {
+    if (!showProjection || globalHistoryData.length === 0) return globalHistoryData;
+
+    const lastData = globalHistoryData[globalHistoryData.length - 1];
+    if (!lastData) return globalHistoryData;
+
+    // 1. Calculate Growth Rate based on selected method
+    
+    // LTM (Last Twelve Months) Average Monthly Growth
+    // Look back 12 months
+    let ltmMonthlyRate = 0.01; // Fallback 1%
+    if (globalHistoryData.length >= 12) {
+       const prevData = globalHistoryData[globalHistoryData.length - 12];
+       const growthFactor = lastData.totalValue / prevData.totalValue;
+       // (Final / Start)^(1/12) - 1
+       ltmMonthlyRate = Math.pow(growthFactor, 1/12) - 1;
+    } else {
+       // Use All time if less than 12 months
+       const firstData = globalHistoryData[0];
+       if (firstData.totalValue > 0) {
+          const months = globalHistoryData.length;
+          const growthFactor = lastData.totalValue / firstData.totalValue;
+          ltmMonthlyRate = Math.pow(growthFactor, 1/months) - 1;
+       }
+    }
+
+    // 2. CAGR (All Time) Average Monthly Growth - Aligned with Stats Card Logic
+    const firstData = globalHistoryData[0];
+    
+    let cagrMonthlyRate = 0.005; // Fallback
+
+    if (globalHistoryData.length > 0) {
+        const startDate = new Date(firstData.date);
+        const endDate = new Date(lastData.date);
+        // Use exact same year duration constant as in stats calculation
+        const years = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+        
+        const currentTotalRoi = lastData.investment > 0 
+            ? (lastData.profit / lastData.investment) 
+            : 0; // Decimal (e.g. 0.50 for 50%)
+
+        let annualCagrDecimal = 0;
+
+        if (years > 0.5) {
+            const totalFactor = 1 + currentTotalRoi;
+            annualCagrDecimal = Math.pow(totalFactor, 1 / years) - 1;
+        } else {
+            // Fallback for short history < 6 months (consistent with Stats Card)
+            annualCagrDecimal = currentTotalRoi;
+        }
+        
+        // Convert Annual CAGR to Monthly Compounding Rate: (1 + Annual)^(1/12) - 1
+        cagrMonthlyRate = Math.pow(1 + annualCagrDecimal, 1/12) - 1;
+    }
+
+    // Store rates for UI display
+    
+    const monthlyRate = projectionMethod === 'LTM' ? ltmMonthlyRate : cagrMonthlyRate;
+    
+    // If rate is negative or zero, projection is flat or downwards, handled gracefully
+    // Only project if we have value
+    if (lastData.totalValue <= 0) return globalHistoryData;
+
+    const projectionPoints: GlobalHistoryRow[] = [];
+    let currentValue = lastData.totalValue;
+    let currentDate = new Date(lastData.date);
+    const targetValue = 1000000;
+    
+    // Safety break: max 30 years (360 months)
+    let iterations = 0;
+    
+    while (currentValue < targetValue && iterations < 360) {
+       iterations++;
+       // Increment Month
+       currentDate.setMonth(currentDate.getMonth() + 1);
+       
+       // Compound Interest
+       currentValue = currentValue * (1 + monthlyRate);
+       
+       // Generate Date String YYYY-MM-DD
+       const y = currentDate.getFullYear();
+       const m = String(currentDate.getMonth() + 1).padStart(2, '0');
+       const d = String(currentDate.getDate()).padStart(2, '0');
+       const dateStr = `${y}-${m}-${d}`;
+
+       projectionPoints.push({
+         date: dateStr,
+         investment: 0, // Optional: Could project investment growth too, but let's keep simple
+         profit: 0,
+         totalValue: 0, // We don't fill historical bars
+         projectedValue: currentValue,
+         roi: 0,
+         cumulativeTwr: 0,
+         ppkShare: 0, cryptoShare: 0, ikeShare: 0
+       });
+    }
+
+    // Add the starting point for the line (connect to last historical point)
+    const connectionPoint = {
+        ...lastData,
+        projectedValue: lastData.totalValue
+    };
+
+    // Replace last point in history with connected point, append projection
+    const historyWithConnection = [...globalHistoryData];
+    historyWithConnection[historyWithConnection.length - 1] = connectionPoint;
+
+    return [...historyWithConnection, ...projectionPoints];
+
+  }, [globalHistoryData, showProjection, projectionMethod]);
+
+  // Calculates display rates for the UI
+  const rateDisplay = useMemo(() => {
+      if (globalHistoryData.length < 2) return { ltm: 0, cagr: 0 };
+      
+      const lastData = globalHistoryData[globalHistoryData.length - 1];
+      const firstData = globalHistoryData[0];
+      
+      // LTM
+      let ltmRate = 0;
+      if (globalHistoryData.length >= 12) {
+          const prev = globalHistoryData[globalHistoryData.length - 12];
+          ltmRate = (Math.pow(lastData.totalValue / prev.totalValue, 1/12) - 1) * 100;
+      } else {
+          ltmRate = (Math.pow(lastData.totalValue / firstData.totalValue, 1/globalHistoryData.length) - 1) * 100;
+      }
+
+      // CAGR - ALIGNED WITH STATS CARD (ROI Based)
+      const startD = new Date(firstData.date);
+      const endD = new Date(lastData.date);
+      const yrs = (endD.getTime() - startD.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+      
+      // ROI Based Calculation
+      const currentTotalRoi = lastData.investment > 0 
+          ? (lastData.profit / lastData.investment)
+          : 0;
+
+      let annualCagr = 0;
+      if (yrs > 0.5) {
+          const totalFactor = 1 + currentTotalRoi;
+          annualCagr = Math.pow(totalFactor, 1/yrs) - 1;
+      } else {
+          annualCagr = currentTotalRoi;
+      }
+      
+      const cagrMonthly = (Math.pow(1 + annualCagr, 1/12) - 1) * 100;
+
+      return { ltm: ltmRate, cagr: cagrMonthly };
+  }, [globalHistoryData]);
+
+
   // --- HEATMAP DATA (OMF - Crypto + IKE only) ---
-  // Separated logic because Heatmap ignores PPK
   const heatmapHistoryData = useMemo(() => {
     if (portfolioType !== 'OMF') return [];
 
@@ -534,23 +679,19 @@ const App: React.FC = () => {
              const currentIndex = perfData.length - 1;
              
              // Function to calculate accumulated TWR from a start index to an end index
-             // Matches Heatmap: R = (V_curr - V_prev - Flow) / (V_prev + Flow)
              const calculateAccumulatedTWR = (startIdx: number, endIdx: number) => {
                 let product = 1;
                 for (let i = startIdx; i <= endIdx; i++) {
-                   if (i <= 0) continue; // Need a previous day to calc return for current day
+                   if (i <= 0) continue; 
                    
                    const prev = perfData[i-1];
                    const curr = perfData[i];
                    
-                   // Global data might not have 'totalValue' explicit prop if derived differently,
-                   // so we calculate it on the fly to be safe.
                    const prevVal = prev['totalValue'] !== undefined ? prev['totalValue'] : (prev.investment + prev.profit);
                    const currVal = curr['totalValue'] !== undefined ? curr['totalValue'] : (curr.investment + curr.profit);
                    
                    const flow = curr.investment - prev.investment; 
                    
-                   // TWR Flow at Start Assumption
                    const denominator = prevVal + flow;
                    if (denominator !== 0) {
                       const gain = currVal - prevVal - flow;
@@ -578,8 +719,6 @@ const App: React.FC = () => {
              }
 
              // --- YTD (TWR on GLOBAL data) ---
-             // Aligned with Heatmap Date Shifting Logic.
-             // We sum returns starting from the first entry of the current year.
              const currentYear = new Date().getFullYear();
              const firstIndexThisYear = perfData.findIndex(d => new Date(d.date).getFullYear() === currentYear);
              
@@ -588,7 +727,6 @@ const App: React.FC = () => {
              }
 
              // --- LTM (TWR on GLOBAL data) ---
-             // Last 12 periods.
              const ltmStartIdx = Math.max(1, currentIndex - 11); 
              ltm = calculateAccumulatedTWR(ltmStartIdx, currentIndex);
          }
@@ -640,9 +778,7 @@ const App: React.FC = () => {
     const result: { name: string; value: number; roi: number; }[] = [];
 
     omfActiveAssets.forEach(asset => {
-      // Check specifically for Krypto portfolio
       if (asset.portfolio === 'Krypto' || asset.portfolio === 'CRYPTO') {
-         // Group small crypto positions (< 1000 PLN) to avoid cluttering the Treemap
          if (asset.currentValue > 1000) {
            result.push({ 
              name: asset.symbol, 
@@ -654,7 +790,6 @@ const App: React.FC = () => {
            cryptoRestPurchaseValue += asset.purchaseValue;
          }
       } else {
-         // Add all non-crypto open assets individually
          result.push({ 
            name: asset.symbol, 
            value: asset.currentValue,
@@ -664,7 +799,6 @@ const App: React.FC = () => {
     });
 
     if (cryptoRestValue > 0) {
-      // Calculate aggregated ROI for "Reszta Krypto"
       const aggRoi = cryptoRestPurchaseValue > 0 
         ? ((cryptoRestValue - cryptoRestPurchaseValue) / cryptoRestPurchaseValue) * 100 
         : 0;
@@ -676,26 +810,14 @@ const App: React.FC = () => {
       });
     }
 
-    // Sort by value descending
     return result.sort((a, b) => b.value - a.value);
   }, [omfActiveAssets, portfolioType]);
 
 
-  // PPK Specific Ratio
   const freeMoneyRatio = useMemo(() => {
     if (portfolioType !== 'PPK' || !stats || !stats.totalEmployee) return 0;
     return (stats.totalProfit / stats.totalEmployee) * 100;
   }, [stats, portfolioType]);
-
-  const getColorClass = (type: string) => {
-    switch(type) {
-      case 'PPK': return 'bg-indigo-600';
-      case 'CRYPTO': return 'bg-violet-600';
-      case 'IKE': return 'bg-cyan-600';
-      case 'OMF': return 'bg-slate-800';
-      default: return 'bg-blue-600';
-    }
-  };
 
   const getTextColorClass = (type: string) => {
     switch(type) {
@@ -706,6 +828,27 @@ const App: React.FC = () => {
       default: return 'text-blue-700';
     }
   };
+
+  const ppkWaterfallData = useMemo(() => {
+    if (!stats || portfolioType !== 'PPK') return [];
+    
+    // Ensure all components are present and non-negative where appropriate for a waterfall chart
+    const employee = stats.totalEmployee || 0;
+    const employer = stats.totalEmployer || 0;
+    const state = stats.totalState || 0;
+    
+    // Calculate Fund Profit: Total Value - (Employee + Employer + State)
+    // NOTE: This might be different from stats.totalProfit which is (Total Value - Employee)
+    const fundResult = (stats.totalValue || 0) - (employee + employer + state);
+
+    return [
+      { name: 'Wkład Własny', value: employee, fill: '#3b82f6' }, // Blue
+      { name: 'Pracodawca', value: employer, fill: '#8b5cf6' }, // Violet
+      { name: 'Państwo', value: state, fill: '#ec4899' }, // Pink
+      { name: 'Wynik Funduszu', value: fundResult, fill: fundResult >= 0 ? '#10b981' : '#ef4444' }, // Green/Red
+      { name: 'Razem', value: stats.totalValue || 0, isTotal: true, fill: '#6366f1' } // Indigo
+    ];
+  }, [stats, portfolioType]);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 pb-12">
@@ -804,7 +947,7 @@ const App: React.FC = () => {
               />
             </div>
 
-            {/* Performance Metrics Grid (Reverted to StatsCard) */}
+            {/* Performance Metrics Grid */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <StatsCard 
                 title="Całkowite ROI" 
@@ -835,21 +978,56 @@ const App: React.FC = () => {
               />
             </div>
 
-            {/* Global Portfolio History */}
+            {/* Global Portfolio History & Road to Million */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex flex-col md:flex-row items-center justify-between mb-6 space-y-4 md:space-y-0">
                 <div>
                   <h3 className="text-lg font-bold text-slate-800">Historia Old Man Fund</h3>
                   <p className="text-sm text-slate-500">Wkład Łączny vs Zysk Łączny (PPK + Krypto + IKE)</p>
                 </div>
-                <div className="p-2 bg-indigo-50 rounded-lg">
-                  <Activity className="text-indigo-600" size={20} />
+                
+                {/* Road to Million Controls */}
+                <div className="flex items-center space-x-4 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                   <button
+                     onClick={() => setShowProjection(!showProjection)}
+                     className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
+                       showProjection 
+                         ? 'bg-amber-100 text-amber-700 shadow-sm ring-1 ring-amber-200' 
+                         : 'bg-white text-slate-500 hover:text-slate-700 border border-slate-200'
+                     }`}
+                   >
+                     <Milestone size={14} className="mr-2" />
+                     Droga do Miliona
+                   </button>
+
+                   {showProjection && (
+                     <div className="flex items-center space-x-2 animate-in fade-in slide-in-from-right-4 duration-300">
+                        <div className="flex bg-white rounded-md border border-slate-200 p-0.5">
+                          <button 
+                            onClick={() => setProjectionMethod('LTM')}
+                            className={`px-2 py-1 text-[10px] font-medium rounded ${projectionMethod === 'LTM' ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-100'}`}
+                          >
+                            LTM
+                          </button>
+                          <button 
+                            onClick={() => setProjectionMethod('CAGR')}
+                            className={`px-2 py-1 text-[10px] font-medium rounded ${projectionMethod === 'CAGR' ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-100'}`}
+                          >
+                            CAGR
+                          </button>
+                        </div>
+                        <span className="text-[10px] font-mono text-slate-500">
+                          +{projectionMethod === 'LTM' ? rateDisplay.ltm.toFixed(2) : rateDisplay.cagr.toFixed(2)}% m/m
+                        </span>
+                     </div>
+                   )}
                 </div>
               </div>
-              <GlobalSummaryChart data={globalHistoryData} />
+              
+              <GlobalSummaryChart data={chartDataWithProjection} />
             </div>
 
-            {/* Global Performance Chart (Separated) */}
+            {/* Global Performance Chart */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
@@ -863,7 +1041,7 @@ const App: React.FC = () => {
               <GlobalPerformanceChart data={globalHistoryData} />
             </div>
 
-            {/* OMF Treemap Chart (NEW) */}
+            {/* OMF Treemap Chart */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
@@ -889,9 +1067,12 @@ const App: React.FC = () => {
                 </div>
               </div>
               <ReturnsHeatmap data={heatmapHistoryData} />
+              <div className="mt-8 pt-6 border-t border-slate-100">
+                 <SeasonalityChart data={heatmapHistoryData} />
+              </div>
             </div>
 
-            {/* Portfolio Allocation History Chart (New) */}
+            {/* Portfolio Allocation History Chart */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
@@ -1049,6 +1230,14 @@ const App: React.FC = () => {
                       <ValueCompositionChart data={data} />
                     </div>
                     
+                    {/* Waterfall Chart - Replaces ROI chart in top spot for better visibility of "free money" */}
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
+                      <h3 className="text-lg font-bold text-slate-800 mb-6">Skąd biorą się pieniądze w PPK? (Waterfall)</h3>
+                      <div className="h-80 w-full">
+                         <PPKWaterfallChart data={ppkWaterfallData} />
+                      </div>
+                    </div>
+
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
                       <h3 className="text-lg font-bold text-slate-800 mb-6">ROI w czasie</h3>
                       <ROIChart data={data} />

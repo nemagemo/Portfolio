@@ -83,6 +83,9 @@ export interface GlobalHistoryRow {
   // Benchmarks (Normalized Percentage Return)
   sp500Return?: number;
   wig20Return?: number;
+
+  // Road to Million Projection
+  projectedValue?: number;
 }
 
 // Union type for general usage in generic Tables/Charts
