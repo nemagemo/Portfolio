@@ -32,7 +32,8 @@ import {
   Milestone,
   Snowflake,
   ArrowUpRight,
-  DoorOpen
+  DoorOpen,
+  Search
 } from 'lucide-react';
 import { parseCSV, validateOMFIntegrity } from './utils/parser';
 import { AnyDataRow, SummaryStats, ValidationReport, PortfolioType, PPKDataRow, CryptoDataRow, IKEDataRow, OMFValidationReport, OMFDataRow, GlobalHistoryRow } from './types';
@@ -274,9 +275,13 @@ const App: React.FC = () => {
   const [isClosedHistoryExpanded, setIsClosedHistoryExpanded] = useState(false);
   const [isActivePositionsExpanded, setIsActivePositionsExpanded] = useState(false);
 
-  // Road to Million State
+  // Road to Million State (OMF)
   const [showProjection, setShowProjection] = useState(false);
   const [projectionMethod, setProjectionMethod] = useState<'LTM' | 'CAGR'>('LTM');
+  const [showCPI, setShowCPI] = useState(false);
+
+  // Road to Retirement State (PPK)
+  const [showPPKProjection, setShowPPKProjection] = useState(false);
 
   const handlePortfolioChange = (type: PortfolioType) => {
     setPortfolioType(type);
@@ -477,7 +482,7 @@ const App: React.FC = () => {
     return history;
   }, [csvSources]);
 
-  // --- ROAD TO MILLION PROJECTION LOGIC ---
+  // --- ROAD TO MILLION PROJECTION LOGIC (OMF) ---
   const chartDataWithProjection = useMemo(() => {
     if (!showProjection || globalHistoryData.length === 0) return globalHistoryData;
 
@@ -589,7 +594,7 @@ const App: React.FC = () => {
 
   }, [globalHistoryData, showProjection, projectionMethod]);
 
-  // Calculates display rates for the UI
+  // Calculates display rates for the UI (OMF)
   const rateDisplay = useMemo(() => {
       if (globalHistoryData.length < 2) return { ltm: 0, cagr: 0 };
       
@@ -627,6 +632,94 @@ const App: React.FC = () => {
 
       return { ltm: ltmRate, cagr: cagrMonthly };
   }, [globalHistoryData]);
+
+  // --- ROAD TO RETIREMENT PROJECTION LOGIC (PPK) ---
+  const ppkChartDataWithProjection = useMemo(() => {
+    if (portfolioType !== 'PPK' || !showPPKProjection || data.length === 0) return data;
+
+    const ppkData = data as PPKDataRow[];
+    const lastData = ppkData[ppkData.length - 1];
+    const firstData = ppkData[0];
+
+    // Calculate Growth Rate based on TOTAL VALUE (CAGR/All-time Growth only)
+    // Formula: (Last Total / First Total) ^ (1/Years)
+    let monthlyRate = 0.005; // Default fallback
+
+    const startD = new Date(firstData.date);
+    const endD = new Date(lastData.date);
+    const yrs = (endD.getTime() - startD.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+    
+    // Total Growth Factor of the Portfolio Value
+    const totalFactor = lastData.totalValue / firstData.totalValue;
+    
+    if (yrs > 0.5) {
+        const annualCagr = Math.pow(totalFactor, 1/yrs) - 1;
+        monthlyRate = Math.pow(1 + annualCagr, 1/12) - 1;
+    } else {
+        // Fallback for very short periods, use simple period growth normalized
+        if (ppkData.length > 1) {
+             monthlyRate = Math.pow(totalFactor, 1/ppkData.length) - 1;
+        }
+    }
+
+    const projectionPoints: any[] = [];
+    let currentValue = lastData.totalValue;
+    let currentDate = new Date(lastData.date);
+    const targetDate = new Date('2049-05-01');
+
+    // Loop until May 2049
+    while (currentDate < targetDate) {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        currentValue = currentValue * (1 + monthlyRate);
+
+        const y = currentDate.getFullYear();
+        const m = String(currentDate.getMonth() + 1).padStart(2, '0');
+        const d = String(currentDate.getDate()).padStart(2, '0');
+        const dateStr = `${y}-${m}-${d}`;
+
+        projectionPoints.push({
+            date: dateStr,
+            // Historical fields are undefined, so areas won't render
+            projectedTotalValue: currentValue
+        });
+    }
+
+    // Connect last historical point
+    const connectionPoint = {
+        ...lastData,
+        projectedTotalValue: lastData.totalValue
+    };
+
+    const historyWithConnection = [...ppkData];
+    historyWithConnection[historyWithConnection.length - 1] = connectionPoint;
+
+    return [...historyWithConnection, ...projectionPoints];
+
+  }, [data, portfolioType, showPPKProjection]);
+
+  const ppkRateDisplay = useMemo(() => {
+      if (portfolioType !== 'PPK' || data.length < 2) return { cagr: 0 };
+      const ppkData = data as PPKDataRow[];
+      const lastData = ppkData[ppkData.length - 1];
+      const firstData = ppkData[0];
+
+      // CAGR based on Total Value growth
+      const startD = new Date(firstData.date);
+      const endD = new Date(lastData.date);
+      const yrs = (endD.getTime() - startD.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+      const totalFactor = lastData.totalValue / firstData.totalValue;
+      
+      let annualCagr = 0;
+      if (yrs > 0.5) {
+          annualCagr = Math.pow(totalFactor, 1/yrs) - 1;
+      } else if (ppkData.length > 1) {
+          // fallback for short duration
+          annualCagr = Math.pow(totalFactor, 12/ppkData.length) - 1;
+      }
+      const cagrMonthly = (Math.pow(1 + annualCagr, 1/12) - 1) * 100;
+
+      return { cagr: cagrMonthly };
+  }, [data, portfolioType]);
 
 
   // --- HEATMAP DATA (OMF - Crypto + IKE only) ---
@@ -1025,8 +1118,21 @@ const App: React.FC = () => {
                   <p className="text-sm text-slate-500">Wkład Łączny vs Zysk Łączny (PPK + Krypto + IKE)</p>
                 </div>
                 
-                {/* Road to Million Controls */}
-                <div className="flex items-center space-x-4 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                {/* Road to Million & CPI Controls */}
+                <div className="flex items-center space-x-3 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                   <button
+                     onClick={() => setShowCPI(!showCPI)}
+                     className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
+                       showCPI 
+                         ? 'bg-slate-200 text-slate-800 shadow-sm ring-1 ring-slate-300' 
+                         : 'bg-white text-slate-500 hover:text-slate-700 border border-slate-200'
+                     }`}
+                   >
+                     CPI
+                   </button>
+
+                   <div className="w-px h-6 bg-slate-200 mx-1"></div>
+
                    <button
                      onClick={() => setShowProjection(!showProjection)}
                      className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
@@ -1063,7 +1169,7 @@ const App: React.FC = () => {
                 </div>
               </div>
               
-              <GlobalSummaryChart data={chartDataWithProjection} />
+              <GlobalSummaryChart data={chartDataWithProjection} showProjection={showProjection} showCPI={showCPI} />
             </div>
 
             {/* Global Performance Chart */}
@@ -1325,8 +1431,31 @@ const App: React.FC = () => {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* Make Value Chart Full Width */}
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
-                      <h3 className="text-lg font-bold text-slate-800 mb-6">Wartość Portfela</h3>
-                      <ValueCompositionChart data={data} />
+                      <div className="flex flex-col md:flex-row items-center justify-between mb-6 space-y-4 md:space-y-0">
+                        <h3 className="text-lg font-bold text-slate-800">Wartość Portfela</h3>
+                        
+                        {/* Road to Retirement Controls */}
+                        <div className="flex items-center space-x-4 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                           <button
+                             onClick={() => setShowPPKProjection(!showPPKProjection)}
+                             className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
+                               showPPKProjection 
+                                 ? 'bg-amber-100 text-amber-700 shadow-sm ring-1 ring-amber-200' 
+                                 : 'bg-white text-slate-500 hover:text-slate-700 border border-slate-200'
+                             }`}
+                           >
+                             <Milestone size={14} className="mr-2" />
+                             Droga do Emerytury
+                           </button>
+
+                           {showPPKProjection && (
+                             <span className="text-[10px] font-mono text-slate-500 animate-in fade-in slide-in-from-right-4 duration-300">
+                               +{ppkRateDisplay.cagr.toFixed(2)}% m/m (CAGR)
+                             </span>
+                           )}
+                        </div>
+                      </div>
+                      <ValueCompositionChart data={ppkChartDataWithProjection} showProjection={showPPKProjection} />
                     </div>
                     
                     {/* ROI Chart */}

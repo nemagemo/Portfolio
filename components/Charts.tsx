@@ -53,6 +53,8 @@ import { ETHLogo } from '../logos/ETHLogo';
 interface ChartProps {
   data: AnyDataRow[];
   className?: string;
+  showProjection?: boolean;
+  showCPI?: boolean;
 }
 
 const formatCurrency = (value: number | undefined) => `${(value || 0).toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł`;
@@ -333,7 +335,7 @@ export const OMFTreemapChart: React.FC<OMFTreemapChartProps> = ({ data }) => {
 
 // --- Standard Charts ---
 
-export const ValueCompositionChart: React.FC<ChartProps> = ({ data }) => {
+export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjection }) => {
   if (data.length === 0) return null;
   const isPPK = 'employeeContribution' in data[0];
 
@@ -341,7 +343,15 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data }) => {
   const chartData = useMemo(() => {
     if (!isPPK) return data;
     return data.map(d => {
-      const r = d as PPKDataRow;
+      // If it's a projection row, it won't have employeeContribution etc.
+      // But it will have projectedTotalValue.
+      const r = d as any;
+      
+      if (r.employeeContribution === undefined) {
+         // It's a pure projection row
+         return r;
+      }
+
       const taxAbs = Math.abs(r.tax || 0);
       // Net Value = Total Value - Tax
       const netValue = r.totalValue - taxAbs;
@@ -396,7 +406,8 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data }) => {
                 fundProfit: 'Zysk Funduszu',
                 taxSigned: 'Podatek',
                 netValue: 'Wartość Netto',
-                exitValue: 'Wartość Exit'
+                exitValue: 'Wartość Exit',
+                projectedTotalValue: 'Prognoza (Emerytura)'
               };
               return [`${value.toLocaleString('pl-PL')} zł`, nameMap[name] || name];
             }}
@@ -424,6 +435,19 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data }) => {
               />
               <Line type="monotone" dataKey="netValue" name="Wartość Netto" stroke="#064e3b" strokeWidth={2} dot={false} />
               <Line type="monotone" dataKey="exitValue" name="Wartość Exit" stroke="#475569" strokeWidth={2} dot={false} />
+              
+              {showProjection && (
+                <Line 
+                  type="monotone" 
+                  dataKey="projectedTotalValue" 
+                  name="Prognoza" 
+                  stroke="#d97706" 
+                  strokeWidth={2} 
+                  strokeDasharray="5 5"
+                  dot={false} 
+                  activeDot={{ r: 6 }}
+                />
+              )}
             </>
           ) : (
             <>
@@ -600,7 +624,7 @@ export const CryptoValueChart: React.FC<ChartProps> = ({ data }) => (
   </div>
 );
 
-export const GlobalSummaryChart: React.FC<ChartProps> = ({ data }) => {
+export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection, showCPI }) => {
   return (
     <div className="h-96 w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -631,10 +655,10 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data }) => {
           <Tooltip 
             formatter={(value: number, name: string) => {
                 const labels: Record<string, string> = {
-                    investment: 'Wkład Łączny',
-                    profit: 'Zysk Łączny',
+                    investment: 'Wkład',
+                    profit: 'Zysk',
                     projectedValue: 'Prognoza (Droga do Miliona)',
-                    realTotalValue: 'Wartość Realna (Inflacja)'
+                    realTotalValue: 'Wartość&CPI'
                 };
                 return [`${value.toLocaleString('pl-PL')} zł`, labels[name] || name];
             }}
@@ -646,7 +670,7 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data }) => {
           <Area 
             type="monotone" 
             dataKey="investment" 
-            name="Wkład Łączny" 
+            name="Wkład" 
             stackId="1" 
             stroke="#3b82f6" 
             fill="url(#colorInvestGlobal)" 
@@ -655,32 +679,36 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data }) => {
           <Area 
             type="monotone" 
             dataKey="profit" 
-            name="Zysk Łączny" 
+            name="Zysk" 
             stackId="1" 
             stroke="#10b981" 
             fill="url(#colorProfitGlobal)" 
           />
 
-          <Line 
-            type="monotone" 
-            dataKey="realTotalValue" 
-            name="Wartość Realna (Inflacja)" 
-            stroke="#334155" 
-            strokeWidth={2} 
-            strokeDasharray="3 3"
-            dot={false} 
-          />
+          {showCPI && (
+            <Line 
+              type="monotone" 
+              dataKey="realTotalValue" 
+              name="Wartość&CPI" 
+              stroke="#334155" 
+              strokeWidth={2} 
+              strokeDasharray="3 3"
+              dot={false} 
+            />
+          )}
 
-          <Line 
-            type="monotone" 
-            dataKey="projectedValue" 
-            name="Prognoza" 
-            stroke="#d97706" 
-            strokeWidth={2} 
-            strokeDasharray="5 5"
-            dot={false} 
-            activeDot={{ r: 6 }}
-          />
+          {showProjection && (
+            <Line 
+              type="monotone" 
+              dataKey="projectedValue" 
+              name="Prognoza" 
+              stroke="#d97706" 
+              strokeWidth={2} 
+              strokeDasharray="5 5"
+              dot={false} 
+              activeDot={{ r: 6 }}
+            />
+          )}
         </ComposedChart>
       </ResponsiveContainer>
     </div>
