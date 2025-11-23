@@ -30,7 +30,8 @@ import {
   Calendar,
   LayoutTemplate,
   Milestone,
-  Snowflake
+  Snowflake,
+  ArrowUpRight
 } from 'lucide-react';
 import { parseCSV, validateOMFIntegrity } from './utils/parser';
 import { AnyDataRow, SummaryStats, ValidationReport, PortfolioType, PPKDataRow, CryptoDataRow, IKEDataRow, OMFValidationReport, OMFDataRow, GlobalHistoryRow } from './types';
@@ -821,21 +822,6 @@ const App: React.FC = () => {
   }, [omfActiveAssets, portfolioType]);
 
 
-  const freeMoneyRatio = useMemo(() => {
-    if (portfolioType !== 'PPK' || !stats || !stats.totalEmployee) return 0;
-    return (stats.totalProfit / stats.totalEmployee) * 100;
-  }, [stats, portfolioType]);
-
-  const getTextColorClass = (type: string) => {
-    switch(type) {
-      case 'PPK': return 'text-indigo-700';
-      case 'CRYPTO': return 'text-violet-700';
-      case 'IKE': return 'text-cyan-700';
-      case 'OMF': return 'text-slate-800';
-      default: return 'text-blue-700';
-    }
-  };
-
   const ppkFlowData = useMemo(() => {
     if (!stats || portfolioType !== 'PPK') return [];
     
@@ -852,6 +838,30 @@ const App: React.FC = () => {
       { name: 'Wartość Portfela', value: stats.totalValue || 0, isTotal: true, fill: '#6366f1' } // Indigo
     ];
   }, [stats, portfolioType]);
+
+  // PPK Time to Payout Calculation
+  const monthsToPayout = useMemo(() => {
+    if (portfolioType !== 'PPK') return 0;
+    
+    const targetDate = new Date('2049-05-01');
+    const now = new Date();
+    
+    let months = (targetDate.getFullYear() - now.getFullYear()) * 12;
+    months -= now.getMonth();
+    months += targetDate.getMonth();
+    
+    return Math.max(0, months);
+  }, [portfolioType]);
+
+  const getTextColorClass = (type: string) => {
+    switch(type) {
+      case 'PPK': return 'text-indigo-700';
+      case 'CRYPTO': return 'text-violet-700';
+      case 'IKE': return 'text-cyan-700';
+      case 'OMF': return 'text-slate-800';
+      default: return 'text-blue-700';
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 pb-12">
@@ -1162,22 +1172,31 @@ const App: React.FC = () => {
                   colorClass={getTextColorClass(portfolioType)}
                 />
                 
-                {/* Removed Employer Card for PPK as requested */}
-                {portfolioType === 'PPK' && stats.totalState !== undefined && (
-                   /* We display State Contribution in the chart, but maybe not as a card if grid is 3. 
-                      Actually, let's put Profit here to fit 3 cols nicely or State. 
-                      Let's stick to Profit as the 3rd main card.
-                   */
-                   <StatsCard 
-                    title="Wynik (Mój Zysk)" 
-                    value={`${(stats.totalProfit || 0).toLocaleString('pl-PL')} zł`} 
-                    trend={stats.currentRoi || 0} 
-                    icon={TrendingUp} 
-                    colorClass="text-emerald-600" 
-                  />
-                )}
-
-                {portfolioType !== 'PPK' && (
+                {portfolioType === 'PPK' && stats.totalState !== undefined ? (
+                   // CUSTOM "ZYSK" CARD FOR PPK
+                   <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-100 hover:shadow-md transition-shadow duration-300">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-sm font-medium text-slate-500">Zysk</h3>
+                        <div className="p-2 rounded-lg bg-slate-50 text-emerald-600">
+                           <TrendingUp size={20} />
+                        </div>
+                      </div>
+                      <div className="flex flex-col">
+                         <span className="text-2xl font-bold text-slate-900">{`${(stats.totalProfit || 0).toLocaleString('pl-PL')} zł`}</span>
+                         <div className="flex items-center mt-1 text-sm space-x-2">
+                            {/* Gross ROI (Profit / Employee Contribution) */}
+                            <span className="flex items-center font-bold text-emerald-600 text-base">
+                               <ArrowUpRight size={18} className="mr-0.5" />
+                               {stats.totalEmployee ? ((stats.totalProfit / stats.totalEmployee) * 100).toFixed(2) : '0.00'}%
+                            </span>
+                            {/* Net ROI (Current standard ROI from CSV) */}
+                            <span className="flex items-center font-normal text-slate-400 text-xs">
+                               {stats.currentRoi ? stats.currentRoi.toFixed(2) : '0.00'}% netto
+                            </span>
+                         </div>
+                      </div>
+                   </div>
+                ) : (
                   <StatsCard 
                     title="Zysk/Strata" 
                     value={`${(stats.totalProfit || 0).toLocaleString('pl-PL')} zł`} 
@@ -1187,21 +1206,34 @@ const App: React.FC = () => {
                   />
                 )}
 
-                {portfolioType === 'PPK' && stats.totalEmployee && (
-                   /* Replaced Efficiency calculation */
-                   <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-100 hover:shadow-md transition-shadow duration-300">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-sm font-medium text-slate-500">Efektywność wpłat</h3>
-                        <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600">
-                           <Activity size={20} />
+                {portfolioType === 'PPK' ? (
+                   // CUSTOM "CZAS DO WYPŁATY" CARD FOR PPK
+                   <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-100 hover:shadow-md transition-shadow duration-300 relative overflow-hidden group">
+                      {/* Hourglass SVG Background */}
+                      <div className="absolute right-[-20px] bottom-[-20px] opacity-10 group-hover:opacity-20 transition-opacity duration-500 pointer-events-none">
+                         <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="text-slate-900">
+                            <path d="M5 22h14" />
+                            <path d="M5 2h14" />
+                            <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" />
+                            <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" />
+                            {/* Sand flowing effect */}
+                            <path d="M12 12v6" strokeWidth="2" strokeDasharray="2 2" />
+                            <path d="M10 20h4" />
+                         </svg>
+                      </div>
+
+                      <div className="flex items-center justify-between mb-4 relative z-10">
+                        <h3 className="text-sm font-medium text-slate-500">Czas do wypłaty</h3>
+                        <div className="p-2 rounded-lg bg-slate-50 text-amber-600">
+                           <Timer size={20} />
                         </div>
                       </div>
-                      <div className="flex flex-col">
-                         <span className="text-2xl font-bold text-slate-900">{(freeMoneyRatio || 0).toFixed(2)}%</span>
-                         <span className="text-sm text-slate-400 mt-1">Zysku do wkładu własnego</span>
+                      <div className="flex flex-col relative z-10">
+                         <span className="text-2xl font-bold text-slate-900">{monthsToPayout}</span>
+                         <span className="text-sm text-slate-400 mt-1">miesięcy (maj 2049)</span>
                       </div>
                    </div>
-                )}
+                ) : null}
               </div>
             )}
 

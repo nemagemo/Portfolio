@@ -347,7 +347,6 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data }) => {
       const netValue = r.totalValue - taxAbs;
       
       // Exit Value = Net Value - (30% Employer) - State - (19% Fund Profit)
-      // Note: This represents the cash value if withdrawn early (losing bonuses + paying ZUS + paying capital gains tax)
       const exitValue = netValue - (0.30 * r.employerContribution) - r.stateContribution - (0.19 * r.fundProfit);
 
       return {
@@ -371,6 +370,10 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data }) => {
             <linearGradient id="colorInvest" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.5}/>
               <stop offset="95%" stopColor="#94a3b8" stopOpacity={0}/>
+            </linearGradient>
+            <linearGradient id="colorTax" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8}/>
+              <stop offset="95%" stopColor="#ef4444" stopOpacity={0.1}/>
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
@@ -412,18 +415,18 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data }) => {
               <Area type="monotone" dataKey="employerContribution" name="Pracodawca" stackId="1" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.9} />
               <Area type="monotone" dataKey="stateContribution" name="Państwo" stackId="1" stroke="#ec4899" fill="#ec4899" fillOpacity={0.9} />
               <Area type="monotone" dataKey="fundProfit" name="Zysk Funduszu" stackId="1" stroke="#10b981" fill="#10b981" fillOpacity={0.9} />
-              {/* New Lines for Net Value, Exit Value and Tax */}
-              <Line type="monotone" dataKey="netValue" name="Wartość Netto" stroke="#0f766e" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="exitValue" name="Wartość Exit" stroke="#d97706" strokeWidth={2} dot={false} />
-              <Line 
+              
+              {/* New Lines and Tax Area */}
+              <Area 
                 type="monotone" 
                 dataKey="taxSigned" 
                 name="Podatek" 
                 stroke="#ef4444" 
-                strokeWidth={2} 
-                dot={false} 
-                strokeOpacity={0.8}
+                fill="url(#colorTax)" 
+                strokeWidth={2}
               />
+              <Line type="monotone" dataKey="netValue" name="Wartość Netto" stroke="#064e3b" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="exitValue" name="Wartość Exit" stroke="#475569" strokeWidth={2} dot={false} />
             </>
           ) : (
             <>
@@ -1028,9 +1031,6 @@ export const PPKFlowChart: React.FC<{ data: PPKWaterfallItem[] }> = ({ data }) =
   const inputRects = [];
   let currentTotalY = totalBarY; // Track where next flow connects to Total bar
 
-  // Sort inputs to match specific visual order if needed (Employee top) or leave as is
-  // Data order from App.tsx is: Employee, Employer, State, Fund Result
-  
   for (let i = 0; i < inputs.length; i++) {
       const item = inputs[i];
       const absValue = Math.abs(item.value);
@@ -1073,56 +1073,14 @@ export const PPKFlowChart: React.FC<{ data: PPKWaterfallItem[] }> = ({ data }) =
           </g>
       );
 
-      // Flow Path (Bezier Curve)
-      // Start: Middle Right of Input Rect
-      // End: Left side of Total Rect, mapped strictly to value contribution
-      // Note: Total Bar is continuous, so we map flows to stacks on the Total Bar
-      
-      // Calculate the portion of the total bar this input represents
-      // (If value is negative, it technically reduces total, but for visualization we often show it contributing 
-      // or flowing out. For simplicity here, we map absolute magnitude to flow width visually)
-      
-      // Correction: PPK Fund result can be negative. A Sankey for negative flow usually flows OUT of the total or into a loss node.
-      // Given the request for "Sankey-style" and simple visuals, if negative, we draw it, but maybe thinner or faded?
-      // Let's treat all as contributors to the visual "block" of value for now to keep the visual simple and "flowing".
-      // Or better: The visual block on the right represents the Net Total. 
-      // Inputs are components.
-      // To make it look like a Sankey: 
-      // y_start = currentY + itemHeight / 2
-      // y_end_top = currentTotalY
-      // y_end_bottom = currentTotalY + (itemHeight proportional to Right Side scale?)
-      
-      // Actually, Total Bar height is `availableHeight`. Total Value is `totalValue`.
-      // So scale on right is `availableHeight / totalValue`.
-      // But we used `scale` calculated from SUM of abs(inputs). 
-      // If sum(inputs) != totalValue (due to negative), heights won't match exactly.
-      // For the purpose of this specific chart (PPK Breakdown), components SUM to Total exactly if all positive.
-      // If Fund Profit is negative, Total < Sum(Inputs).
-      // Visual trick: We scale flows to match the Right Bar visually.
-      
-      const rightScale = availableHeight / totalValue; 
-      // If we have negative value, this logic gets tricky. 
-      // Let's assume standard PPK growth where Profit is positive for the nice visual.
-      // If negative, we'll just render it but it might look slightly overlapping or detached. 
-      // Standard fallback: Map flows to source height.
-      
-      const flowHeight = itemHeight; 
-      
-      // Path coordinates
-      const startX = padding + barWidth;
-      const startYTop = currentY;
-      const startYBot = currentY + itemHeight;
-      
-      const endX = flowEndX;
-      // Target Y on the Total Bar
-      // We stack them downwards
-      // We need to normalize the target height to fit the Total Bar exactly
-      const targetHeight = (item.value / totalValue) * availableHeight; 
-      
-      // If negative, we can't easily stack it "inside" the total bar in a standard flow.
-      // We will skip flow for negative values or draw a thin line to bottom.
-      
       if (!isNegative) {
+          const targetHeight = (item.value / totalValue) * availableHeight; 
+          
+          const startX = padding + barWidth;
+          const startYTop = currentY;
+          const startYBot = currentY + itemHeight;
+          
+          const endX = flowEndX;
           const endYTop = currentTotalY;
           const endYBot = currentTotalY + targetHeight;
           
