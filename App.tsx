@@ -261,7 +261,7 @@ const OMFIntegrityStatus: React.FC<{ report: OMFValidationReport }> = ({ report 
   );
 };
 
-const App: React.FC = () => {
+export const App: React.FC = () => {
   const [portfolioType, setPortfolioType] = useState<PortfolioType>('OMF');
   
   // Use local TS data exclusively (OFFLINE MODE)
@@ -838,7 +838,18 @@ const App: React.FC = () => {
       // For IKE, calculate tax saved
       let taxSaved = 0;
       if (portfolioType === 'IKE') {
-         taxSaved = row.profit > 0 ? row.profit * 0.19 : 0;
+         // Calculate Tax Saved based on CLOSED positions from OMF data
+         // logic: Sum of profits from closed IKE positions * 19%
+         if (omfClosedAssets.length > 0) {
+            const ikeClosedProfits = omfClosedAssets
+              .filter(a => a.portfolio === 'IKE' || a.portfolio === 'ike')
+              .reduce((sum, a) => sum + a.profit, 0);
+            
+            taxSaved = ikeClosedProfits > 0 ? ikeClosedProfits * 0.19 : 0;
+         } else {
+            // Fallback to old logic if no closed assets (or before OMF parsing)
+            taxSaved = row.profit > 0 ? row.profit * 0.19 : 0;
+         }
       }
 
       return {
@@ -849,7 +860,7 @@ const App: React.FC = () => {
         taxSaved
       };
     }
-  }, [data, portfolioType, omfActiveAssets, globalHistoryData, heatmapHistoryData, excludePPK]); // Added excludePPK
+  }, [data, portfolioType, omfActiveAssets, omfClosedAssets, globalHistoryData, heatmapHistoryData, excludePPK]); // Added omfClosedAssets to deps
 
   // --- OMF Structure Data Calculation ---
   const omfStructureData = useMemo(() => {
@@ -1379,7 +1390,7 @@ const App: React.FC = () => {
                     onClick={() => setActiveTab('dashboard')}
                     className={`pb-4 px-1 border-b-2 font-medium text-sm flex items-center ${
                       activeTab === 'dashboard'
-                        ? `border-${portfolioType === 'PPK' ? 'indigo' : 'slate'}-500 text-${portfolioType === 'PPK' ? 'indigo' : 'slate'}-600`
+                        ? 'border-slate-500 text-slate-600'
                         : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
                     }`}
                   >
@@ -1390,7 +1401,7 @@ const App: React.FC = () => {
                     onClick={() => setActiveTab('history')}
                     className={`pb-4 px-1 border-b-2 font-medium text-sm flex items-center ${
                       activeTab === 'history'
-                        ? `border-${portfolioType === 'PPK' ? 'indigo' : 'slate'}-500 text-${portfolioType === 'PPK' ? 'indigo' : 'slate'}-600`
+                        ? 'border-slate-500 text-slate-600'
                         : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
                     }`}
                   >
