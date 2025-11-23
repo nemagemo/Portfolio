@@ -33,7 +33,8 @@ import {
   Snowflake,
   ArrowUpRight,
   DoorOpen,
-  Search
+  Search,
+  Palette
 } from 'lucide-react';
 import { parseCSV, validateOMFIntegrity } from './utils/parser';
 import { AnyDataRow, SummaryStats, ValidationReport, PortfolioType, PPKDataRow, CryptoDataRow, IKEDataRow, OMFValidationReport, OMFDataRow, GlobalHistoryRow } from './types';
@@ -98,41 +99,79 @@ const TaxToggleIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-const DataStatus: React.FC<{ report: ValidationReport }> = ({ report }) => {
+// --- THEME DEFINITIONS ---
+type Theme = 'default' | 'dark' | 'comic' | 'light';
+
+const themeStyles: Record<Theme, {
+  appBg: string;
+  text: string;
+  textSub: string;
+  headerBg: string;
+  headerBorder: string;
+  cardContainer: string;
+  cardHeaderIconBg: string;
+  buttonActive: string;
+  buttonInactive: string;
+}> = {
+  default: {
+    appBg: 'bg-slate-50',
+    text: 'text-slate-900',
+    textSub: 'text-slate-500',
+    headerBg: 'bg-white',
+    headerBorder: 'border-slate-200',
+    cardContainer: 'bg-white rounded-xl shadow-sm border border-slate-200',
+    cardHeaderIconBg: 'bg-slate-50',
+    buttonActive: 'bg-slate-800 text-white shadow-sm',
+    buttonInactive: 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+  },
+  dark: {
+    appBg: 'bg-slate-950',
+    text: 'text-slate-100',
+    textSub: 'text-slate-400',
+    headerBg: 'bg-slate-900',
+    headerBorder: 'border-slate-800',
+    cardContainer: 'bg-slate-900 rounded-xl shadow-sm border border-slate-800',
+    cardHeaderIconBg: 'bg-slate-800',
+    buttonActive: 'bg-emerald-600 text-white shadow-sm shadow-emerald-900/20',
+    buttonInactive: 'bg-slate-800 text-slate-400 hover:bg-slate-700 border border-slate-700'
+  },
+  comic: {
+    appBg: 'bg-yellow-50',
+    text: 'text-black font-bold',
+    textSub: 'text-black opacity-80 font-medium',
+    headerBg: 'bg-white',
+    headerBorder: 'border-black border-b-4',
+    cardContainer: 'bg-white rounded-none border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]',
+    cardHeaderIconBg: 'bg-yellow-300 border-2 border-black',
+    buttonActive: 'bg-cyan-400 text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-black',
+    buttonInactive: 'bg-white text-black border-2 border-black hover:bg-gray-100 font-bold'
+  },
+  light: {
+    appBg: 'bg-white',
+    text: 'text-gray-900 font-serif',
+    textSub: 'text-gray-500 font-sans',
+    headerBg: 'bg-white',
+    headerBorder: 'border-gray-100',
+    cardContainer: 'bg-gray-50 rounded-md border border-gray-100',
+    cardHeaderIconBg: 'bg-white border border-gray-200',
+    buttonActive: 'bg-gray-900 text-white',
+    buttonInactive: 'bg-white text-gray-500 hover:text-gray-900 border border-gray-200'
+  }
+};
+
+const DataStatus: React.FC<{ report: ValidationReport, theme: Theme }> = ({ report, theme }) => {
   const [expanded, setExpanded] = useState(false);
   
+  // Compact success state
   if (report.isValid && report.errors.length === 0) {
-    return (
-      <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="bg-emerald-100 p-2 rounded-full">
-              <ShieldCheck className="text-emerald-600 w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-emerald-800">Weryfikacja danych pomyślna</h3>
-              <p className="text-xs text-emerald-600">Potrójne sprawdzanie: Struktura OK • Formaty OK • Logika OK</p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-             <div className="text-xs font-medium text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full">
-               Zaimportowano {report.stats.validRows} wierszy
-             </div>
-             {report.source && (
-               <span className="text-[10px] uppercase font-bold text-emerald-600 border border-emerald-200 px-2 py-0.5 rounded bg-white/50">
-                 {report.source}
-               </span>
-             )}
-          </div>
-        </div>
-      </div>
-    );
+    return null; // Handled by parent to group with OMF status
   }
 
   const isCritical = !report.isValid;
+  const containerClass = themeStyles[theme].cardContainer;
 
   return (
-    <div className={`border rounded-lg p-4 mb-6 transition-all ${isCritical ? 'bg-rose-50 border-rose-200' : 'bg-amber-50 border-amber-200'}`}>
+    <div className={`${containerClass} p-4 mb-6 transition-all ${isCritical ? 'bg-rose-50 border-rose-200' : 'bg-amber-50 border-amber-200'}`}>
       <div className="flex items-center justify-between cursor-pointer" onClick={() => setExpanded(!expanded)}>
         <div className="flex items-center space-x-3">
           <div className={`p-2 rounded-full ${isCritical ? 'bg-rose-100' : 'bg-amber-100'}`}>
@@ -184,41 +223,19 @@ const DataStatus: React.FC<{ report: ValidationReport }> = ({ report }) => {
   );
 };
 
-const OMFIntegrityStatus: React.FC<{ report: OMFValidationReport }> = ({ report }) => {
+const OMFIntegrityStatus: React.FC<{ report: OMFValidationReport, theme: Theme }> = ({ report, theme }) => {
   const [expanded, setExpanded] = useState(false);
   const isPerfect = report.isConsistent && report.messages.length === 0;
   const isCritical = !report.isConsistent;
+  const containerClass = themeStyles[theme].cardContainer;
 
+  // Compact success state
   if (isPerfect) {
-    return (
-      <div className="bg-slate-800 border border-slate-700 rounded-lg p-4 mb-6 text-white shadow-md">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="bg-emerald-500 p-2 rounded-full">
-              <Scale className="text-white w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-emerald-400">Raport Integralności OMF</h3>
-              <p className="text-xs text-slate-300">Potrójna weryfikacja: Struktura OK • Format OK • Logika OK</p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="text-xs font-medium text-white bg-emerald-600 px-3 py-1 rounded-full">
-              Spójność 100%
-            </div>
-            {report.source && (
-              <span className="text-[10px] uppercase font-bold text-slate-300 border border-slate-500 px-2 py-0.5 rounded bg-slate-700">
-                {report.source}
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-    );
+    return null; // Handled by parent
   }
 
   return (
-    <div className={`border rounded-lg p-4 mb-6 transition-all shadow-sm ${isCritical ? 'bg-rose-50 border-rose-200' : 'bg-amber-50 border-amber-200'}`}>
+    <div className={`${containerClass} p-4 mb-6 transition-all shadow-sm ${isCritical ? 'bg-rose-50 border-rose-200' : 'bg-amber-50 border-amber-200'}`}>
        <div className="flex items-center justify-between cursor-pointer" onClick={() => setExpanded(!expanded)}>
          <div className="flex items-center space-x-3">
             <div className={`p-2 rounded-full ${isCritical ? 'bg-rose-100' : 'bg-amber-100'}`}>
@@ -273,6 +290,8 @@ const OMFIntegrityStatus: React.FC<{ report: OMFValidationReport }> = ({ report 
 
 export const App: React.FC = () => {
   const [portfolioType, setPortfolioType] = useState<PortfolioType>('OMF');
+  const [theme, setTheme] = useState<Theme>('default');
+  const styles = themeStyles[theme];
   
   // Use local TS data exclusively (OFFLINE MODE)
   const [csvSources] = useState({
@@ -961,19 +980,22 @@ export const App: React.FC = () => {
     }
   };
 
+  const isOfflineValid = (portfolioType === 'OMF' && omfReport?.isConsistent) || (portfolioType !== 'OMF' && report?.isValid);
+
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 pb-12">
+    <div className={`min-h-screen ${styles.appBg} ${styles.text} pb-12 transition-colors duration-300`}>
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-center">
-          {/* Portfolio Switcher */}
-          <div className="bg-slate-100 p-1 rounded-lg flex space-x-1 overflow-x-auto">
+      <header className={`${styles.headerBg} ${styles.headerBorder} border-b sticky top-0 z-50 transition-colors duration-300`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          {/* Empty Left Space for Balance */}
+          <div className="w-24"></div>
+
+          {/* Portfolio Switcher (Centered) */}
+          <div className={`p-1 rounded-lg flex space-x-1 overflow-x-auto ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-100'}`}>
             <button
               onClick={() => handlePortfolioChange('OMF')}
               className={`flex items-center px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${
-                portfolioType === 'OMF' 
-                  ? 'bg-white text-slate-800 shadow-sm' 
-                  : 'text-slate-600 hover:text-slate-900'
+                portfolioType === 'OMF' ? styles.buttonActive : styles.buttonInactive
               }`}
             >
               <LayoutGrid size={16} className="mr-2 hidden sm:block" />
@@ -982,9 +1004,7 @@ export const App: React.FC = () => {
             <button
               onClick={() => handlePortfolioChange('PPK')}
               className={`flex items-center px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${
-                portfolioType === 'PPK' 
-                  ? 'bg-white text-indigo-700 shadow-sm' 
-                  : 'text-slate-600 hover:text-slate-900'
+                portfolioType === 'PPK' ? styles.buttonActive : styles.buttonInactive
               }`}
             >
               <Briefcase size={16} className="mr-2 hidden sm:block" />
@@ -993,9 +1013,7 @@ export const App: React.FC = () => {
             <button
               onClick={() => handlePortfolioChange('CRYPTO')}
               className={`flex items-center px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${
-                portfolioType === 'CRYPTO' 
-                  ? 'bg-white text-violet-700 shadow-sm' 
-                  : 'text-slate-600 hover:text-slate-900'
+                portfolioType === 'CRYPTO' ? styles.buttonActive : styles.buttonInactive
               }`}
             >
               <Coins size={16} className="mr-2 hidden sm:block" />
@@ -1004,14 +1022,20 @@ export const App: React.FC = () => {
             <button
               onClick={() => handlePortfolioChange('IKE')}
               className={`flex items-center px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${
-                portfolioType === 'IKE' 
-                  ? 'bg-white text-cyan-700 shadow-sm' 
-                  : 'text-slate-600 hover:text-slate-900'
+                portfolioType === 'IKE' ? styles.buttonActive : styles.buttonInactive
               }`}
             >
               <PiggyBank size={16} className="mr-2 hidden sm:block" />
               IKE
             </button>
+          </div>
+
+          {/* Theme Switcher (Right) */}
+          <div className="w-24 flex justify-end space-x-1">
+             <button onClick={() => setTheme('default')} className={`w-6 h-6 text-xs font-bold rounded ${theme === 'default' ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-500'}`} title="Default">D</button>
+             <button onClick={() => setTheme('dark')} className={`w-6 h-6 text-xs font-bold rounded ${theme === 'dark' ? 'bg-slate-800 text-white' : 'bg-slate-200 text-slate-500'}`} title="Dark Minimalist">1</button>
+             <button onClick={() => setTheme('comic')} className={`w-6 h-6 text-xs font-bold rounded ${theme === 'comic' ? 'bg-yellow-400 text-black border border-black' : 'bg-slate-200 text-slate-500'}`} title="Comic">2</button>
+             <button onClick={() => setTheme('light')} className={`w-6 h-6 text-xs font-bold rounded ${theme === 'light' ? 'bg-white border border-gray-300 text-black' : 'bg-slate-200 text-slate-500'}`} title="Light Professional">3</button>
           </div>
         </div>
       </header>
@@ -1019,8 +1043,19 @@ export const App: React.FC = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         {/* Data Status Section */}
-        {portfolioType === 'OMF' && omfReport && <OMFIntegrityStatus report={omfReport} />}
-        {portfolioType !== 'OMF' && report && <DataStatus report={report} />}
+        {isOfflineValid ? (
+           <div className="flex justify-center mb-6">
+              <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full flex items-center border border-emerald-200 shadow-sm">
+                 <CheckCircle2 size={14} className="mr-1.5" />
+                 OFFLINE
+              </span>
+           </div>
+        ) : (
+           <>
+             {portfolioType === 'OMF' && omfReport && <OMFIntegrityStatus report={omfReport} theme={theme} />}
+             {portfolioType !== 'OMF' && report && <DataStatus report={report} theme={theme} />}
+           </>
+        )}
 
         {/* OMF VIEW */}
         {portfolioType === 'OMF' && stats ? (
@@ -1032,7 +1067,8 @@ export const App: React.FC = () => {
                 value={`${(stats.totalValue || 0).toLocaleString('pl-PL')} zł`} 
                 subValue="Aktywa Otwarte + Gotówka" 
                 icon={LayoutGrid} 
-                colorClass="text-slate-800 bg-slate-100" 
+                colorClass={theme === 'dark' ? 'text-slate-300 bg-slate-800' : "text-slate-800 bg-slate-100"}
+                className={styles.cardContainer}
               />
               <StatsCard 
                 title="Zysk" 
@@ -1041,6 +1077,7 @@ export const App: React.FC = () => {
                 trendLabel="m/m"
                 icon={TrendingUp} 
                 colorClass="text-emerald-600 bg-emerald-50" 
+                className={styles.cardContainer}
               />
               <StatsCard 
                 title="Zainwestowano" 
@@ -1048,6 +1085,7 @@ export const App: React.FC = () => {
                 subValue="Kapitał (OMF)" 
                 icon={Wallet} 
                 colorClass="text-blue-600 bg-blue-50" 
+                className={styles.cardContainer}
               />
               <StatsCard 
                 title="Pozycja Gotówkowa" 
@@ -1055,6 +1093,7 @@ export const App: React.FC = () => {
                 subValue="PLN" 
                 icon={Banknote} 
                 colorClass="text-violet-600 bg-violet-50" 
+                className={styles.cardContainer}
               />
             </div>
 
@@ -1065,6 +1104,7 @@ export const App: React.FC = () => {
                 value={`${(stats.currentRoi || 0).toFixed(2)}%`} 
                 icon={Percent}
                 colorClass="text-indigo-600 bg-indigo-50" 
+                className={styles.cardContainer}
               />
               <StatsCard 
                 title="CAGR" 
@@ -1072,6 +1112,7 @@ export const App: React.FC = () => {
                 subValue="(ROI Based)"
                 icon={Activity}
                 colorClass="text-purple-600 bg-purple-50" 
+                className={styles.cardContainer}
               />
               <StatsCard 
                 title="LTM" 
@@ -1079,6 +1120,7 @@ export const App: React.FC = () => {
                 subValue="(TWR)"
                 icon={Timer}
                 colorClass="text-amber-600 bg-amber-50" 
+                className={styles.cardContainer}
               />
               <StatsCard 
                 title="YTD" 
@@ -1086,19 +1128,20 @@ export const App: React.FC = () => {
                 subValue="(TWR)"
                 icon={Calendar}
                 colorClass="text-teal-600 bg-teal-50" 
+                className={styles.cardContainer}
               />
             </div>
 
             {/* Global Portfolio History & Road to Million */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <div className={`${styles.cardContainer} p-6`}>
               <div className="flex flex-col md:flex-row items-center justify-between mb-6 space-y-4 md:space-y-0">
                 <div>
-                  <h3 className="text-lg font-bold text-slate-800">Historia Old Man Fund</h3>
-                  <p className="text-sm text-slate-500">Wkład Łączny vs Zysk Łączny (PPK + Krypto + IKE)</p>
+                  <h3 className={`text-lg font-bold ${styles.text}`}>Historia Old Man Fund</h3>
+                  <p className={`text-sm ${styles.textSub}`}>Wkład Łączny vs Zysk Łączny (PPK + Krypto + IKE)</p>
                 </div>
                 
                 {/* Road to Million & CPI Controls */}
-                <div className="flex items-center space-x-3 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                <div className={`flex items-center space-x-3 p-2 rounded-lg border ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-100'}`}>
                    {/* No PPK Button */}
                    <button
                      onClick={() => setExcludePPK(!excludePPK)}
@@ -1106,7 +1149,7 @@ export const App: React.FC = () => {
                      className={`flex items-center justify-center w-20 px-2 py-1.5 rounded-md transition-all ${
                        excludePPK 
                          ? 'bg-slate-800 text-white shadow-sm ring-1 ring-slate-900' 
-                         : 'bg-white text-slate-500 hover:text-slate-700 border border-slate-200'
+                         : `bg-transparent ${theme === 'dark' ? 'text-slate-400 border-slate-600 hover:text-white' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`
                      } ${showCPI || showProjection ? 'opacity-50 cursor-not-allowed' : ''}`}
                      title={excludePPK ? "Pokaż PPK" : "Ukryj PPK"}
                    >
@@ -1119,7 +1162,7 @@ export const App: React.FC = () => {
                      className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
                        showCPI 
                          ? 'bg-slate-200 text-slate-800 shadow-sm ring-1 ring-slate-300' 
-                         : 'bg-white text-slate-500 hover:text-slate-700 border border-slate-200'
+                         : `bg-transparent ${theme === 'dark' ? 'text-slate-400 border-slate-600 hover:text-white' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`
                      } ${excludePPK ? 'opacity-50 cursor-not-allowed' : ''}`}
                    >
                      CPI
@@ -1133,7 +1176,7 @@ export const App: React.FC = () => {
                      className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
                        showProjection 
                          ? 'bg-amber-100 text-amber-700 shadow-sm ring-1 ring-amber-200' 
-                         : 'bg-white text-slate-500 hover:text-slate-700 border border-slate-200'
+                         : `bg-transparent ${theme === 'dark' ? 'text-slate-400 border-slate-600 hover:text-white' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`
                      } ${excludePPK ? 'opacity-50 cursor-not-allowed' : ''}`}
                    >
                      <Milestone size={14} className="mr-2" />
@@ -1142,7 +1185,7 @@ export const App: React.FC = () => {
 
                    {showProjection && (
                      <div className="flex items-center space-x-2 animate-in fade-in slide-in-from-right-4 duration-300">
-                        <div className="flex bg-white rounded-md border border-slate-200 p-0.5">
+                        <div className={`flex rounded-md border p-0.5 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
                           <button 
                             onClick={() => setProjectionMethod('LTM')}
                             className={`px-2 py-1 text-[10px] font-medium rounded ${projectionMethod === 'LTM' ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-100'}`}
@@ -1156,7 +1199,7 @@ export const App: React.FC = () => {
                             CAGR
                           </button>
                         </div>
-                        <span className="text-[10px] font-mono text-slate-500">
+                        <span className={`text-[10px] font-mono ${styles.textSub}`}>
                           +{projectionMethod === 'LTM' ? rateDisplay.ltm.toFixed(2) : rateDisplay.cagr.toFixed(2)}% m/m
                         </span>
                      </div>
@@ -1164,45 +1207,45 @@ export const App: React.FC = () => {
                 </div>
               </div>
               
-              <GlobalSummaryChart data={chartDataWithProjection} showProjection={showProjection} showCPI={showCPI} />
+              <GlobalSummaryChart data={chartDataWithProjection} showProjection={showProjection} showCPI={showCPI} themeMode={theme} />
             </div>
 
             {/* Global Performance Chart */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <div className={`${styles.cardContainer} p-6`}>
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-lg font-bold text-slate-800">Efektywność Old Man Fund</h3>
-                  <p className="text-sm text-slate-500">Analiza stopy zwrotu (ROI) oraz TWR w czasie</p>
+                  <h3 className={`text-lg font-bold ${styles.text}`}>Efektywność Old Man Fund</h3>
+                  <p className={`text-sm ${styles.textSub}`}>Analiza stopy zwrotu (ROI) oraz TWR w czasie</p>
                 </div>
-                <div className="p-2 bg-purple-50 rounded-lg">
+                <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}>
                   <TrendingUp className="text-purple-600" size={20} />
                 </div>
               </div>
-              <GlobalPerformanceChart data={globalHistoryData} />
+              <GlobalPerformanceChart data={globalHistoryData} themeMode={theme} />
             </div>
 
             {/* OMF Treemap Chart */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <div className={`${styles.cardContainer} p-6`}>
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-lg font-bold text-slate-800">Mapa Aktywów (Treemap)</h3>
-                  <p className="text-sm text-slate-500">Wizualizacja kafelkowa struktury portfela.</p>
+                  <h3 className={`text-lg font-bold ${styles.text}`}>Mapa Aktywów (Treemap)</h3>
+                  <p className={`text-sm ${styles.textSub}`}>Wizualizacja kafelkowa struktury portfela.</p>
                 </div>
-                <div className="p-2 bg-cyan-50 rounded-lg">
+                <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}>
                   <LayoutTemplate className="text-cyan-600" size={20} />
                 </div>
               </div>
-              <OMFTreemapChart data={omfStructureData} />
+              <OMFTreemapChart data={omfStructureData} themeMode={theme} />
             </div>
 
             {/* Heatmap */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 overflow-x-auto">
+            <div className={`${styles.cardContainer} p-6 overflow-x-auto`}>
               <div className="flex items-center justify-between mb-6 min-w-[600px]">
                 <div>
-                  <h3 className="text-lg font-bold text-slate-800">Miesięczne Stopy Zwrotu</h3>
-                  <p className="text-sm text-slate-500">Analiza efektywności portfela (Crypto + IKE) bez uwzględnienia PPK</p>
+                  <h3 className={`text-lg font-bold ${styles.text}`}>Miesięczne Stopy Zwrotu</h3>
+                  <p className={`text-sm ${styles.textSub}`}>Analiza efektywności portfela (Crypto + IKE) bez uwzględnienia PPK</p>
                 </div>
-                <div className="p-2 bg-emerald-50 rounded-lg">
+                <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}>
                   <CalendarDays className="text-emerald-600" size={20} />
                 </div>
               </div>
@@ -1210,42 +1253,42 @@ export const App: React.FC = () => {
             </div>
 
             {/* Seasonality Chart (Separate Card) */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <div className={`${styles.cardContainer} p-6`}>
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-lg font-bold text-slate-800">Sezonowość</h3>
-                  <p className="text-sm text-slate-500">Średnia stopa zwrotu w poszczególnych miesiącach</p>
+                  <h3 className={`text-lg font-bold ${styles.text}`}>Sezonowość</h3>
+                  <p className={`text-sm ${styles.textSub}`}>Średnia stopa zwrotu w poszczególnych miesiącach</p>
                 </div>
-                <div className="p-2 bg-blue-50 rounded-lg">
+                <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}>
                   <Snowflake className="text-blue-600" size={20} />
                 </div>
               </div>
-              <SeasonalityChart data={heatmapHistoryData} />
+              <SeasonalityChart data={heatmapHistoryData} themeMode={theme} />
             </div>
 
             {/* Portfolio Allocation History Chart */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <div className={`${styles.cardContainer} p-6`}>
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-lg font-bold text-slate-800">Historia Alokacji Portfela</h3>
-                  <p className="text-sm text-slate-500">Zmiana udziału procentowego PPK, Crypto i IKE w czasie</p>
+                  <h3 className={`text-lg font-bold ${styles.text}`}>Historia Alokacji Portfela</h3>
+                  <p className={`text-sm ${styles.textSub}`}>Zmiana udziału procentowego PPK, Crypto i IKE w czasie</p>
                 </div>
-                <div className="p-2 bg-blue-50 rounded-lg">
+                <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}>
                   <PieChart className="text-blue-600" size={20} />
                 </div>
               </div>
-              <PortfolioAllocationHistoryChart data={globalHistoryData} />
+              <PortfolioAllocationHistoryChart data={globalHistoryData} themeMode={theme} />
             </div>
 
             {/* Tables */}
             <div className="space-y-8">
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+              <div className={`${styles.cardContainer} overflow-hidden`}>
                 <div 
-                  className="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors"
+                  className={`px-6 py-4 border-b flex justify-between items-center cursor-pointer transition-colors ${theme === 'dark' ? 'bg-slate-900 border-slate-800 hover:bg-slate-800' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}
                   onClick={() => setIsActivePositionsExpanded(!isActivePositionsExpanded)}
                 >
                   <div className="flex items-center space-x-2">
-                     <h3 className="text-lg font-bold text-slate-800">Aktywne Pozycje</h3>
+                     <h3 className={`text-lg font-bold ${styles.text}`}>Aktywne Pozycje</h3>
                      {isActivePositionsExpanded ? <ChevronUp size={20} className="text-slate-400"/> : <ChevronDown size={20} className="text-slate-400"/>}
                   </div>
                   <span className="text-xs font-medium bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full">
@@ -1261,13 +1304,13 @@ export const App: React.FC = () => {
                 )}
               </div>
 
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+              <div className={`${styles.cardContainer} overflow-hidden`}>
                 <div 
-                  className="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors"
+                  className={`px-6 py-4 border-b flex justify-between items-center cursor-pointer transition-colors ${theme === 'dark' ? 'bg-slate-900 border-slate-800 hover:bg-slate-800' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}
                   onClick={() => setIsClosedHistoryExpanded(!isClosedHistoryExpanded)}
                 >
                   <div className="flex items-center space-x-2">
-                     <h3 className="text-lg font-bold text-slate-800">Historia Zamkniętych Pozycji</h3>
+                     <h3 className={`text-lg font-bold ${styles.text}`}>Historia Zamkniętych Pozycji</h3>
                      {isClosedHistoryExpanded ? <ChevronUp size={20} className="text-slate-400"/> : <ChevronDown size={20} className="text-slate-400"/>}
                   </div>
                   <span className="text-xs font-medium bg-slate-200 text-slate-600 px-2 py-1 rounded-full">
@@ -1289,18 +1332,18 @@ export const App: React.FC = () => {
                 
                 {portfolioType === 'PPK' ? (
                    // CUSTOM "WARTOŚĆ" CARD FOR PPK (With Exit Value)
-                   <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-100 hover:shadow-md transition-shadow duration-300">
+                   <div className={`${styles.cardContainer} p-6 hover:shadow-md transition-shadow duration-300`}>
                       <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-sm font-medium text-slate-500">Wartość</h3>
-                        <div className="p-2 rounded-lg bg-slate-50 text-indigo-700">
+                        <h3 className={`text-sm font-medium ${styles.textSub}`}>Wartość</h3>
+                        <div className={`p-2 rounded-lg ${theme === 'dark' ? 'bg-indigo-900 text-indigo-200' : 'bg-slate-50 text-indigo-700'}`}>
                            <Wallet size={20} />
                         </div>
                       </div>
                       <div className="flex flex-col">
-                         <span className="text-2xl font-bold text-slate-900">{`${(stats.totalValue || 0).toLocaleString('pl-PL')} zł`}</span>
+                         <span className={`text-2xl font-bold ${styles.text}`}>{`${(stats.totalValue || 0).toLocaleString('pl-PL')} zł`}</span>
                          <div className="flex items-center mt-1 text-sm space-x-2">
                             {/* Exit Value */}
-                            <span className="flex items-center font-bold text-slate-600 text-base">
+                            <span className={`flex items-center font-bold text-base ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
                                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                                   <polyline points="16 17 21 12 16 7" />
@@ -1320,6 +1363,7 @@ export const App: React.FC = () => {
                     value={`${(stats.totalValue || 0).toLocaleString('pl-PL')} zł`} 
                     icon={Wallet} 
                     colorClass={getTextColorClass(portfolioType)}
+                    className={styles.cardContainer}
                   />
                 )}
 
@@ -1328,19 +1372,20 @@ export const App: React.FC = () => {
                   value={`${(stats.totalInvestment ?? stats.totalEmployee ?? 0).toLocaleString('pl-PL')} zł`} 
                   icon={Building2} 
                   colorClass={getTextColorClass(portfolioType)}
+                  className={styles.cardContainer}
                 />
                 
                 {portfolioType === 'PPK' && stats.totalState !== undefined ? (
                    // CUSTOM "ZYSK" CARD FOR PPK
-                   <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-100 hover:shadow-md transition-shadow duration-300">
+                   <div className={`${styles.cardContainer} p-6 hover:shadow-md transition-shadow duration-300`}>
                       <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-sm font-medium text-slate-500">Zysk</h3>
-                        <div className="p-2 rounded-lg bg-slate-50 text-emerald-600">
+                        <h3 className={`text-sm font-medium ${styles.textSub}`}>Zysk</h3>
+                        <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg} text-emerald-600`}>
                            <TrendingUp size={20} />
                         </div>
                       </div>
                       <div className="flex flex-col">
-                         <span className="text-2xl font-bold text-slate-900">{`${(stats.totalProfit || 0).toLocaleString('pl-PL')} zł`}</span>
+                         <span className={`text-2xl font-bold ${styles.text}`}>{`${(stats.totalProfit || 0).toLocaleString('pl-PL')} zł`}</span>
                          <div className="flex items-center mt-1 text-sm space-x-2">
                             {/* Gross ROI (Profit / Employee Contribution) */}
                             <span className="flex items-center font-bold text-emerald-600 text-base">
@@ -1348,7 +1393,7 @@ export const App: React.FC = () => {
                                {stats.totalEmployee ? ((stats.totalProfit / stats.totalEmployee) * 100).toFixed(2) : '0.00'}%
                             </span>
                             {/* Net ROI (Current standard ROI from CSV) */}
-                            <span className="flex items-center font-normal text-slate-400 text-xs">
+                            <span className={`flex items-center font-normal text-xs ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
                                {stats.currentRoi ? stats.currentRoi.toFixed(2) : '0.00'}% netto
                             </span>
                          </div>
@@ -1361,21 +1406,22 @@ export const App: React.FC = () => {
                     trend={stats.currentRoi || 0} 
                     icon={TrendingUp} 
                     colorClass={(stats.totalProfit || 0) >= 0 ? "text-emerald-600" : "text-rose-600"} 
+                    className={styles.cardContainer}
                   />
                 )}
 
                 {portfolioType === 'PPK' ? (
                    // CUSTOM "CZAS DO WYPŁATY" CARD FOR PPK (Clean, No Background Icon)
-                   <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-100 hover:shadow-md transition-shadow duration-300">
+                   <div className={`${styles.cardContainer} p-6 hover:shadow-md transition-shadow duration-300`}>
                       <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-sm font-medium text-slate-500">Czas do wypłaty</h3>
-                        <div className="p-2 rounded-lg bg-slate-50 text-amber-600">
+                        <h3 className={`text-sm font-medium ${styles.textSub}`}>Czas do wypłaty</h3>
+                        <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg} text-amber-600`}>
                            <Timer size={20} />
                         </div>
                       </div>
                       <div className="flex flex-col">
-                         <span className="text-2xl font-bold text-slate-900">{monthsToPayout}</span>
-                         <span className="text-sm text-slate-400 mt-1">miesięcy (maj 2049)</span>
+                         <span className={`text-2xl font-bold ${styles.text}`}>{monthsToPayout}</span>
+                         <span className={`text-sm mt-1 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>miesięcy (maj 2049)</span>
                       </div>
                    </div>
                 ) : null}
@@ -1388,23 +1434,22 @@ export const App: React.FC = () => {
                      subValue="Zaoszczędzony podatek (19%)"
                      icon={ShieldCheck} 
                      colorClass="text-cyan-700 bg-cyan-50" 
+                     className={styles.cardContainer}
                    />
                 )}
               </div>
             )}
 
-            {/* Removed PPKStructureBar as requested */}
-
-            {/* Tabs - Hidden for PPK and Crypto/IKE as requested */}
+            {/* Tabs */}
             {(portfolioType === 'OMF') && (
-              <div className="border-b border-slate-200 mb-8">
+              <div className={`border-b mb-8 ${styles.headerBorder}`}>
                 <nav className="-mb-px flex space-x-8">
                   <button
                     onClick={() => setActiveTab('dashboard')}
                     className={`pb-4 px-1 border-b-2 font-medium text-sm flex items-center ${
                       activeTab === 'dashboard'
-                        ? 'border-slate-500 text-slate-600'
-                        : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                        ? `border-slate-500 ${styles.text}`
+                        : `border-transparent ${styles.textSub} hover:border-slate-300`
                     }`}
                   >
                     <LayoutDashboard className="w-4 h-4 mr-2" />
@@ -1414,8 +1459,8 @@ export const App: React.FC = () => {
                     onClick={() => setActiveTab('history')}
                     className={`pb-4 px-1 border-b-2 font-medium text-sm flex items-center ${
                       activeTab === 'history'
-                        ? 'border-slate-500 text-slate-600'
-                        : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                        ? `border-slate-500 ${styles.text}`
+                        : `border-transparent ${styles.textSub} hover:border-slate-300`
                     }`}
                   >
                     <FileText className="w-4 h-4 mr-2" />
@@ -1431,18 +1476,18 @@ export const App: React.FC = () => {
                   /* PPK Visualizations (Dashboard Only) */
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* Make Value Chart Full Width */}
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
+                    <div className={`${styles.cardContainer} p-6 lg:col-span-2`}>
                       <div className="flex flex-col md:flex-row items-center justify-between mb-6 space-y-4 md:space-y-0">
-                        <h3 className="text-lg font-bold text-slate-800">Wartość Portfela</h3>
+                        <h3 className={`text-lg font-bold ${styles.text}`}>Wartość Portfela</h3>
                         
                         {/* Road to Retirement Controls */}
-                        <div className="flex items-center space-x-4 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                        <div className={`flex items-center space-x-4 p-2 rounded-lg border ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-100'}`}>
                            <button
                              onClick={() => setShowPPKProjection(!showPPKProjection)}
                              className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
                                showPPKProjection 
                                  ? 'bg-amber-100 text-amber-700 shadow-sm ring-1 ring-amber-200' 
-                                 : 'bg-white text-slate-500 hover:text-slate-700 border border-slate-200'
+                                 : `bg-transparent ${theme === 'dark' ? 'text-slate-400 border-slate-600 hover:text-white' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`
                              }`}
                            >
                              <Milestone size={14} className="mr-2" />
@@ -1450,33 +1495,33 @@ export const App: React.FC = () => {
                            </button>
 
                            {showPPKProjection && (
-                             <span className="text-[10px] font-mono text-slate-500 animate-in fade-in slide-in-from-right-4 duration-300">
+                             <span className={`text-[10px] font-mono ${styles.textSub} animate-in fade-in slide-in-from-right-4 duration-300`}>
                                +{ppkRateDisplay.cagr.toFixed(2)}% m/m (CAGR)
                              </span>
                            )}
                         </div>
                       </div>
-                      <ValueCompositionChart data={ppkChartDataWithProjection} showProjection={showPPKProjection} />
+                      <ValueCompositionChart data={ppkChartDataWithProjection} showProjection={showPPKProjection} themeMode={theme} />
                     </div>
                     
                     {/* ROI Chart */}
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
-                      <h3 className="text-lg font-bold text-slate-800 mb-6">ROI w czasie</h3>
-                      <ROIChart data={data} />
+                    <div className={`${styles.cardContainer} p-6 lg:col-span-2`}>
+                      <h3 className={`text-lg font-bold ${styles.text} mb-6`}>ROI w czasie</h3>
+                      <ROIChart data={data} themeMode={theme} />
                     </div>
 
                     {/* Capital Structure History Chart (Full Width below ROI) */}
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
-                      <h3 className="text-lg font-bold text-slate-800 mb-6">Struktura Kapitału w czasie</h3>
-                      <CapitalStructureHistoryChart data={data} />
+                    <div className={`${styles.cardContainer} p-6 lg:col-span-2`}>
+                      <h3 className={`text-lg font-bold ${styles.text} mb-6`}>Struktura Kapitału w czasie</h3>
+                      <CapitalStructureHistoryChart data={data} themeMode={theme} />
                     </div>
                   </div>
                 ) : (
                   /* Crypto / IKE Visualizations */
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
+                    <div className={`${styles.cardContainer} p-6 lg:col-span-2`}>
                       <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-lg font-bold text-slate-800">
+                        <h3 className={`text-lg font-bold ${styles.text}`}>
                           {portfolioType === 'IKE' && showTaxComparison 
                             ? 'Kapitał vs Wycena (IKE vs Opodatkowane)' 
                             : 'Kapitał vs Wycena'}
@@ -1486,8 +1531,8 @@ export const App: React.FC = () => {
                             onClick={() => setShowTaxComparison(!showTaxComparison)}
                             className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
                               showTaxComparison 
-                                ? 'bg-slate-800 text-white shadow-sm' 
-                                : 'bg-white text-slate-500 hover:text-slate-700 border border-slate-200'
+                                ? styles.buttonActive
+                                : styles.buttonInactive
                             }`}
                             title="Pokaż porównanie z kontem opodatkowanym"
                           >
@@ -1496,23 +1541,19 @@ export const App: React.FC = () => {
                           </button>
                         )}
                       </div>
-                      <CryptoValueChart data={data} showTaxComparison={showTaxComparison} />
+                      <CryptoValueChart data={data} showTaxComparison={showTaxComparison} themeMode={theme} />
                     </div>
-                    {/* CryptoProfitChart removed as requested */}
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
-                      <h3 className="text-lg font-bold text-slate-800 mb-6">ROI w czasie</h3>
-                      <ROIChart data={data} />
+                    <div className={`${styles.cardContainer} p-6 lg:col-span-2`}>
+                      <h3 className={`text-lg font-bold ${styles.text} mb-6`}>ROI w czasie</h3>
+                      <ROIChart data={data} themeMode={theme} />
                     </div>
                   </div>
                 )}
               </div>
             )}
 
-            {/* History Table rendered directly if no tabs are shown (or if activeTab is history) */}
-            {/* For PPK, we removed the History tab, so we only show HistoryTable if we add it back. 
-                Current requirement says "Usuń zakładkę Historia" for PPK. So it's gone. */}
             {activeTab === 'history' && portfolioType === 'OMF' && (
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+              <div className={`${styles.cardContainer} overflow-hidden`}>
                 <HistoryTable data={data} type={portfolioType} />
               </div>
             )}

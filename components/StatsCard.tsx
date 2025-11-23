@@ -10,28 +10,41 @@ interface StatsCardProps {
   trend?: number; // Positive or negative number for trend
   trendLabel?: string; // Optional label like "m/m"
   colorClass?: string;
+  className?: string; // New prop for theming overrides
 }
 
-export const StatsCard: React.FC<StatsCardProps> = ({ title, value, subValue, icon: Icon, trend, trendLabel, colorClass = "text-blue-600" }) => {
+export const StatsCard: React.FC<StatsCardProps> = ({ 
+  title, 
+  value, 
+  subValue, 
+  icon: Icon, 
+  trend, 
+  trendLabel, 
+  colorClass = "text-blue-600",
+  className 
+}) => {
+  // Default classes if no override is provided via className
+  const containerClass = className || "bg-white rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow duration-300";
+
   return (
-    <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-100 hover:shadow-md transition-shadow duration-300">
+    <div className={`p-6 ${containerClass}`}>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-medium text-slate-500">{title}</h3>
-        <div className={`p-2 rounded-lg bg-slate-50 ${colorClass}`}>
+        <h3 className="text-sm font-medium opacity-70">{title}</h3>
+        <div className={`p-2 rounded-lg bg-opacity-10 ${colorClass}`}>
           <Icon size={20} />
         </div>
       </div>
       <div className="flex flex-col">
-        <span className="text-2xl font-bold text-slate-900">{value}</span>
+        <span className="text-2xl font-bold">{value}</span>
         {(subValue || trend !== undefined) && (
           <div className="flex items-center mt-1 text-sm">
             {trend !== undefined && (
               <span className={`flex items-center font-medium ${trend >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                 {trend >= 0 ? <ArrowUpRight size={16} className="mr-1" /> : <ArrowDownRight size={16} className="mr-1" />}
-                {Math.abs(trend).toFixed(2)}%{trendLabel && <span className="ml-1 font-normal text-slate-500">{trendLabel}</span>}
+                {Math.abs(trend).toFixed(2)}%{trendLabel && <span className="ml-1 font-normal opacity-60">{trendLabel}</span>}
               </span>
             )}
-            {subValue && <span className="text-slate-400 ml-2">{subValue}</span>}
+            {subValue && <span className="opacity-50 ml-2">{subValue}</span>}
           </div>
         )}
       </div>
