@@ -31,12 +31,13 @@ import {
   LayoutTemplate,
   Milestone,
   Snowflake,
-  ArrowUpRight
+  ArrowUpRight,
+  DoorOpen
 } from 'lucide-react';
 import { parseCSV, validateOMFIntegrity } from './utils/parser';
 import { AnyDataRow, SummaryStats, ValidationReport, PortfolioType, PPKDataRow, CryptoDataRow, IKEDataRow, OMFValidationReport, OMFDataRow, GlobalHistoryRow } from './types';
 import { StatsCard } from './components/StatsCard';
-import { ValueCompositionChart, ROIChart, ContributionComparisonChart, CryptoValueChart, OMFAllocationChart, GlobalSummaryChart, GlobalPerformanceChart, OMFStructureChart, OMFTreemapChart, PortfolioAllocationHistoryChart, CapitalStructureHistoryChart, SeasonalityChart, PPKFlowChart } from './components/Charts';
+import { ValueCompositionChart, ROIChart, ContributionComparisonChart, CryptoValueChart, OMFAllocationChart, GlobalSummaryChart, GlobalPerformanceChart, OMFStructureChart, OMFTreemapChart, PortfolioAllocationHistoryChart, CapitalStructureHistoryChart, SeasonalityChart, PPKStructureBar } from './components/Charts';
 import { HistoryTable } from './components/HistoryTable';
 import { ReturnsHeatmap } from './components/ReturnsHeatmap';
 
@@ -45,8 +46,9 @@ import { PPK_DATA } from './CSV/PPK';
 import { KRYPTO_DATA } from './CSV/Krypto';
 import { IKE_DATA } from './CSV/IKE';
 import { OMF_DATA } from './CSV/OMF';
-// Import benchmarks
+// Import benchmarks & inflation
 import { SP500_DATA, WIG20_DATA } from './constants/benchmarks';
+import { CPI_DATA } from './constants/inflation';
 
 /**
  * ============================================================================
@@ -358,10 +360,13 @@ const App: React.FC = () => {
     let lastCrypto = { inv: 0, profit: 0 };
     let lastIKE = { inv: 0, profit: 0 };
     
-    // Variables for Cumulative TWR Calculation (Crypto + IKE Only)
+    // Variables for Cumulative TWR Calculation (Strictly Crypto + IKE, No PPK)
     let twrProduct = 1;
     let prevTwrVal = 0;
     let prevTwrInv = 0;
+
+    // Variable for Inflation Calculation
+    let cumulativeInflation = 1.0;
 
     // Benchmarks Baseline
     let startSP500 = 0;
@@ -414,6 +419,20 @@ const App: React.FC = () => {
       prevTwrVal = currTwrVal;
       prevTwrInv = currTwrInv;
 
+      // --- Real Value Calculation (Inflation Adjusted) ---
+      // CPI_DATA is Month-over-Month.
+      // If we are at date X, we apply the inflation that occurred *during* that month (or ending at that month).
+      // We assume the portfolio starts at index 1.0 relative to start date.
+      
+      if (index > 0) {
+         // Lookup inflation for this specific month
+         // CPI_DATA keys map to the row date (e.g. "2023-04-01" has 0.7% inflation)
+         const inflationRate = CPI_DATA[date] || 0;
+         cumulativeInflation *= (1 + inflationRate);
+      }
+      
+      const realTotalValue = totalValue / cumulativeInflation;
+
       // For Allocation Chart
       const ppkVal = lastPPK.inv + lastPPK.profit;
       const cryptoVal = lastCrypto.inv + lastCrypto.profit;
@@ -442,6 +461,7 @@ const App: React.FC = () => {
         investment: totalInvestment,
         profit: totalProfit,
         totalValue: totalValue, 
+        realTotalValue, // Add this new calculated field
         roi: totalInvestment > 0 ? (totalProfit / totalInvestment) * 100 : 0,
         cumulativeTwr: (twrProduct - 1) * 100,
         
@@ -757,6 +777,10 @@ const App: React.FC = () => {
     
     if (portfolioType === 'PPK') {
       const row = last as PPKDataRow;
+      const taxAbs = Math.abs(row.tax || 0);
+      const netValue = row.totalValue - taxAbs;
+      const exitValue = netValue - (0.30 * row.employerContribution) - row.stateContribution - (0.19 * row.fundProfit);
+
       return {
         totalValue: row.totalValue,
         totalProfit: row.profit,
@@ -764,8 +788,10 @@ const App: React.FC = () => {
         totalEmployer: row.employerContribution,
         totalState: row.stateContribution,
         currentRoi: row.roi,
-        currentExitRoi: row.exitRoi
-      };
+        currentExitRoi: row.exitRoi,
+        // Storing exitValue as a custom property in the stat object for the card
+        customExitValue: exitValue
+      } as SummaryStats & { customExitValue?: number };
     } else {
       const row = last as CryptoDataRow | IKEDataRow;
       return {
@@ -1158,13 +1184,44 @@ const App: React.FC = () => {
           <>
             {/* Stats Grid */}
             {stats && (
-              <div className={`grid grid-cols-1 gap-6 mb-8 ${portfolioType === 'PPK' ? 'lg:grid-cols-3 xl:grid-cols-4' : 'lg:grid-cols-4'}`}>
-                <StatsCard 
-                  title="Wartość Całkowita" 
-                  value={`${(stats.totalValue || 0).toLocaleString('pl-PL')} zł`} 
-                  icon={Wallet} 
-                  colorClass={getTextColorClass(portfolioType)}
-                />
+              <div className={`grid grid-cols-1 gap-6 mb-4 ${portfolioType === 'PPK' ? 'lg:grid-cols-3 xl:grid-cols-4' : 'lg:grid-cols-4'}`}>
+                
+                {portfolioType === 'PPK' ? (
+                   // CUSTOM "WARTOŚĆ" CARD FOR PPK (With Exit Value)
+                   <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-100 hover:shadow-md transition-shadow duration-300">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-sm font-medium text-slate-500">Wartość</h3>
+                        <div className="p-2 rounded-lg bg-slate-50 text-indigo-700">
+                           <Wallet size={20} />
+                        </div>
+                      </div>
+                      <div className="flex flex-col">
+                         <span className="text-2xl font-bold text-slate-900">{`${(stats.totalValue || 0).toLocaleString('pl-PL')} zł`}</span>
+                         <div className="flex items-center mt-1 text-sm space-x-2">
+                            {/* Exit Value */}
+                            <span className="flex items-center font-bold text-slate-600 text-base">
+                               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                                  <polyline points="16 17 21 12 16 7" />
+                                  <line x1="21" y1="12" x2="9" y2="12" />
+                                  {/* Custom "Running man" stick figure approximation */}
+                                  <path d="M13 10l-2 3l2 3" strokeWidth="1.5" /> 
+                                  <circle cx="13" cy="8" r="1.5" fill="currentColor" stroke="none"/>
+                               </svg>
+                               {((stats as any).customExitValue || 0).toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł
+                            </span>
+                         </div>
+                      </div>
+                   </div>
+                ) : (
+                  <StatsCard 
+                    title="Wartość Całkowita" 
+                    value={`${(stats.totalValue || 0).toLocaleString('pl-PL')} zł`} 
+                    icon={Wallet} 
+                    colorClass={getTextColorClass(portfolioType)}
+                  />
+                )}
+
                 <StatsCard 
                   title={portfolioType === 'PPK' ? "Wkład Własny" : "Zainwestowano"} 
                   value={`${(stats.totalInvestment ?? stats.totalEmployee ?? 0).toLocaleString('pl-PL')} zł`} 
@@ -1207,28 +1264,15 @@ const App: React.FC = () => {
                 )}
 
                 {portfolioType === 'PPK' ? (
-                   // CUSTOM "CZAS DO WYPŁATY" CARD FOR PPK
-                   <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-100 hover:shadow-md transition-shadow duration-300 relative overflow-hidden group">
-                      {/* Hourglass SVG Background */}
-                      <div className="absolute right-[-20px] bottom-[-20px] opacity-10 group-hover:opacity-20 transition-opacity duration-500 pointer-events-none">
-                         <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="text-slate-900">
-                            <path d="M5 22h14" />
-                            <path d="M5 2h14" />
-                            <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" />
-                            <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" />
-                            {/* Sand flowing effect */}
-                            <path d="M12 12v6" strokeWidth="2" strokeDasharray="2 2" />
-                            <path d="M10 20h4" />
-                         </svg>
-                      </div>
-
-                      <div className="flex items-center justify-between mb-4 relative z-10">
+                   // CUSTOM "CZAS DO WYPŁATY" CARD FOR PPK (Clean, No Background Icon)
+                   <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-100 hover:shadow-md transition-shadow duration-300">
+                      <div className="flex items-center justify-between mb-4">
                         <h3 className="text-sm font-medium text-slate-500">Czas do wypłaty</h3>
                         <div className="p-2 rounded-lg bg-slate-50 text-amber-600">
                            <Timer size={20} />
                         </div>
                       </div>
-                      <div className="flex flex-col relative z-10">
+                      <div className="flex flex-col">
                          <span className="text-2xl font-bold text-slate-900">{monthsToPayout}</span>
                          <span className="text-sm text-slate-400 mt-1">miesięcy (maj 2049)</span>
                       </div>
@@ -1237,8 +1281,15 @@ const App: React.FC = () => {
               </div>
             )}
 
-            {/* Tabs - Hidden for Crypto/IKE as requested */}
-            {(portfolioType === 'OMF' || portfolioType === 'PPK') && (
+            {/* Extra Chart for PPK: Current Structure Bar (Full Width) */}
+            {portfolioType === 'PPK' && stats && (
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
+                   <PPKStructureBar data={stats} />
+                </div>
+            )}
+
+            {/* Tabs - Hidden for PPK and Crypto/IKE as requested */}
+            {(portfolioType === 'OMF') && (
               <div className="border-b border-slate-200 mb-8">
                 <nav className="-mb-px flex space-x-8">
                   <button
@@ -1270,28 +1321,21 @@ const App: React.FC = () => {
             {activeTab === 'dashboard' && (
               <div className="space-y-8">
                 {portfolioType === 'PPK' ? (
-                  /* PPK Visualizations */
+                  /* PPK Visualizations (Dashboard Only) */
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* Make Value Chart Full Width */}
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
-                      <h3 className="text-lg font-bold text-slate-800 mb-6">Wzrost Wartości Portfela</h3>
+                      <h3 className="text-lg font-bold text-slate-800 mb-6">Wartość Portfela</h3>
                       <ValueCompositionChart data={data} />
                     </div>
                     
-                    {/* Flow Chart (Sankey-like) - Replaces Waterfall */}
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
-                      <h3 className="text-lg font-bold text-slate-800 mb-6">Skąd biorą się pieniądze w PPK?</h3>
-                      <div className="h-80 w-full">
-                         <PPKFlowChart data={ppkFlowData} />
-                      </div>
-                    </div>
-
+                    {/* ROI Chart */}
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
                       <h3 className="text-lg font-bold text-slate-800 mb-6">ROI w czasie</h3>
                       <ROIChart data={data} />
                     </div>
 
-                    {/* New Capital Structure History Chart (Full Width below ROI) */}
+                    {/* Capital Structure History Chart (Full Width below ROI) */}
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
                       <h3 className="text-lg font-bold text-slate-800 mb-6">Struktura Kapitału w czasie</h3>
                       <CapitalStructureHistoryChart data={data} />
@@ -1314,7 +1358,10 @@ const App: React.FC = () => {
               </div>
             )}
 
-            {activeTab === 'history' && (
+            {/* History Table rendered directly if no tabs are shown (or if activeTab is history) */}
+            {/* For PPK, we removed the History tab, so we only show HistoryTable if we add it back. 
+                Current requirement says "Usuń zakładkę Historia" for PPK. So it's gone. */}
+            {activeTab === 'history' && portfolioType === 'OMF' && (
               <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <HistoryTable data={data} type={portfolioType} />
               </div>

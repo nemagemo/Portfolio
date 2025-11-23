@@ -84,6 +84,9 @@ export interface GlobalHistoryRow {
   sp500Return?: number;
   wig20Return?: number;
 
+  // Real Value (Inflation Adjusted)
+  realTotalValue?: number;
+
   // Road to Million Projection
   projectedValue?: number;
 }

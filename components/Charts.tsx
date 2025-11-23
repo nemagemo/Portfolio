@@ -21,7 +21,7 @@ import {
   ComposedChart,
   Treemap
 } from 'recharts';
-import { PPKDataRow, CryptoDataRow, AnyDataRow, GlobalHistoryRow } from '../types';
+import { PPKDataRow, CryptoDataRow, AnyDataRow, GlobalHistoryRow, SummaryStats } from '../types';
 
 // Logo Imports
 import { PPKLogo } from '../logos/PPKLogo';
@@ -371,10 +371,6 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data }) => {
               <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.5}/>
               <stop offset="95%" stopColor="#94a3b8" stopOpacity={0}/>
             </linearGradient>
-            <linearGradient id="colorTax" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8}/>
-              <stop offset="95%" stopColor="#ef4444" stopOpacity={0.1}/>
-            </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
           <XAxis 
@@ -416,13 +412,14 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data }) => {
               <Area type="monotone" dataKey="stateContribution" name="Państwo" stackId="1" stroke="#ec4899" fill="#ec4899" fillOpacity={0.9} />
               <Area type="monotone" dataKey="fundProfit" name="Zysk Funduszu" stackId="1" stroke="#10b981" fill="#10b981" fillOpacity={0.9} />
               
-              {/* New Lines and Tax Area */}
+              {/* Tax as Area with SOLID fill similar to others, but negative */}
               <Area 
                 type="monotone" 
                 dataKey="taxSigned" 
                 name="Podatek" 
                 stroke="#ef4444" 
-                fill="url(#colorTax)" 
+                fill="#ef4444" 
+                fillOpacity={0.9}
                 strokeWidth={2}
               />
               <Line type="monotone" dataKey="netValue" name="Wartość Netto" stroke="#064e3b" strokeWidth={2} dot={false} />
@@ -636,7 +633,8 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data }) => {
                 const labels: Record<string, string> = {
                     investment: 'Wkład Łączny',
                     profit: 'Zysk Łączny',
-                    projectedValue: 'Prognoza (Droga do Miliona)'
+                    projectedValue: 'Prognoza (Droga do Miliona)',
+                    realTotalValue: 'Wartość Realna (Inflacja)'
                 };
                 return [`${value.toLocaleString('pl-PL')} zł`, labels[name] || name];
             }}
@@ -661,6 +659,16 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data }) => {
             stackId="1" 
             stroke="#10b981" 
             fill="url(#colorProfitGlobal)" 
+          />
+
+          <Line 
+            type="monotone" 
+            dataKey="realTotalValue" 
+            name="Wartość Realna (Inflacja)" 
+            stroke="#334155" 
+            strokeWidth={2} 
+            strokeDasharray="3 3"
+            dot={false} 
           />
 
           <Line 
@@ -986,172 +994,94 @@ export const SeasonalityChart: React.FC<{ data: any[] }> = ({ data }) => {
   );
 };
 
-interface PPKWaterfallItem {
-  name: string;
-  value: number;
-  fill: string;
-  isTotal?: boolean;
+const renderCustomLabel = (props: any, text: string) => {
+  const { x, y, width, height } = props;
+  if (width < 40) return null; // Hide label if bar segment is too small
+  return (
+    <text 
+      x={x + width / 2} 
+      y={y + height / 2} 
+      fill="#fff" 
+      textAnchor="middle" 
+      dominantBaseline="middle"
+      fontSize={12}
+      fontWeight="bold"
+      style={{ pointerEvents: 'none', textShadow: '0px 1px 2px rgba(0,0,0,0.5)' }}
+    >
+      {text}
+    </text>
+  );
+};
+
+interface PPKStructureBarProps {
+  data: SummaryStats;
 }
 
-export const PPKFlowChart: React.FC<{ data: PPKWaterfallItem[] }> = ({ data }) => {
-  // Filter data to get inputs and total
-  const totalItem = data.find(item => item.isTotal);
-  const inputs = data.filter(item => !item.isTotal);
+export const PPKStructureBar: React.FC<PPKStructureBarProps> = ({ data }) => {
+  if (!data.totalEmployee) return null;
+
+  // Reconstruct data for visualization
+  // Logic: Total Portfolio = Employee + Employer + State + FundProfit
+  // Note: 'totalProfit' in stats usually means (Total Value - Employee), i.e. Employer + State + FundProfit.
+  // But for this visualization we want explicit components.
   
-  if (!totalItem || inputs.length === 0) return null;
-
-  const totalValue = totalItem.value;
-  if (totalValue <= 0) return null;
-
-  // SVG Dimensions
-  const width = 600;
-  const height = 300;
-  const padding = 20;
-  const barWidth = 40;
-  const flowStartX = padding + barWidth;
-  const flowEndX = width - padding - barWidth;
+  const employee = data.totalEmployee || 0;
+  const employer = data.totalEmployer || 0;
+  const state = data.totalState || 0;
   
-  // Calculate heights proportional to total value
-  const availableHeight = height - (padding * 2);
-  const gap = 10;
-  
-  // Total bar (Right side)
-  const totalBarHeight = availableHeight;
-  const totalBarY = padding;
+  // Calculate fund profit implicitly: Total Value - (Employee + Employer + State)
+  // Using data.totalValue which is pre-calculated in App.tsx logic
+  const fundProfit = (data.totalValue || 0) - (employee + employer + state);
 
-  // Input bars (Left side)
-  // We need to distribute them with gaps
-  const totalInputsValue = inputs.reduce((sum, item) => sum + Math.abs(item.value), 0);
-  const scale = (availableHeight - (inputs.length - 1) * gap) / totalInputsValue;
-
-  let currentY = padding;
-  
-  // Render Flows
-  const flows = [];
-  const inputRects = [];
-  let currentTotalY = totalBarY; // Track where next flow connects to Total bar
-
-  for (let i = 0; i < inputs.length; i++) {
-      const item = inputs[i];
-      const absValue = Math.abs(item.value);
-      const itemHeight = absValue * scale;
-      const isNegative = item.value < 0;
-      
-      // Input Rect
-      inputRects.push(
-          <g key={`rect-${i}`}>
-             <rect 
-                x={padding} 
-                y={currentY} 
-                width={barWidth} 
-                height={itemHeight} 
-                fill={item.fill} 
-                rx={4}
-             />
-             <text 
-                x={padding + barWidth / 2} 
-                y={currentY + itemHeight / 2} 
-                dy={4}
-                textAnchor="middle" 
-                fill="#fff" 
-                fontSize={10} 
-                fontWeight="bold"
-                style={{pointerEvents: 'none'}}
-             >
-                {((absValue / totalValue) * 100).toFixed(0)}%
-             </text>
-             {/* Label outside */}
-             <text 
-                x={padding} 
-                y={currentY - 5} 
-                fill="#64748b" 
-                fontSize={10} 
-                fontWeight="500"
-             >
-                {item.name}
-             </text>
-          </g>
-      );
-
-      if (!isNegative) {
-          const targetHeight = (item.value / totalValue) * availableHeight; 
-          
-          const startX = padding + barWidth;
-          const startYTop = currentY;
-          const startYBot = currentY + itemHeight;
-          
-          const endX = flowEndX;
-          const endYTop = currentTotalY;
-          const endYBot = currentTotalY + targetHeight;
-          
-          const controlPointX1 = startX + (endX - startX) / 2;
-          const controlPointX2 = endX - (endX - startX) / 2;
-
-          flows.push(
-              <path 
-                  key={`flow-${i}`}
-                  d={`
-                      M ${startX} ${startYTop} 
-                      C ${controlPointX1} ${startYTop}, ${controlPointX2} ${endYTop}, ${endX} ${endYTop}
-                      L ${endX} ${endYBot}
-                      C ${controlPointX2} ${endYBot}, ${controlPointX1} ${startYBot}, ${startX} ${startYBot}
-                      Z
-                  `}
-                  fill={item.fill}
-                  fillOpacity={0.3}
-                  stroke={item.fill}
-                  strokeOpacity={0.5}
-                  strokeWidth={1}
-              />
-          );
-          currentTotalY += targetHeight;
-      }
-
-      currentY += itemHeight + gap;
-  }
-
-  // Total Rect (Right Side)
-  const totalRect = (
-      <g>
-          <rect 
-              x={width - padding - barWidth} 
-              y={padding} 
-              width={barWidth} 
-              height={availableHeight} 
-              fill={totalItem.fill} 
-              rx={4}
-          />
-          <text 
-              x={width - padding - barWidth / 2} 
-              y={height / 2} 
-              transform={`rotate(-90, ${width - padding - barWidth / 2}, ${height / 2})`}
-              textAnchor="middle" 
-              fill="#fff" 
-              fontSize={12} 
-              fontWeight="bold"
-          >
-              {totalItem.name}
-          </text>
-          <text 
-              x={width - padding - barWidth / 2} 
-              y={padding + availableHeight + 15} 
-              textAnchor="middle"
-              fill="#475569" 
-              fontSize={11} 
-              fontWeight="bold"
-          >
-              {(totalValue / 1000).toFixed(1)}k
-          </text>
-      </g>
-  );
+  const chartData = [
+    {
+      name: "Struktura",
+      employee,
+      employer,
+      state,
+      profit: fundProfit,
+    }
+  ];
 
   return (
-    <div className="h-full w-full overflow-hidden">
-        <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" className="w-full h-full">
-            {flows}
-            {inputRects}
-            {totalRect}
-        </svg>
+    <div className="h-24 w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart 
+          data={chartData} 
+          layout="vertical"
+          margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
+        >
+          <XAxis type="number" hide domain={[0, 'dataMax']} />
+          <YAxis type="category" dataKey="name" hide width={1} />
+          <Tooltip 
+            cursor={{fill: 'transparent'}}
+            formatter={(value: number, name: string) => {
+               const total = employee + employer + state + fundProfit;
+               const percent = total > 0 ? (value / total) * 100 : 0;
+               const labels: Record<string, string> = {
+                 employee: 'Pracownik',
+                 employer: 'Pracodawca',
+                 state: 'Państwo',
+                 profit: 'Wynik Funduszu'
+               };
+               return [`${value.toLocaleString('pl-PL')} zł (${percent.toFixed(1)}%)`, labels[name] || name];
+            }}
+            contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+          />
+          <Bar dataKey="employee" name="Pracownik" stackId="a" fill="#3b82f6" radius={[4, 0, 0, 4]} barSize={60}>
+            <LabelList content={(props) => renderCustomLabel(props, "Pracownik")} />
+          </Bar>
+          <Bar dataKey="employer" name="Pracodawca" stackId="a" fill="#8b5cf6" barSize={60}>
+            <LabelList content={(props) => renderCustomLabel(props, "Pracodawca")} />
+          </Bar>
+          <Bar dataKey="state" name="Państwo" stackId="a" fill="#ec4899" barSize={60}>
+            <LabelList content={(props) => renderCustomLabel(props, "Państwo")} />
+          </Bar>
+          <Bar dataKey="profit" name="Wynik Funduszu" stackId="a" fill={fundProfit >= 0 ? "#10b981" : "#ef4444"} radius={[0, 4, 4, 0]} barSize={60}>
+            <LabelList content={(props) => renderCustomLabel(props, "Zysk Funduszu")} />
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
     </div>
   );
 };
