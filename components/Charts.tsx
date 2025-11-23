@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   AreaChart,
   Area,
@@ -48,6 +48,7 @@ import { ACNLogo } from '../logos/ACNLogo';
 import { PLNLogo } from '../logos/PLNLogo';
 import { ResztaKryptoLogo } from '../logos/ResztaKryptoLogo';
 import { ETFBS80TRLogo } from '../logos/ETFBS80TRLogo';
+import { ETHLogo } from '../logos/ETHLogo';
 
 interface ChartProps {
   data: AnyDataRow[];
@@ -171,7 +172,8 @@ const LOGO_MAP: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
   ACN: ACNLogo,
   PLN: PLNLogo,
   'Reszta Krypto': ResztaKryptoLogo,
-  ETFBS80TR: ETFBS80TRLogo
+  ETFBS80TR: ETFBS80TRLogo,
+  ETH: ETHLogo
 };
 
 interface AssetLogoProps {
@@ -335,10 +337,32 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data }) => {
   if (data.length === 0) return null;
   const isPPK = 'employeeContribution' in data[0];
 
+  // Prepare data with additional computed fields for PPK (Net Value and Tax)
+  const chartData = useMemo(() => {
+    if (!isPPK) return data;
+    return data.map(d => {
+      const r = d as PPKDataRow;
+      const taxAbs = Math.abs(r.tax || 0);
+      // Net Value = Total Value - Tax
+      const netValue = r.totalValue - taxAbs;
+      
+      // Exit Value = Net Value - (30% Employer) - State - (19% Fund Profit)
+      // Note: This represents the cash value if withdrawn early (losing bonuses + paying ZUS + paying capital gains tax)
+      const exitValue = netValue - (0.30 * r.employerContribution) - r.stateContribution - (0.19 * r.fundProfit);
+
+      return {
+        ...r,
+        taxSigned: r.tax, // Use raw negative value for the chart line
+        netValue,
+        exitValue
+      };
+    });
+  }, [data, isPPK]);
+
   return (
     <div className="h-80 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data as any[]}>
+        <ComposedChart data={chartData as any[]}>
           <defs>
             <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.8}/>
@@ -370,7 +394,10 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data }) => {
                 employeeContribution: 'Pracownik',
                 employerContribution: 'Pracodawca',
                 stateContribution: 'Państwo',
-                fundProfit: 'Zysk Funduszu'
+                fundProfit: 'Zysk Funduszu',
+                taxSigned: 'Podatek',
+                netValue: 'Wartość Netto',
+                exitValue: 'Wartość Exit'
               };
               return [`${value.toLocaleString('pl-PL')} zł`, nameMap[name] || name];
             }}
@@ -385,6 +412,18 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data }) => {
               <Area type="monotone" dataKey="employerContribution" name="Pracodawca" stackId="1" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.9} />
               <Area type="monotone" dataKey="stateContribution" name="Państwo" stackId="1" stroke="#ec4899" fill="#ec4899" fillOpacity={0.9} />
               <Area type="monotone" dataKey="fundProfit" name="Zysk Funduszu" stackId="1" stroke="#10b981" fill="#10b981" fillOpacity={0.9} />
+              {/* New Lines for Net Value, Exit Value and Tax */}
+              <Line type="monotone" dataKey="netValue" name="Wartość Netto" stroke="#0f766e" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="exitValue" name="Wartość Exit" stroke="#d97706" strokeWidth={2} dot={false} />
+              <Line 
+                type="monotone" 
+                dataKey="taxSigned" 
+                name="Podatek" 
+                stroke="#ef4444" 
+                strokeWidth={2} 
+                dot={false} 
+                strokeOpacity={0.8}
+              />
             </>
           ) : (
             <>
@@ -409,7 +448,7 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data }) => {
               />
             </>
           )}
-        </AreaChart>
+        </ComposedChart>
       </ResponsiveContainer>
     </div>
   );
