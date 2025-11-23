@@ -100,7 +100,7 @@ const TaxToggleIcon = ({ className }: { className?: string }) => (
 );
 
 // --- THEME DEFINITIONS ---
-type Theme = 'default' | 'dark' | 'comic' | 'light';
+type Theme = 'default' | 'dark' | 'comic' | 'light' | 'neon';
 
 const themeStyles: Record<Theme, {
   appBg: string;
@@ -156,6 +156,17 @@ const themeStyles: Record<Theme, {
     cardHeaderIconBg: 'bg-white border border-gray-200',
     buttonActive: 'bg-gray-900 text-white',
     buttonInactive: 'bg-white text-gray-500 hover:text-gray-900 border border-gray-200'
+  },
+  neon: {
+    appBg: 'bg-[#050505] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-[#050505] to-black',
+    text: 'text-cyan-50 font-mono tracking-tight',
+    textSub: 'text-cyan-600/80 font-mono',
+    headerBg: 'bg-black/80 backdrop-blur-md',
+    headerBorder: 'border-cyan-900/50 border-b',
+    cardContainer: 'bg-black/40 border border-cyan-500/30 shadow-[0_0_15px_-3px_rgba(6,182,212,0.15)] backdrop-blur-sm rounded-none',
+    cardHeaderIconBg: 'bg-cyan-950/30 border border-cyan-500/50 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.2)]',
+    buttonActive: 'bg-cyan-950 text-cyan-300 border border-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.3)] font-mono',
+    buttonInactive: 'bg-black text-cyan-800 border border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700 font-mono'
   }
 };
 
@@ -971,6 +982,7 @@ export const App: React.FC = () => {
   }, [portfolioType]);
 
   const getTextColorClass = (type: string) => {
+    if (theme === 'neon') return 'text-cyan-400';
     switch(type) {
       case 'PPK': return 'text-indigo-700';
       case 'CRYPTO': return 'text-violet-700';
@@ -991,7 +1003,7 @@ export const App: React.FC = () => {
           <div className="w-24"></div>
 
           {/* Portfolio Switcher (Centered) */}
-          <div className={`p-1 rounded-lg flex space-x-1 overflow-x-auto ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-100'}`}>
+          <div className={`p-1 rounded-lg flex space-x-1 overflow-x-auto ${theme === 'dark' ? 'bg-slate-800' : theme === 'neon' ? 'bg-black border border-cyan-900/50' : 'bg-slate-100'}`}>
             <button
               onClick={() => handlePortfolioChange('OMF')}
               className={`flex items-center px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${
@@ -1036,6 +1048,7 @@ export const App: React.FC = () => {
              <button onClick={() => setTheme('dark')} className={`w-6 h-6 text-xs font-bold rounded ${theme === 'dark' ? 'bg-slate-800 text-white' : 'bg-slate-200 text-slate-500'}`} title="Dark Minimalist">1</button>
              <button onClick={() => setTheme('comic')} className={`w-6 h-6 text-xs font-bold rounded ${theme === 'comic' ? 'bg-yellow-400 text-black border border-black' : 'bg-slate-200 text-slate-500'}`} title="Comic">2</button>
              <button onClick={() => setTheme('light')} className={`w-6 h-6 text-xs font-bold rounded ${theme === 'light' ? 'bg-white border border-gray-300 text-black' : 'bg-slate-200 text-slate-500'}`} title="Light Professional">3</button>
+             <button onClick={() => setTheme('neon')} className={`w-6 h-6 text-xs font-bold rounded ${theme === 'neon' ? 'bg-cyan-500 text-black shadow-[0_0_10px_rgba(6,182,212,0.8)]' : 'bg-slate-200 text-slate-500'}`} title="Neon Cyberpunk">4</button>
           </div>
         </div>
       </header>
@@ -1045,7 +1058,7 @@ export const App: React.FC = () => {
         {/* Data Status Section */}
         {isOfflineValid ? (
            <div className="flex justify-center mb-6">
-              <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full flex items-center border border-emerald-200 shadow-sm">
+              <span className={`text-xs font-bold px-3 py-1 rounded-full flex items-center shadow-sm ${theme === 'neon' ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-500/50' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'}`}>
                  <CheckCircle2 size={14} className="mr-1.5" />
                  OFFLINE
               </span>
@@ -1067,7 +1080,7 @@ export const App: React.FC = () => {
                 value={`${(stats.totalValue || 0).toLocaleString('pl-PL')} zł`} 
                 subValue="Aktywa Otwarte + Gotówka" 
                 icon={LayoutGrid} 
-                colorClass={theme === 'dark' ? 'text-slate-300 bg-slate-800' : "text-slate-800 bg-slate-100"}
+                colorClass={theme === 'neon' ? 'text-cyan-400' : (theme === 'dark' ? 'text-slate-300 bg-slate-800' : "text-slate-800 bg-slate-100")}
                 className={styles.cardContainer}
               />
               <StatsCard 
@@ -1076,7 +1089,7 @@ export const App: React.FC = () => {
                 trend={stats.profitTrend}
                 trendLabel="m/m"
                 icon={TrendingUp} 
-                colorClass="text-emerald-600 bg-emerald-50" 
+                colorClass={theme === 'neon' ? 'text-emerald-400' : "text-emerald-600 bg-emerald-50"} 
                 className={styles.cardContainer}
               />
               <StatsCard 
@@ -1084,7 +1097,7 @@ export const App: React.FC = () => {
                 value={`${(stats.totalInvestment || 0).toLocaleString('pl-PL')} zł`} 
                 subValue="Kapitał (OMF)" 
                 icon={Wallet} 
-                colorClass="text-blue-600 bg-blue-50" 
+                colorClass={theme === 'neon' ? 'text-blue-400' : "text-blue-600 bg-blue-50"} 
                 className={styles.cardContainer}
               />
               <StatsCard 
@@ -1092,7 +1105,7 @@ export const App: React.FC = () => {
                 value={`${(omfActiveAssets.filter(a => a.symbol === 'PLN').reduce((acc, c) => acc + c.currentValue, 0) || 0).toLocaleString('pl-PL')} zł`} 
                 subValue="PLN" 
                 icon={Banknote} 
-                colorClass="text-violet-600 bg-violet-50" 
+                colorClass={theme === 'neon' ? 'text-violet-400' : "text-violet-600 bg-violet-50"} 
                 className={styles.cardContainer}
               />
             </div>
@@ -1103,7 +1116,7 @@ export const App: React.FC = () => {
                 title="Całkowite ROI" 
                 value={`${(stats.currentRoi || 0).toFixed(2)}%`} 
                 icon={Percent}
-                colorClass="text-indigo-600 bg-indigo-50" 
+                colorClass={theme === 'neon' ? 'text-indigo-400' : "text-indigo-600 bg-indigo-50"} 
                 className={styles.cardContainer}
               />
               <StatsCard 
@@ -1111,7 +1124,7 @@ export const App: React.FC = () => {
                 value={`${(stats.cagr || 0).toFixed(2)}%`} 
                 subValue="(ROI Based)"
                 icon={Activity}
-                colorClass="text-purple-600 bg-purple-50" 
+                colorClass={theme === 'neon' ? 'text-purple-400' : "text-purple-600 bg-purple-50"} 
                 className={styles.cardContainer}
               />
               <StatsCard 
@@ -1119,7 +1132,7 @@ export const App: React.FC = () => {
                 value={`${(stats.ltm || 0).toFixed(2)}%`} 
                 subValue="(TWR)"
                 icon={Timer}
-                colorClass="text-amber-600 bg-amber-50" 
+                colorClass={theme === 'neon' ? 'text-amber-400' : "text-amber-600 bg-amber-50"} 
                 className={styles.cardContainer}
               />
               <StatsCard 
@@ -1127,7 +1140,7 @@ export const App: React.FC = () => {
                 value={`${(stats.ytd || 0).toFixed(2)}%`} 
                 subValue="(TWR)"
                 icon={Calendar}
-                colorClass="text-teal-600 bg-teal-50" 
+                colorClass={theme === 'neon' ? 'text-teal-400' : "text-teal-600 bg-teal-50"} 
                 className={styles.cardContainer}
               />
             </div>
@@ -1141,15 +1154,15 @@ export const App: React.FC = () => {
                 </div>
                 
                 {/* Road to Million & CPI Controls */}
-                <div className={`flex items-center space-x-3 p-2 rounded-lg border ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-100'}`}>
+                <div className={`flex items-center space-x-3 p-2 rounded-lg border ${theme === 'neon' ? 'bg-black/50 border-cyan-900/50' : theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-100'}`}>
                    {/* No PPK Button */}
                    <button
                      onClick={() => setExcludePPK(!excludePPK)}
                      disabled={showCPI || showProjection}
                      className={`flex items-center justify-center w-20 px-2 py-1.5 rounded-md transition-all ${
                        excludePPK 
-                         ? 'bg-slate-800 text-white shadow-sm ring-1 ring-slate-900' 
-                         : `bg-transparent ${theme === 'dark' ? 'text-slate-400 border-slate-600 hover:text-white' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`
+                         ? theme === 'neon' ? 'bg-cyan-900/50 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.2)]' : 'bg-slate-800 text-white shadow-sm ring-1 ring-slate-900' 
+                         : `bg-transparent ${theme === 'neon' ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : theme === 'dark' ? 'text-slate-400 border-slate-600 hover:text-white' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`
                      } ${showCPI || showProjection ? 'opacity-50 cursor-not-allowed' : ''}`}
                      title={excludePPK ? "Pokaż PPK" : "Ukryj PPK"}
                    >
@@ -1161,22 +1174,22 @@ export const App: React.FC = () => {
                      disabled={excludePPK}
                      className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
                        showCPI 
-                         ? 'bg-slate-200 text-slate-800 shadow-sm ring-1 ring-slate-300' 
-                         : `bg-transparent ${theme === 'dark' ? 'text-slate-400 border-slate-600 hover:text-white' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`
+                         ? theme === 'neon' ? 'bg-pink-900/50 text-pink-400 shadow-[0_0_10px_rgba(236,72,153,0.2)] ring-1 ring-pink-700/50' : 'bg-slate-200 text-slate-800 shadow-sm ring-1 ring-slate-300' 
+                         : `bg-transparent ${theme === 'neon' ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : theme === 'dark' ? 'text-slate-400 border-slate-600 hover:text-white' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`
                      } ${excludePPK ? 'opacity-50 cursor-not-allowed' : ''}`}
                    >
                      CPI
                    </button>
 
-                   <div className="w-px h-6 bg-slate-200 mx-1"></div>
+                   <div className={`w-px h-6 mx-1 ${theme === 'neon' ? 'bg-cyan-900/50' : 'bg-slate-200'}`}></div>
 
                    <button
                      onClick={() => setShowProjection(!showProjection)}
                      disabled={excludePPK}
                      className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
                        showProjection 
-                         ? 'bg-amber-100 text-amber-700 shadow-sm ring-1 ring-amber-200' 
-                         : `bg-transparent ${theme === 'dark' ? 'text-slate-400 border-slate-600 hover:text-white' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`
+                         ? theme === 'neon' ? 'bg-yellow-900/50 text-yellow-400 shadow-[0_0_10px_rgba(234,179,8,0.2)] ring-1 ring-yellow-700/50' : 'bg-amber-100 text-amber-700 shadow-sm ring-1 ring-amber-200' 
+                         : `bg-transparent ${theme === 'neon' ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : theme === 'dark' ? 'text-slate-400 border-slate-600 hover:text-white' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`
                      } ${excludePPK ? 'opacity-50 cursor-not-allowed' : ''}`}
                    >
                      <Milestone size={14} className="mr-2" />
@@ -1185,16 +1198,16 @@ export const App: React.FC = () => {
 
                    {showProjection && (
                      <div className="flex items-center space-x-2 animate-in fade-in slide-in-from-right-4 duration-300">
-                        <div className={`flex rounded-md border p-0.5 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                        <div className={`flex rounded-md border p-0.5 ${theme === 'neon' ? 'bg-black border-cyan-900/50' : theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
                           <button 
                             onClick={() => setProjectionMethod('LTM')}
-                            className={`px-2 py-1 text-[10px] font-medium rounded ${projectionMethod === 'LTM' ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-100'}`}
+                            className={`px-2 py-1 text-[10px] font-medium rounded ${projectionMethod === 'LTM' ? (theme === 'neon' ? 'bg-cyan-900 text-cyan-300' : 'bg-slate-800 text-white') : (theme === 'neon' ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')}`}
                           >
                             LTM
                           </button>
                           <button 
                             onClick={() => setProjectionMethod('CAGR')}
-                            className={`px-2 py-1 text-[10px] font-medium rounded ${projectionMethod === 'CAGR' ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-100'}`}
+                            className={`px-2 py-1 text-[10px] font-medium rounded ${projectionMethod === 'CAGR' ? (theme === 'neon' ? 'bg-cyan-900 text-cyan-300' : 'bg-slate-800 text-white') : (theme === 'neon' ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')}`}
                           >
                             CAGR
                           </button>
@@ -1218,7 +1231,7 @@ export const App: React.FC = () => {
                   <p className={`text-sm ${styles.textSub}`}>Analiza stopy zwrotu (ROI) oraz TWR w czasie</p>
                 </div>
                 <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}>
-                  <TrendingUp className="text-purple-600" size={20} />
+                  <TrendingUp className={theme === 'neon' ? 'text-purple-400' : 'text-purple-600'} size={20} />
                 </div>
               </div>
               <GlobalPerformanceChart data={globalHistoryData} themeMode={theme} />
@@ -1232,7 +1245,7 @@ export const App: React.FC = () => {
                   <p className={`text-sm ${styles.textSub}`}>Wizualizacja kafelkowa struktury portfela.</p>
                 </div>
                 <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}>
-                  <LayoutTemplate className="text-cyan-600" size={20} />
+                  <LayoutTemplate className={theme === 'neon' ? 'text-cyan-400' : 'text-cyan-600'} size={20} />
                 </div>
               </div>
               <OMFTreemapChart data={omfStructureData} themeMode={theme} />
@@ -1246,7 +1259,7 @@ export const App: React.FC = () => {
                   <p className={`text-sm ${styles.textSub}`}>Analiza efektywności portfela (Crypto + IKE) bez uwzględnienia PPK</p>
                 </div>
                 <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}>
-                  <CalendarDays className="text-emerald-600" size={20} />
+                  <CalendarDays className={theme === 'neon' ? 'text-emerald-400' : 'text-emerald-600'} size={20} />
                 </div>
               </div>
               <ReturnsHeatmap data={heatmapHistoryData} />
@@ -1260,7 +1273,7 @@ export const App: React.FC = () => {
                   <p className={`text-sm ${styles.textSub}`}>Średnia stopa zwrotu w poszczególnych miesiącach</p>
                 </div>
                 <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}>
-                  <Snowflake className="text-blue-600" size={20} />
+                  <Snowflake className={theme === 'neon' ? 'text-blue-400' : 'text-blue-600'} size={20} />
                 </div>
               </div>
               <SeasonalityChart data={heatmapHistoryData} themeMode={theme} />
@@ -1274,7 +1287,7 @@ export const App: React.FC = () => {
                   <p className={`text-sm ${styles.textSub}`}>Zmiana udziału procentowego PPK, Crypto i IKE w czasie</p>
                 </div>
                 <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}>
-                  <PieChart className="text-blue-600" size={20} />
+                  <PieChart className={theme === 'neon' ? 'text-blue-400' : 'text-blue-600'} size={20} />
                 </div>
               </div>
               <PortfolioAllocationHistoryChart data={globalHistoryData} themeMode={theme} />
@@ -1284,14 +1297,14 @@ export const App: React.FC = () => {
             <div className="space-y-8">
               <div className={`${styles.cardContainer} overflow-hidden`}>
                 <div 
-                  className={`px-6 py-4 border-b flex justify-between items-center cursor-pointer transition-colors ${theme === 'dark' ? 'bg-slate-900 border-slate-800 hover:bg-slate-800' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}
+                  className={`px-6 py-4 border-b flex justify-between items-center cursor-pointer transition-colors ${theme === 'neon' ? 'bg-black/20 border-cyan-900/30 hover:bg-cyan-950/10' : theme === 'dark' ? 'bg-slate-900 border-slate-800 hover:bg-slate-800' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}
                   onClick={() => setIsActivePositionsExpanded(!isActivePositionsExpanded)}
                 >
                   <div className="flex items-center space-x-2">
                      <h3 className={`text-lg font-bold ${styles.text}`}>Aktywne Pozycje</h3>
-                     {isActivePositionsExpanded ? <ChevronUp size={20} className="text-slate-400"/> : <ChevronDown size={20} className="text-slate-400"/>}
+                     {isActivePositionsExpanded ? <ChevronUp size={20} className={theme === 'neon' ? 'text-cyan-600' : 'text-slate-400'}/> : <ChevronDown size={20} className={theme === 'neon' ? 'text-cyan-600' : 'text-slate-400'}/>}
                   </div>
-                  <span className="text-xs font-medium bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full">
+                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${theme === 'neon' ? 'bg-emerald-900/40 text-emerald-400 border border-emerald-700/50' : 'bg-emerald-100 text-emerald-700'}`}>
                     {omfActiveAssets.length} pozycji
                   </span>
                 </div>
@@ -1306,14 +1319,14 @@ export const App: React.FC = () => {
 
               <div className={`${styles.cardContainer} overflow-hidden`}>
                 <div 
-                  className={`px-6 py-4 border-b flex justify-between items-center cursor-pointer transition-colors ${theme === 'dark' ? 'bg-slate-900 border-slate-800 hover:bg-slate-800' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}
+                  className={`px-6 py-4 border-b flex justify-between items-center cursor-pointer transition-colors ${theme === 'neon' ? 'bg-black/20 border-cyan-900/30 hover:bg-cyan-950/10' : theme === 'dark' ? 'bg-slate-900 border-slate-800 hover:bg-slate-800' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}
                   onClick={() => setIsClosedHistoryExpanded(!isClosedHistoryExpanded)}
                 >
                   <div className="flex items-center space-x-2">
                      <h3 className={`text-lg font-bold ${styles.text}`}>Historia Zamkniętych Pozycji</h3>
-                     {isClosedHistoryExpanded ? <ChevronUp size={20} className="text-slate-400"/> : <ChevronDown size={20} className="text-slate-400"/>}
+                     {isClosedHistoryExpanded ? <ChevronUp size={20} className={theme === 'neon' ? 'text-cyan-600' : 'text-slate-400'}/> : <ChevronDown size={20} className={theme === 'neon' ? 'text-cyan-600' : 'text-slate-400'}/>}
                   </div>
-                  <span className="text-xs font-medium bg-slate-200 text-slate-600 px-2 py-1 rounded-full">
+                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${theme === 'neon' ? 'bg-slate-800 text-slate-400 border border-slate-700' : 'bg-slate-200 text-slate-600'}`}>
                     {omfClosedAssets.length} pozycji
                   </span>
                 </div>
@@ -1335,7 +1348,7 @@ export const App: React.FC = () => {
                    <div className={`${styles.cardContainer} p-6 hover:shadow-md transition-shadow duration-300`}>
                       <div className="flex items-center justify-between mb-4">
                         <h3 className={`text-sm font-medium ${styles.textSub}`}>Wartość</h3>
-                        <div className={`p-2 rounded-lg ${theme === 'dark' ? 'bg-indigo-900 text-indigo-200' : 'bg-slate-50 text-indigo-700'}`}>
+                        <div className={`p-2 rounded-lg ${theme === 'neon' ? 'bg-indigo-900/30 text-indigo-400 border border-indigo-500/50' : theme === 'dark' ? 'bg-indigo-900 text-indigo-200' : 'bg-slate-50 text-indigo-700'}`}>
                            <Wallet size={20} />
                         </div>
                       </div>
@@ -1343,7 +1356,7 @@ export const App: React.FC = () => {
                          <span className={`text-2xl font-bold ${styles.text}`}>{`${(stats.totalValue || 0).toLocaleString('pl-PL')} zł`}</span>
                          <div className="flex items-center mt-1 text-sm space-x-2">
                             {/* Exit Value */}
-                            <span className={`flex items-center font-bold text-base ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
+                            <span className={`flex items-center font-bold text-base ${theme === 'neon' ? 'text-slate-400' : theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
                                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                                   <polyline points="16 17 21 12 16 7" />
@@ -1380,7 +1393,7 @@ export const App: React.FC = () => {
                    <div className={`${styles.cardContainer} p-6 hover:shadow-md transition-shadow duration-300`}>
                       <div className="flex items-center justify-between mb-4">
                         <h3 className={`text-sm font-medium ${styles.textSub}`}>Zysk</h3>
-                        <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg} text-emerald-600`}>
+                        <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg} ${theme === 'neon' ? 'text-emerald-400' : 'text-emerald-600'}`}>
                            <TrendingUp size={20} />
                         </div>
                       </div>
@@ -1388,12 +1401,12 @@ export const App: React.FC = () => {
                          <span className={`text-2xl font-bold ${styles.text}`}>{`${(stats.totalProfit || 0).toLocaleString('pl-PL')} zł`}</span>
                          <div className="flex items-center mt-1 text-sm space-x-2">
                             {/* Gross ROI (Profit / Employee Contribution) */}
-                            <span className="flex items-center font-bold text-emerald-600 text-base">
+                            <span className={`flex items-center font-bold text-base ${theme === 'neon' ? 'text-emerald-400' : 'text-emerald-600'}`}>
                                <ArrowUpRight size={18} className="mr-0.5" />
                                {stats.totalEmployee ? ((stats.totalProfit / stats.totalEmployee) * 100).toFixed(2) : '0.00'}%
                             </span>
                             {/* Net ROI (Current standard ROI from CSV) */}
-                            <span className={`flex items-center font-normal text-xs ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+                            <span className={`flex items-center font-normal text-xs ${theme === 'neon' ? 'text-cyan-700' : theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
                                {stats.currentRoi ? stats.currentRoi.toFixed(2) : '0.00'}% netto
                             </span>
                          </div>
@@ -1405,7 +1418,7 @@ export const App: React.FC = () => {
                     value={`${(stats.totalProfit || 0).toLocaleString('pl-PL')} zł`} 
                     trend={stats.currentRoi || 0} 
                     icon={TrendingUp} 
-                    colorClass={(stats.totalProfit || 0) >= 0 ? "text-emerald-600" : "text-rose-600"} 
+                    colorClass={theme === 'neon' ? ((stats.totalProfit || 0) >= 0 ? "text-emerald-400" : "text-rose-400") : ((stats.totalProfit || 0) >= 0 ? "text-emerald-600" : "text-rose-600")} 
                     className={styles.cardContainer}
                   />
                 )}
@@ -1415,13 +1428,13 @@ export const App: React.FC = () => {
                    <div className={`${styles.cardContainer} p-6 hover:shadow-md transition-shadow duration-300`}>
                       <div className="flex items-center justify-between mb-4">
                         <h3 className={`text-sm font-medium ${styles.textSub}`}>Czas do wypłaty</h3>
-                        <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg} text-amber-600`}>
+                        <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg} ${theme === 'neon' ? 'text-amber-400' : 'text-amber-600'}`}>
                            <Timer size={20} />
                         </div>
                       </div>
                       <div className="flex flex-col">
                          <span className={`text-2xl font-bold ${styles.text}`}>{monthsToPayout}</span>
-                         <span className={`text-sm mt-1 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>miesięcy (maj 2049)</span>
+                         <span className={`text-sm mt-1 ${theme === 'neon' ? 'text-cyan-700' : theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>miesięcy (maj 2049)</span>
                       </div>
                    </div>
                 ) : null}
@@ -1433,7 +1446,7 @@ export const App: React.FC = () => {
                      value={`${(stats.taxSaved).toLocaleString('pl-PL')} zł`} 
                      subValue="Zaoszczędzony podatek (19%)"
                      icon={ShieldCheck} 
-                     colorClass="text-cyan-700 bg-cyan-50" 
+                     colorClass={theme === 'neon' ? 'text-cyan-400' : "text-cyan-700 bg-cyan-50"} 
                      className={styles.cardContainer}
                    />
                 )}
@@ -1481,13 +1494,13 @@ export const App: React.FC = () => {
                         <h3 className={`text-lg font-bold ${styles.text}`}>Wartość Portfela</h3>
                         
                         {/* Road to Retirement Controls */}
-                        <div className={`flex items-center space-x-4 p-2 rounded-lg border ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-100'}`}>
+                        <div className={`flex items-center space-x-4 p-2 rounded-lg border ${theme === 'neon' ? 'bg-black/50 border-cyan-900/50' : theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-100'}`}>
                            <button
                              onClick={() => setShowPPKProjection(!showPPKProjection)}
                              className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
                                showPPKProjection 
-                                 ? 'bg-amber-100 text-amber-700 shadow-sm ring-1 ring-amber-200' 
-                                 : `bg-transparent ${theme === 'dark' ? 'text-slate-400 border-slate-600 hover:text-white' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`
+                                 ? theme === 'neon' ? 'bg-amber-900/50 text-amber-400 shadow-[0_0_10px_rgba(234,179,8,0.2)] ring-1 ring-amber-700/50' : 'bg-amber-100 text-amber-700 shadow-sm ring-1 ring-amber-200' 
+                                 : `bg-transparent ${theme === 'neon' ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : theme === 'dark' ? 'text-slate-400 border-slate-600 hover:text-white' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`
                              }`}
                            >
                              <Milestone size={14} className="mr-2" />

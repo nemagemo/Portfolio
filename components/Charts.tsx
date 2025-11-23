@@ -50,7 +50,7 @@ import { ResztaKryptoLogo } from '../logos/ResztaKryptoLogo';
 import { ETFBS80TRLogo } from '../logos/ETFBS80TRLogo';
 import { ETHLogo } from '../logos/ETHLogo';
 
-type ThemeMode = 'default' | 'dark' | 'comic' | 'light';
+type ThemeMode = 'default' | 'dark' | 'comic' | 'light' | 'neon';
 
 interface ChartProps {
   data: AnyDataRow[];
@@ -156,6 +156,25 @@ const CHART_THEMES: Record<ThemeMode, {
     pieColors: ['#475569', '#7c3aed', '#059669', '#d97706', '#be123c', '#1e293b'],
     barProfitPos: '#059669',
     barProfitNeg: '#b91c1c'
+  },
+  neon: {
+    investment: '#22d3ee', // Cyan-400
+    profit: '#39ff14',     // Neon Green
+    employer: '#d946ef',   // Fuchsia-500
+    state: '#f472b6',      // Pink-400
+    tax: '#ef4444',        // Red
+    net: '#ccfbf1',        // Teal-100
+    exit: '#94a3b8',       // Slate-400
+    projection: '#facc15', // Yellow-400
+    grid: '#1e293b',       // Slate-800
+    axis: '#67e8f9',       // Cyan-300
+    tooltipBg: '#000000',
+    tooltipText: '#22d3ee',
+    tooltipBorder: '#22d3ee',
+    strokeWidth: 2,
+    pieColors: ['#06b6d4', '#8b5cf6', '#10b981', '#f59e0b', '#f43f5e', '#64748b'],
+    barProfitPos: '#39ff14',
+    barProfitNeg: '#ef4444'
   }
 };
 
@@ -181,6 +200,11 @@ const getTooltipStyle = (theme: ThemeMode) => {
     style.border = '2px solid #000000';
     style.boxShadow = '4px 4px 0px 0px #000000';
   }
+
+  if (theme === 'neon') {
+    style.borderRadius = '0px';
+    style.boxShadow = '0 0 10px rgba(34, 211, 238, 0.3)';
+  }
   
   return style;
 };
@@ -198,7 +222,7 @@ export const OMFAllocationChart: React.FC<OMFAllocationProps> = ({ data, title, 
   
   return (
     <div className="h-80 w-full flex flex-col items-center">
-      {title && <h4 className={`text-sm font-semibold mb-2 ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>{title}</h4>}
+      {title && <h4 className={`text-sm font-semibold mb-2 ${themeMode === 'dark' ? 'text-slate-400' : themeMode === 'neon' ? 'text-cyan-700' : 'text-slate-500'}`}>{title}</h4>}
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
@@ -214,7 +238,7 @@ export const OMFAllocationChart: React.FC<OMFAllocationProps> = ({ data, title, 
               <Cell 
                 key={`cell-${index}`} 
                 fill={entry.color || t.pieColors[index % t.pieColors.length]} 
-                stroke={themeMode === 'dark' ? '#1e293b' : '#fff'} 
+                stroke={themeMode === 'dark' ? '#1e293b' : themeMode === 'neon' ? '#000' : '#fff'} 
                 strokeWidth={themeMode === 'comic' ? 2 : 1} 
               />
             ))}
@@ -252,7 +276,7 @@ export const OMFStructureChart: React.FC<OMFAllocationProps> = ({ data, themeMod
               <Cell 
                 key={`cell-${index}`} 
                 fill={entry.color || extendedColors[index % extendedColors.length]} 
-                stroke={themeMode === 'dark' ? '#1e293b' : '#fff'} 
+                stroke={themeMode === 'dark' ? '#1e293b' : themeMode === 'neon' ? '#000' : '#fff'} 
                 strokeWidth={themeMode === 'comic' ? 2 : 1} 
               />
             ))}
@@ -269,7 +293,9 @@ export const OMFStructureChart: React.FC<OMFAllocationProps> = ({ data, themeMod
             wrapperStyle={{ fontSize: '12px', maxHeight: '480px', overflowY: 'auto' }}
             formatter={(value, entry: any) => {
                 const val = entry.payload.value;
-                return <span className={`${themeMode === 'dark' ? 'text-slate-300' : 'text-slate-600'} font-medium ml-1`}>{value} <span className={`${themeMode === 'dark' ? 'text-slate-500' : 'text-slate-400'} text-xs ml-1`}>({val.toLocaleString('pl-PL')} zł)</span></span>;
+                const textColor = themeMode === 'dark' ? 'text-slate-300' : themeMode === 'neon' ? 'text-cyan-400' : 'text-slate-600';
+                const subTextColor = themeMode === 'dark' ? 'text-slate-500' : themeMode === 'neon' ? 'text-cyan-800' : 'text-slate-400';
+                return <span className={`${textColor} font-medium ml-1`}>{value} <span className={`${subTextColor} text-xs ml-1`}>({val.toLocaleString('pl-PL')} zł)</span></span>;
             }}
           />
         </PieChart>
@@ -374,7 +400,7 @@ const TreemapContent = (props: any) => {
   const showText = width > 40 && height > 30;
   const padding = 5;
 
-  const strokeColor = themeMode === 'dark' ? '#1e293b' : '#fff';
+  const strokeColor = themeMode === 'dark' ? '#1e293b' : themeMode === 'neon' ? '#000' : '#fff';
   const strokeWidth = themeMode === 'comic' ? 2 : 2;
 
   return (
@@ -437,7 +463,7 @@ export const OMFTreemapChart: React.FC<OMFTreemapChartProps> = ({ data, themeMod
           dataKey="value"
           nameKey="name"
           aspectRatio={4 / 3}
-          stroke={themeMode === 'dark' ? "#1e293b" : "#fff"}
+          stroke={themeMode === 'dark' ? "#1e293b" : themeMode === 'neon' ? '#000' : "#fff"}
           fill="#8884d8"
           content={(props) => <TreemapContent {...props} themeMode={themeMode as ThemeMode} />}
         >
@@ -685,7 +711,7 @@ export const ContributionComparisonChart: React.FC<ChartProps> = ({ data, themeM
           <Tooltip 
             formatter={(value: number) => [`${value.toLocaleString('pl-PL')} zł`]}
             labelFormatter={formatDate}
-            cursor={{fill: themeMode === 'dark' ? '#334155' : '#f1f5f9'}}
+            cursor={{fill: themeMode === 'dark' ? '#334155' : themeMode === 'neon' ? '#22d3ee10' : '#f1f5f9'}}
             contentStyle={getTooltipStyle(themeMode as ThemeMode)}
           />
           <Legend verticalAlign="top" height={36} />
@@ -899,7 +925,7 @@ export const GlobalPerformanceChart: React.FC<ChartProps> = ({ data, themeMode =
           className={`px-3 py-1 text-xs font-medium rounded-full transition-all ${
             showSP500 
               ? 'bg-slate-700 text-white ring-2 ring-slate-700 ring-offset-1' 
-              : `border border-slate-300 ${themeMode === 'dark' ? 'bg-slate-700 text-slate-200' : 'bg-white text-slate-600'} hover:opacity-80`
+              : `border border-slate-300 ${themeMode === 'dark' || themeMode === 'neon' ? 'bg-slate-700 text-slate-200' : 'bg-white text-slate-600'} hover:opacity-80`
           }`}
         >
           S&P 500
@@ -909,7 +935,7 @@ export const GlobalPerformanceChart: React.FC<ChartProps> = ({ data, themeMode =
           className={`px-3 py-1 text-xs font-medium rounded-full transition-all ${
             showWIG20 
               ? 'bg-purple-800 text-white ring-2 ring-purple-800 ring-offset-1' 
-              : `border border-slate-300 ${themeMode === 'dark' ? 'bg-slate-700 text-slate-200' : 'bg-white text-slate-600'} hover:opacity-80`
+              : `border border-slate-300 ${themeMode === 'dark' || themeMode === 'neon' ? 'bg-slate-700 text-slate-200' : 'bg-white text-slate-600'} hover:opacity-80`
           }`}
         >
           WIG20
