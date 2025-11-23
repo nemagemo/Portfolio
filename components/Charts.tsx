@@ -55,6 +55,7 @@ interface ChartProps {
   className?: string;
   showProjection?: boolean;
   showCPI?: boolean;
+  showTaxComparison?: boolean;
 }
 
 const formatCurrency = (value: number | undefined) => `${(value || 0).toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł`;
@@ -567,7 +568,7 @@ export const ContributionComparisonChart: React.FC<ChartProps> = ({ data }) => (
   </div>
 );
 
-export const CryptoValueChart: React.FC<ChartProps> = ({ data }) => {
+export const CryptoValueChart: React.FC<ChartProps> = ({ data, showTaxComparison }) => {
   const hasTaxedValue = data.length > 0 && 'taxedTotalValue' in data[data.length - 1];
 
   // Use ComposedChart to allow lines alongside areas
@@ -643,7 +644,7 @@ export const CryptoValueChart: React.FC<ChartProps> = ({ data }) => {
           />
 
           {/* Virtual Tax Line for IKE */}
-          {hasTaxedValue && (
+          {hasTaxedValue && showTaxComparison && (
             <Line
               type="monotone"
               dataKey="taxedTotalValue"

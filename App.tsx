@@ -88,6 +88,16 @@ const NoPPKIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+// Custom Icon for "Tax Toggle"
+const TaxToggleIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <rect x="5" y="3" width="14" height="18" rx="2" />
+    <line x1="9" y1="10" x2="15" y2="16" />
+    <circle cx="10.5" cy="14.5" r="1" fill="currentColor" stroke="none" />
+    <circle cx="13.5" cy="11.5" r="1" fill="currentColor" stroke="none" />
+  </svg>
+);
+
 const DataStatus: React.FC<{ report: ValidationReport }> = ({ report }) => {
   const [expanded, setExpanded] = useState(false);
   
@@ -291,6 +301,9 @@ export const App: React.FC = () => {
 
   // Road to Retirement State (PPK)
   const [showPPKProjection, setShowPPKProjection] = useState(false);
+
+  // IKE Tax Comparison State
+  const [showTaxComparison, setShowTaxComparison] = useState(false);
 
   const handlePortfolioChange = (type: PortfolioType) => {
     setPortfolioType(type);
@@ -1462,10 +1475,28 @@ export const App: React.FC = () => {
                   /* Crypto / IKE Visualizations */
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
-                      <h3 className="text-lg font-bold text-slate-800 mb-6">
-                        {portfolioType === 'IKE' ? 'Kapitał vs Wycena (IKE vs Konto Opodatkowane)' : 'Kapitał vs Wycena'}
-                      </h3>
-                      <CryptoValueChart data={data} />
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-lg font-bold text-slate-800">
+                          {portfolioType === 'IKE' && showTaxComparison 
+                            ? 'Kapitał vs Wycena (IKE vs Opodatkowane)' 
+                            : 'Kapitał vs Wycena'}
+                        </h3>
+                        {portfolioType === 'IKE' && (
+                          <button
+                            onClick={() => setShowTaxComparison(!showTaxComparison)}
+                            className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
+                              showTaxComparison 
+                                ? 'bg-slate-800 text-white shadow-sm' 
+                                : 'bg-white text-slate-500 hover:text-slate-700 border border-slate-200'
+                            }`}
+                            title="Pokaż porównanie z kontem opodatkowanym"
+                          >
+                            <TaxToggleIcon className="w-4 h-4 mr-2" />
+                            Belka
+                          </button>
+                        )}
+                      </div>
+                      <CryptoValueChart data={data} showTaxComparison={showTaxComparison} />
                     </div>
                     {/* CryptoProfitChart removed as requested */}
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
