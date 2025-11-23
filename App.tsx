@@ -29,12 +29,13 @@ import {
   Timer,
   Calendar,
   LayoutTemplate,
-  Milestone
+  Milestone,
+  Snowflake
 } from 'lucide-react';
 import { parseCSV, validateOMFIntegrity } from './utils/parser';
 import { AnyDataRow, SummaryStats, ValidationReport, PortfolioType, PPKDataRow, CryptoDataRow, IKEDataRow, OMFValidationReport, OMFDataRow, GlobalHistoryRow } from './types';
 import { StatsCard } from './components/StatsCard';
-import { ValueCompositionChart, ROIChart, ContributionComparisonChart, CryptoValueChart, CryptoProfitChart, OMFAllocationChart, GlobalSummaryChart, GlobalPerformanceChart, OMFStructureChart, OMFTreemapChart, PortfolioAllocationHistoryChart, CapitalStructureHistoryChart, SeasonalityChart, PPKWaterfallChart } from './components/Charts';
+import { ValueCompositionChart, ROIChart, ContributionComparisonChart, CryptoValueChart, OMFAllocationChart, GlobalSummaryChart, GlobalPerformanceChart, OMFStructureChart, OMFTreemapChart, PortfolioAllocationHistoryChart, CapitalStructureHistoryChart, SeasonalityChart, PPKFlowChart } from './components/Charts';
 import { HistoryTable } from './components/HistoryTable';
 import { ReturnsHeatmap } from './components/ReturnsHeatmap';
 
@@ -273,6 +274,12 @@ const App: React.FC = () => {
   // Road to Million State
   const [showProjection, setShowProjection] = useState(false);
   const [projectionMethod, setProjectionMethod] = useState<'LTM' | 'CAGR'>('LTM');
+
+  const handlePortfolioChange = (type: PortfolioType) => {
+    setPortfolioType(type);
+    // Force reset to dashboard when switching to prevent getting stuck in 'history' tab for portfolios that hide it
+    setActiveTab('dashboard');
+  };
 
   useEffect(() => {
     try {
@@ -829,24 +836,20 @@ const App: React.FC = () => {
     }
   };
 
-  const ppkWaterfallData = useMemo(() => {
+  const ppkFlowData = useMemo(() => {
     if (!stats || portfolioType !== 'PPK') return [];
     
-    // Ensure all components are present and non-negative where appropriate for a waterfall chart
     const employee = stats.totalEmployee || 0;
     const employer = stats.totalEmployer || 0;
     const state = stats.totalState || 0;
-    
-    // Calculate Fund Profit: Total Value - (Employee + Employer + State)
-    // NOTE: This might be different from stats.totalProfit which is (Total Value - Employee)
     const fundResult = (stats.totalValue || 0) - (employee + employer + state);
 
     return [
-      { name: 'Wkład Własny', value: employee, fill: '#3b82f6' }, // Blue
+      { name: 'Pracownik', value: employee, fill: '#3b82f6' }, // Blue
       { name: 'Pracodawca', value: employer, fill: '#8b5cf6' }, // Violet
       { name: 'Państwo', value: state, fill: '#ec4899' }, // Pink
       { name: 'Wynik Funduszu', value: fundResult, fill: fundResult >= 0 ? '#10b981' : '#ef4444' }, // Green/Red
-      { name: 'Razem', value: stats.totalValue || 0, isTotal: true, fill: '#6366f1' } // Indigo
+      { name: 'Wartość Portfela', value: stats.totalValue || 0, isTotal: true, fill: '#6366f1' } // Indigo
     ];
   }, [stats, portfolioType]);
 
@@ -858,7 +861,7 @@ const App: React.FC = () => {
           {/* Portfolio Switcher */}
           <div className="bg-slate-100 p-1 rounded-lg flex space-x-1 overflow-x-auto">
             <button
-              onClick={() => setPortfolioType('OMF')}
+              onClick={() => handlePortfolioChange('OMF')}
               className={`flex items-center px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${
                 portfolioType === 'OMF' 
                   ? 'bg-white text-slate-800 shadow-sm' 
@@ -869,7 +872,7 @@ const App: React.FC = () => {
               OMF
             </button>
             <button
-              onClick={() => setPortfolioType('PPK')}
+              onClick={() => handlePortfolioChange('PPK')}
               className={`flex items-center px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${
                 portfolioType === 'PPK' 
                   ? 'bg-white text-indigo-700 shadow-sm' 
@@ -880,7 +883,7 @@ const App: React.FC = () => {
               PPK
             </button>
             <button
-              onClick={() => setPortfolioType('CRYPTO')}
+              onClick={() => handlePortfolioChange('CRYPTO')}
               className={`flex items-center px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${
                 portfolioType === 'CRYPTO' 
                   ? 'bg-white text-violet-700 shadow-sm' 
@@ -891,7 +894,7 @@ const App: React.FC = () => {
               Krypto
             </button>
             <button
-              onClick={() => setPortfolioType('IKE')}
+              onClick={() => handlePortfolioChange('IKE')}
               className={`flex items-center px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${
                 portfolioType === 'IKE' 
                   ? 'bg-white text-cyan-700 shadow-sm' 
@@ -1067,9 +1070,20 @@ const App: React.FC = () => {
                 </div>
               </div>
               <ReturnsHeatmap data={heatmapHistoryData} />
-              <div className="mt-8 pt-6 border-t border-slate-100">
-                 <SeasonalityChart data={heatmapHistoryData} />
+            </div>
+
+            {/* Seasonality Chart (Separate Card) */}
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-lg font-bold text-slate-800">Sezonowość</h3>
+                  <p className="text-sm text-slate-500">Średnia stopa zwrotu w poszczególnych miesiącach</p>
+                </div>
+                <div className="p-2 bg-blue-50 rounded-lg">
+                  <Snowflake className="text-blue-600" size={20} />
+                </div>
               </div>
+              <SeasonalityChart data={heatmapHistoryData} />
             </div>
 
             {/* Portfolio Allocation History Chart */}
@@ -1191,33 +1205,35 @@ const App: React.FC = () => {
               </div>
             )}
 
-            {/* Tabs */}
-            <div className="border-b border-slate-200 mb-8">
-              <nav className="-mb-px flex space-x-8">
-                <button
-                  onClick={() => setActiveTab('dashboard')}
-                  className={`pb-4 px-1 border-b-2 font-medium text-sm flex items-center ${
-                    activeTab === 'dashboard'
-                      ? `border-${portfolioType === 'PPK' ? 'indigo' : portfolioType === 'IKE' ? 'cyan' : 'violet'}-500 text-${portfolioType === 'PPK' ? 'indigo' : portfolioType === 'IKE' ? 'cyan' : 'violet'}-600`
-                      : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
-                  }`}
-                >
-                  <LayoutDashboard className="w-4 h-4 mr-2" />
-                  Dashboard
-                </button>
-                <button
-                  onClick={() => setActiveTab('history')}
-                  className={`pb-4 px-1 border-b-2 font-medium text-sm flex items-center ${
-                    activeTab === 'history'
-                      ? `border-${portfolioType === 'PPK' ? 'indigo' : portfolioType === 'IKE' ? 'cyan' : 'violet'}-500 text-${portfolioType === 'PPK' ? 'indigo' : portfolioType === 'IKE' ? 'cyan' : 'violet'}-600`
-                      : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
-                  }`}
-                >
-                  <FileText className="w-4 h-4 mr-2" />
-                  Historia
-                </button>
-              </nav>
-            </div>
+            {/* Tabs - Hidden for Crypto/IKE as requested */}
+            {(portfolioType === 'OMF' || portfolioType === 'PPK') && (
+              <div className="border-b border-slate-200 mb-8">
+                <nav className="-mb-px flex space-x-8">
+                  <button
+                    onClick={() => setActiveTab('dashboard')}
+                    className={`pb-4 px-1 border-b-2 font-medium text-sm flex items-center ${
+                      activeTab === 'dashboard'
+                        ? `border-${portfolioType === 'PPK' ? 'indigo' : 'slate'}-500 text-${portfolioType === 'PPK' ? 'indigo' : 'slate'}-600`
+                        : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                    }`}
+                  >
+                    <LayoutDashboard className="w-4 h-4 mr-2" />
+                    Dashboard
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('history')}
+                    className={`pb-4 px-1 border-b-2 font-medium text-sm flex items-center ${
+                      activeTab === 'history'
+                        ? `border-${portfolioType === 'PPK' ? 'indigo' : 'slate'}-500 text-${portfolioType === 'PPK' ? 'indigo' : 'slate'}-600`
+                        : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                    }`}
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    Historia
+                  </button>
+                </nav>
+              </div>
+            )}
 
             {activeTab === 'dashboard' && (
               <div className="space-y-8">
@@ -1230,11 +1246,11 @@ const App: React.FC = () => {
                       <ValueCompositionChart data={data} />
                     </div>
                     
-                    {/* Waterfall Chart - Replaces ROI chart in top spot for better visibility of "free money" */}
+                    {/* Flow Chart (Sankey-like) - Replaces Waterfall */}
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
-                      <h3 className="text-lg font-bold text-slate-800 mb-6">Skąd biorą się pieniądze w PPK? (Waterfall)</h3>
+                      <h3 className="text-lg font-bold text-slate-800 mb-6">Skąd biorą się pieniądze w PPK?</h3>
                       <div className="h-80 w-full">
-                         <PPKWaterfallChart data={ppkWaterfallData} />
+                         <PPKFlowChart data={ppkFlowData} />
                       </div>
                     </div>
 
@@ -1256,11 +1272,8 @@ const App: React.FC = () => {
                       <h3 className="text-lg font-bold text-slate-800 mb-6">Kapitał vs Wycena</h3>
                       <CryptoValueChart data={data} />
                     </div>
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                      <h3 className="text-lg font-bold text-slate-800 mb-6">Zysk/Strata Netto (Miesięcznie)</h3>
-                      <CryptoProfitChart data={data} />
-                    </div>
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    {/* CryptoProfitChart removed as requested */}
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
                       <h3 className="text-lg font-bold text-slate-800 mb-6">ROI w czasie</h3>
                       <ROIChart data={data} />
                     </div>

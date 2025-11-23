@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   AreaChart,
@@ -560,40 +561,6 @@ export const CryptoValueChart: React.FC<ChartProps> = ({ data }) => (
   </div>
 );
 
-export const CryptoProfitChart: React.FC<ChartProps> = ({ data }) => (
-  <div className="h-80 w-full">
-    <ResponsiveContainer width="100%" height="100%">
-      <BarChart data={data as any[]}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-        <XAxis 
-          dataKey="date" 
-          tickFormatter={formatDate} 
-          stroke="#94a3b8" 
-          fontSize={12}
-          tickMargin={10}
-        />
-        <YAxis 
-          tickFormatter={(val) => `${(val/1000).toFixed(0)}k`} 
-          stroke="#94a3b8" 
-          fontSize={12}
-        />
-        <Tooltip 
-          formatter={(value: number) => [`${value.toLocaleString('pl-PL')} zł`, 'Zysk/Strata']}
-          labelFormatter={formatDate}
-          cursor={{fill: '#f1f5f9'}}
-          contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }}
-        />
-        <ReferenceLine y={0} stroke="#64748b" />
-        <Bar dataKey="profit" name="Zysk/Strata Netto">
-          {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={(entry.profit || 0) >= 0 ? '#10b981' : '#ef4444'} />
-          ))}
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
-  </div>
-);
-
 export const GlobalSummaryChart: React.FC<ChartProps> = ({ data }) => {
   return (
     <div className="h-96 w-full">
@@ -956,7 +923,6 @@ export const SeasonalityChart: React.FC<{ data: any[] }> = ({ data }) => {
 
   return (
     <div className="h-64 w-full">
-        <h4 className="text-sm font-semibold text-slate-500 mb-4">Sezonowość (Średnia miesięczna stopa zwrotu)</h4>
         <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
@@ -985,79 +951,210 @@ interface PPKWaterfallItem {
   isTotal?: boolean;
 }
 
-export const PPKWaterfallChart: React.FC<{ data: PPKWaterfallItem[] }> = ({ data }) => {
-  let accumulated = 0;
-  const chartData = data.map(item => {
-      if (item.isTotal) {
-          return {
-              name: item.name,
-              uv: item.value, 
-              placeholder: 0,
-              fill: item.fill,
-              displayValue: item.value,
-              isTotal: true
-          };
-      }
+export const PPKFlowChart: React.FC<{ data: PPKWaterfallItem[] }> = ({ data }) => {
+  // Filter data to get inputs and total
+  const totalItem = data.find(item => item.isTotal);
+  const inputs = data.filter(item => !item.isTotal);
+  
+  if (!totalItem || inputs.length === 0) return null;
+
+  const totalValue = totalItem.value;
+  if (totalValue <= 0) return null;
+
+  // SVG Dimensions
+  const width = 600;
+  const height = 300;
+  const padding = 20;
+  const barWidth = 40;
+  const flowStartX = padding + barWidth;
+  const flowEndX = width - padding - barWidth;
+  
+  // Calculate heights proportional to total value
+  const availableHeight = height - (padding * 2);
+  const gap = 10;
+  
+  // Total bar (Right side)
+  const totalBarHeight = availableHeight;
+  const totalBarY = padding;
+
+  // Input bars (Left side)
+  // We need to distribute them with gaps
+  const totalInputsValue = inputs.reduce((sum, item) => sum + Math.abs(item.value), 0);
+  const scale = (availableHeight - (inputs.length - 1) * gap) / totalInputsValue;
+
+  let currentY = padding;
+  
+  // Render Flows
+  const flows = [];
+  const inputRects = [];
+  let currentTotalY = totalBarY; // Track where next flow connects to Total bar
+
+  // Sort inputs to match specific visual order if needed (Employee top) or leave as is
+  // Data order from App.tsx is: Employee, Employer, State, Fund Result
+  
+  for (let i = 0; i < inputs.length; i++) {
+      const item = inputs[i];
+      const absValue = Math.abs(item.value);
+      const itemHeight = absValue * scale;
+      const isNegative = item.value < 0;
       
-      const val = item.value;
-      let placeholder = 0;
-      let barSize = 0;
+      // Input Rect
+      inputRects.push(
+          <g key={`rect-${i}`}>
+             <rect 
+                x={padding} 
+                y={currentY} 
+                width={barWidth} 
+                height={itemHeight} 
+                fill={item.fill} 
+                rx={4}
+             />
+             <text 
+                x={padding + barWidth / 2} 
+                y={currentY + itemHeight / 2} 
+                dy={4}
+                textAnchor="middle" 
+                fill="#fff" 
+                fontSize={10} 
+                fontWeight="bold"
+                style={{pointerEvents: 'none'}}
+             >
+                {((absValue / totalValue) * 100).toFixed(0)}%
+             </text>
+             {/* Label outside */}
+             <text 
+                x={padding} 
+                y={currentY - 5} 
+                fill="#64748b" 
+                fontSize={10} 
+                fontWeight="500"
+             >
+                {item.name}
+             </text>
+          </g>
+      );
 
-      if (val >= 0) {
-          placeholder = accumulated;
-          barSize = val;
-          accumulated += val;
-      } else {
-          accumulated += val; 
-          placeholder = accumulated;
-          barSize = Math.abs(val);
+      // Flow Path (Bezier Curve)
+      // Start: Middle Right of Input Rect
+      // End: Left side of Total Rect, mapped strictly to value contribution
+      // Note: Total Bar is continuous, so we map flows to stacks on the Total Bar
+      
+      // Calculate the portion of the total bar this input represents
+      // (If value is negative, it technically reduces total, but for visualization we often show it contributing 
+      // or flowing out. For simplicity here, we map absolute magnitude to flow width visually)
+      
+      // Correction: PPK Fund result can be negative. A Sankey for negative flow usually flows OUT of the total or into a loss node.
+      // Given the request for "Sankey-style" and simple visuals, if negative, we draw it, but maybe thinner or faded?
+      // Let's treat all as contributors to the visual "block" of value for now to keep the visual simple and "flowing".
+      // Or better: The visual block on the right represents the Net Total. 
+      // Inputs are components.
+      // To make it look like a Sankey: 
+      // y_start = currentY + itemHeight / 2
+      // y_end_top = currentTotalY
+      // y_end_bottom = currentTotalY + (itemHeight proportional to Right Side scale?)
+      
+      // Actually, Total Bar height is `availableHeight`. Total Value is `totalValue`.
+      // So scale on right is `availableHeight / totalValue`.
+      // But we used `scale` calculated from SUM of abs(inputs). 
+      // If sum(inputs) != totalValue (due to negative), heights won't match exactly.
+      // For the purpose of this specific chart (PPK Breakdown), components SUM to Total exactly if all positive.
+      // If Fund Profit is negative, Total < Sum(Inputs).
+      // Visual trick: We scale flows to match the Right Bar visually.
+      
+      const rightScale = availableHeight / totalValue; 
+      // If we have negative value, this logic gets tricky. 
+      // Let's assume standard PPK growth where Profit is positive for the nice visual.
+      // If negative, we'll just render it but it might look slightly overlapping or detached. 
+      // Standard fallback: Map flows to source height.
+      
+      const flowHeight = itemHeight; 
+      
+      // Path coordinates
+      const startX = padding + barWidth;
+      const startYTop = currentY;
+      const startYBot = currentY + itemHeight;
+      
+      const endX = flowEndX;
+      // Target Y on the Total Bar
+      // We stack them downwards
+      // We need to normalize the target height to fit the Total Bar exactly
+      const targetHeight = (item.value / totalValue) * availableHeight; 
+      
+      // If negative, we can't easily stack it "inside" the total bar in a standard flow.
+      // We will skip flow for negative values or draw a thin line to bottom.
+      
+      if (!isNegative) {
+          const endYTop = currentTotalY;
+          const endYBot = currentTotalY + targetHeight;
+          
+          const controlPointX1 = startX + (endX - startX) / 2;
+          const controlPointX2 = endX - (endX - startX) / 2;
+
+          flows.push(
+              <path 
+                  key={`flow-${i}`}
+                  d={`
+                      M ${startX} ${startYTop} 
+                      C ${controlPointX1} ${startYTop}, ${controlPointX2} ${endYTop}, ${endX} ${endYTop}
+                      L ${endX} ${endYBot}
+                      C ${controlPointX2} ${endYBot}, ${controlPointX1} ${startYBot}, ${startX} ${startYBot}
+                      Z
+                  `}
+                  fill={item.fill}
+                  fillOpacity={0.3}
+                  stroke={item.fill}
+                  strokeOpacity={0.5}
+                  strokeWidth={1}
+              />
+          );
+          currentTotalY += targetHeight;
       }
 
-      return {
-          name: item.name,
-          uv: barSize,
-          placeholder: placeholder,
-          fill: item.fill,
-          displayValue: val, 
-          isTotal: false
-      };
-  });
+      currentY += itemHeight + gap;
+  }
+
+  // Total Rect (Right Side)
+  const totalRect = (
+      <g>
+          <rect 
+              x={width - padding - barWidth} 
+              y={padding} 
+              width={barWidth} 
+              height={availableHeight} 
+              fill={totalItem.fill} 
+              rx={4}
+          />
+          <text 
+              x={width - padding - barWidth / 2} 
+              y={height / 2} 
+              transform={`rotate(-90, ${width - padding - barWidth / 2}, ${height / 2})`}
+              textAnchor="middle" 
+              fill="#fff" 
+              fontSize={12} 
+              fontWeight="bold"
+          >
+              {totalItem.name}
+          </text>
+          <text 
+              x={width - padding - barWidth / 2} 
+              y={padding + availableHeight + 15} 
+              textAnchor="middle"
+              fill="#475569" 
+              fontSize={11} 
+              fontWeight="bold"
+          >
+              {(totalValue / 1000).toFixed(1)}k
+          </text>
+      </g>
+  );
 
   return (
-    <div className="h-full w-full">
-        <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} tickMargin={5} />
-                <YAxis stroke="#94a3b8" fontSize={12} tickFormatter={(val) => `${(val/1000).toFixed(0)}k`} />
-                <Tooltip 
-                    formatter={(value: number, name: string, props: any) => {
-                        // Safe access: check if payload and displayValue exist
-                        const realValue = props?.payload?.displayValue;
-                        if (realValue !== undefined) {
-                            return [`${realValue.toLocaleString('pl-PL')} zł`, 'Wartość'];
-                        }
-                        return [`${value.toLocaleString('pl-PL')} zł`, 'Wartość'];
-                    }}
-                    contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                    cursor={{fill: 'transparent'}}
-                />
-                <Bar dataKey="placeholder" stackId="a" fill="transparent" />
-                <Bar dataKey="uv" stackId="a" radius={[4, 4, 4, 4]}>
-                    {chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                    <LabelList 
-                        dataKey="displayValue" 
-                        position="top" 
-                        formatter={(val: number) => {
-                            return val !== 0 ? `${(val/1000).toFixed(1)}k` : '';
-                        }} 
-                        style={{fontSize: '10px', fill: '#64748b'}} 
-                    />
-                </Bar>
-            </BarChart>
-        </ResponsiveContainer>
+    <div className="h-full w-full overflow-hidden">
+        <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" className="w-full h-full">
+            {flows}
+            {inputRects}
+            {totalRect}
+        </svg>
     </div>
   );
 };
