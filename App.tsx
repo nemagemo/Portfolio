@@ -38,7 +38,7 @@ import {
 import { parseCSV, validateOMFIntegrity } from './utils/parser';
 import { AnyDataRow, SummaryStats, ValidationReport, PortfolioType, PPKDataRow, CryptoDataRow, IKEDataRow, OMFValidationReport, OMFDataRow, GlobalHistoryRow } from './types';
 import { StatsCard } from './components/StatsCard';
-import { ValueCompositionChart, ROIChart, ContributionComparisonChart, CryptoValueChart, OMFAllocationChart, GlobalSummaryChart, GlobalPerformanceChart, OMFStructureChart, OMFTreemapChart, PortfolioAllocationHistoryChart, CapitalStructureHistoryChart, SeasonalityChart, PPKStructureBar } from './components/Charts';
+import { ValueCompositionChart, ROIChart, ContributionComparisonChart, CryptoValueChart, OMFAllocationChart, GlobalSummaryChart, GlobalPerformanceChart, OMFStructureChart, OMFTreemapChart, PortfolioAllocationHistoryChart, CapitalStructureHistoryChart, SeasonalityChart } from './components/Charts';
 import { HistoryTable } from './components/HistoryTable';
 import { ReturnsHeatmap } from './components/ReturnsHeatmap';
 
@@ -79,6 +79,14 @@ import { CPI_DATA } from './constants/inflation';
  *    - Data integrity messages persist (no auto-hide) to ensure issues with source files are visible.
  *    - OMF is the default starting tab as it aggregates everything.
  */
+
+// Custom Icon for "No PPK"
+const NoPPKIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 34 14" className={className} fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+    <text x="50%" y="11.5" textAnchor="middle" fontSize="12" fontWeight="900" fontFamily="sans-serif" letterSpacing="1px">PPK</text>
+    <line x1="2" y1="7" x2="32" y2="7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
 
 const DataStatus: React.FC<{ report: ValidationReport }> = ({ report }) => {
   const [expanded, setExpanded] = useState(false);
@@ -279,6 +287,7 @@ const App: React.FC = () => {
   const [showProjection, setShowProjection] = useState(false);
   const [projectionMethod, setProjectionMethod] = useState<'LTM' | 'CAGR'>('LTM');
   const [showCPI, setShowCPI] = useState(false);
+  const [excludePPK, setExcludePPK] = useState(false);
 
   // Road to Retirement State (PPK)
   const [showPPKProjection, setShowPPKProjection] = useState(false);
@@ -388,9 +397,14 @@ const App: React.FC = () => {
       if (cryptoMap.has(date)) lastCrypto = cryptoMap.get(date)!;
       if (ikeMap.has(date)) lastIKE = ikeMap.get(date)!;
 
-      // Global Totals (Including PPK)
-      const totalInvestment = lastPPK.inv + lastCrypto.inv + lastIKE.inv;
-      const totalProfit = lastPPK.profit + lastCrypto.profit + lastIKE.profit;
+      // Apply Exclusion Logic for PPK
+      // If excludePPK is true, we force PPK contribution to 0 for the current row logic
+      const currentPPKInv = excludePPK ? 0 : lastPPK.inv;
+      const currentPPKProfit = excludePPK ? 0 : lastPPK.profit;
+
+      // Global Totals (Possibly Excluding PPK)
+      const totalInvestment = currentPPKInv + lastCrypto.inv + lastIKE.inv;
+      const totalProfit = currentPPKProfit + lastCrypto.profit + lastIKE.profit;
       const totalValue = totalInvestment + totalProfit;
       
       // --- Cumulative TWR Calculation (Strictly Crypto + IKE, No PPK) ---
@@ -439,7 +453,8 @@ const App: React.FC = () => {
       const realTotalValue = totalValue / cumulativeInflation;
 
       // For Allocation Chart
-      const ppkVal = lastPPK.inv + lastPPK.profit;
+      // If excludePPK is true, ppkVal should be 0 so it disappears from charts
+      const ppkVal = excludePPK ? 0 : (lastPPK.inv + lastPPK.profit);
       const cryptoVal = lastCrypto.inv + lastCrypto.profit;
       const ikeVal = lastIKE.inv + lastIKE.profit;
       
@@ -480,7 +495,7 @@ const App: React.FC = () => {
     });
 
     return history;
-  }, [csvSources]);
+  }, [csvSources, excludePPK]); // Add excludePPK as dependency
 
   // --- ROAD TO MILLION PROJECTION LOGIC (OMF) ---
   const chartDataWithProjection = useMemo(() => {
@@ -509,29 +524,33 @@ const App: React.FC = () => {
        }
     }
 
-    // 2. CAGR (All Time) Average Monthly Growth - Aligned with Stats Card Logic
-    const firstData = globalHistoryData[0];
-    
+    // 2. CAGR (All Time) - CHANGED TO TOTAL VALUE GROWTH (Balance-based CAGR)
+    // Previously this used ROI, which was inflated by PPK contributions.
+    // Now we use simple portfolio balance growth from Start to End.
     let cagrMonthlyRate = 0.005; // Fallback
 
-    if (globalHistoryData.length > 0) {
-        const startDate = new Date(firstData.date);
+    // Find first valid data point with non-zero value to avoid division by zero or infinity
+    const firstNonZero = globalHistoryData.find(d => d.totalValue > 0);
+    
+    if (firstNonZero && lastData.totalValue > 0) {
+        const startDate = new Date(firstNonZero.date);
         const endDate = new Date(lastData.date);
-        // Use exact same year duration constant as in stats calculation
+        // Use exact same year duration constant
         const years = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
         
-        const currentTotalRoi = lastData.investment > 0 
-            ? (lastData.profit / lastData.investment) 
-            : 0; // Decimal (e.g. 0.50 for 50%)
+        // Total Growth Factor of the Portfolio Value
+        const totalFactor = lastData.totalValue / firstNonZero.totalValue;
 
         let annualCagrDecimal = 0;
 
         if (years > 0.5) {
-            const totalFactor = 1 + currentTotalRoi;
             annualCagrDecimal = Math.pow(totalFactor, 1 / years) - 1;
         } else {
-            // Fallback for short history < 6 months (consistent with Stats Card)
-            annualCagrDecimal = currentTotalRoi;
+            // Fallback for short history < 6 months
+            // Simple normalized growth if we have at least 2 points
+            if (globalHistoryData.length > 1) {
+                 annualCagrDecimal = Math.pow(totalFactor, 1/Math.max(years, 0.1)) - 1;
+            }
         }
         
         // Convert Annual CAGR to Monthly Compounding Rate: (1 + Annual)^(1/12) - 1
@@ -610,25 +629,29 @@ const App: React.FC = () => {
           ltmRate = (Math.pow(lastData.totalValue / firstData.totalValue, 1/globalHistoryData.length) - 1) * 100;
       }
 
-      // CAGR - ALIGNED WITH STATS CARD (ROI Based)
-      const startD = new Date(firstData.date);
-      const endD = new Date(lastData.date);
-      const yrs = (endD.getTime() - startD.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
-      
-      // ROI Based Calculation
-      const currentTotalRoi = lastData.investment > 0 
-          ? (lastData.profit / lastData.investment)
-          : 0;
+      // CAGR - ALIGNED WITH TOTAL VALUE GROWTH (Not ROI)
+      // Find first non-zero total value
+      const firstNonZero = globalHistoryData.find(d => d.totalValue > 0);
+      let cagrMonthly = 0;
 
-      let annualCagr = 0;
-      if (yrs > 0.5) {
-          const totalFactor = 1 + currentTotalRoi;
-          annualCagr = Math.pow(totalFactor, 1/yrs) - 1;
-      } else {
-          annualCagr = currentTotalRoi;
+      if (firstNonZero && lastData.totalValue > 0) {
+          const startD = new Date(firstNonZero.date);
+          const endD = new Date(lastData.date);
+          const yrs = (endD.getTime() - startD.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+          
+          const totalFactor = lastData.totalValue / firstNonZero.totalValue;
+          let annualCagr = 0;
+
+          if (yrs > 0.5) {
+              annualCagr = Math.pow(totalFactor, 1/yrs) - 1;
+          } else {
+              // Fallback logic
+              if (globalHistoryData.length > 1) {
+                  annualCagr = Math.pow(totalFactor, 1/Math.max(yrs, 0.1)) - 1;
+              }
+          }
+          cagrMonthly = (Math.pow(1 + annualCagr, 1/12) - 1) * 100;
       }
-      
-      const cagrMonthly = (Math.pow(1 + annualCagr, 1/12) - 1) * 100;
 
       return { ltm: ltmRate, cagr: cagrMonthly };
   }, [globalHistoryData]);
@@ -639,28 +662,11 @@ const App: React.FC = () => {
 
     const ppkData = data as PPKDataRow[];
     const lastData = ppkData[ppkData.length - 1];
-    const firstData = ppkData[0];
 
-    // Calculate Growth Rate based on TOTAL VALUE (CAGR/All-time Growth only)
-    // Formula: (Last Total / First Total) ^ (1/Years)
-    let monthlyRate = 0.005; // Default fallback
-
-    const startD = new Date(firstData.date);
-    const endD = new Date(lastData.date);
-    const yrs = (endD.getTime() - startD.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
-    
-    // Total Growth Factor of the Portfolio Value
-    const totalFactor = lastData.totalValue / firstData.totalValue;
-    
-    if (yrs > 0.5) {
-        const annualCagr = Math.pow(totalFactor, 1/yrs) - 1;
-        monthlyRate = Math.pow(1 + annualCagr, 1/12) - 1;
-    } else {
-        // Fallback for very short periods, use simple period growth normalized
-        if (ppkData.length > 1) {
-             monthlyRate = Math.pow(totalFactor, 1/ppkData.length) - 1;
-        }
-    }
+    // Fixed Annual CAGR of 6% for Projection as requested
+    const annualCagr = 0.06; 
+    // Monthly Compounding Rate: (1 + 6%)^(1/12) - 1
+    const monthlyRate = Math.pow(1 + annualCagr, 1/12) - 1;
 
     const projectionPoints: any[] = [];
     let currentValue = lastData.totalValue;
@@ -698,27 +704,8 @@ const App: React.FC = () => {
   }, [data, portfolioType, showPPKProjection]);
 
   const ppkRateDisplay = useMemo(() => {
-      if (portfolioType !== 'PPK' || data.length < 2) return { cagr: 0 };
-      const ppkData = data as PPKDataRow[];
-      const lastData = ppkData[ppkData.length - 1];
-      const firstData = ppkData[0];
-
-      // CAGR based on Total Value growth
-      const startD = new Date(firstData.date);
-      const endD = new Date(lastData.date);
-      const yrs = (endD.getTime() - startD.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
-      const totalFactor = lastData.totalValue / firstData.totalValue;
-      
-      let annualCagr = 0;
-      if (yrs > 0.5) {
-          annualCagr = Math.pow(totalFactor, 1/yrs) - 1;
-      } else if (ppkData.length > 1) {
-          // fallback for short duration
-          annualCagr = Math.pow(totalFactor, 12/ppkData.length) - 1;
-      }
-      const cagrMonthly = (Math.pow(1 + annualCagr, 1/12) - 1) * 100;
-
-      return { cagr: cagrMonthly };
+      // Simply return 6.00% as it is fixed for the projection
+      return { cagr: 6.00 };
   }, [data, portfolioType]);
 
 
@@ -767,8 +754,13 @@ const App: React.FC = () => {
   const stats: SummaryStats | null = useMemo(() => {
     if (portfolioType === 'OMF') {
        // OMF Stats Calculation 
-       const totalValue = omfActiveAssets.reduce((acc, row) => acc + row.currentValue, 0);
-       const totalInvestedSnapshot = omfActiveAssets.reduce((acc, row) => acc + row.purchaseValue, 0);
+       // Update: If excludePPK is active, we filter the active assets to calculate "Net Worth" and "Invested" correctly
+       const assetsToSum = excludePPK 
+          ? omfActiveAssets.filter(a => a.portfolio !== 'PPK') 
+          : omfActiveAssets;
+
+       const totalValue = assetsToSum.reduce((acc, row) => acc + row.currentValue, 0);
+       const totalInvestedSnapshot = assetsToSum.reduce((acc, row) => acc + row.purchaseValue, 0);
 
        let aggregatedProfit = 0;
        let totalRoi = 0;
@@ -894,7 +886,7 @@ const App: React.FC = () => {
         currentRoi: row.roi
       };
     }
-  }, [data, portfolioType, omfActiveAssets, globalHistoryData, heatmapHistoryData]);
+  }, [data, portfolioType, omfActiveAssets, globalHistoryData, heatmapHistoryData, excludePPK]); // Added excludePPK
 
   // --- OMF Structure Data Calculation ---
   const omfStructureData = useMemo(() => {
@@ -1120,13 +1112,28 @@ const App: React.FC = () => {
                 
                 {/* Road to Million & CPI Controls */}
                 <div className="flex items-center space-x-3 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                   {/* No PPK Button */}
+                   <button
+                     onClick={() => setExcludePPK(!excludePPK)}
+                     disabled={showCPI || showProjection}
+                     className={`flex items-center justify-center w-20 px-2 py-1.5 rounded-md transition-all ${
+                       excludePPK 
+                         ? 'bg-slate-800 text-white shadow-sm ring-1 ring-slate-900' 
+                         : 'bg-white text-slate-500 hover:text-slate-700 border border-slate-200'
+                     } ${showCPI || showProjection ? 'opacity-50 cursor-not-allowed' : ''}`}
+                     title={excludePPK ? "Pokaż PPK" : "Ukryj PPK"}
+                   >
+                     <NoPPKIcon className="w-full h-4" />
+                   </button>
+
                    <button
                      onClick={() => setShowCPI(!showCPI)}
+                     disabled={excludePPK}
                      className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
                        showCPI 
                          ? 'bg-slate-200 text-slate-800 shadow-sm ring-1 ring-slate-300' 
                          : 'bg-white text-slate-500 hover:text-slate-700 border border-slate-200'
-                     }`}
+                     } ${excludePPK ? 'opacity-50 cursor-not-allowed' : ''}`}
                    >
                      CPI
                    </button>
@@ -1135,11 +1142,12 @@ const App: React.FC = () => {
 
                    <button
                      onClick={() => setShowProjection(!showProjection)}
+                     disabled={excludePPK}
                      className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
                        showProjection 
                          ? 'bg-amber-100 text-amber-700 shadow-sm ring-1 ring-amber-200' 
                          : 'bg-white text-slate-500 hover:text-slate-700 border border-slate-200'
-                     }`}
+                     } ${excludePPK ? 'opacity-50 cursor-not-allowed' : ''}`}
                    >
                      <Milestone size={14} className="mr-2" />
                      Droga do Miliona
@@ -1387,12 +1395,7 @@ const App: React.FC = () => {
               </div>
             )}
 
-            {/* Extra Chart for PPK: Current Structure Bar (Full Width) */}
-            {portfolioType === 'PPK' && stats && (
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
-                   <PPKStructureBar data={stats} />
-                </div>
-            )}
+            {/* Removed PPKStructureBar as requested */}
 
             {/* Tabs - Hidden for PPK and Crypto/IKE as requested */}
             {(portfolioType === 'OMF') && (

@@ -369,7 +369,7 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjecti
   }, [data, isPPK]);
 
   return (
-    <div className="h-80 w-full">
+    <div className="h-96 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart data={chartData as any[]}>
           <defs>
