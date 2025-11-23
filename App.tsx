@@ -524,38 +524,13 @@ const App: React.FC = () => {
        }
     }
 
-    // 2. CAGR (All Time) - CHANGED TO TOTAL VALUE GROWTH (Balance-based CAGR)
-    // Previously this used ROI, which was inflated by PPK contributions.
-    // Now we use simple portfolio balance growth from Start to End.
+    // 2. CAGR - FIXED 10% ANNUAL (Requested Update)
     let cagrMonthlyRate = 0.005; // Fallback
 
-    // Find first valid data point with non-zero value to avoid division by zero or infinity
-    const firstNonZero = globalHistoryData.find(d => d.totalValue > 0);
-    
-    if (firstNonZero && lastData.totalValue > 0) {
-        const startDate = new Date(firstNonZero.date);
-        const endDate = new Date(lastData.date);
-        // Use exact same year duration constant
-        const years = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
-        
-        // Total Growth Factor of the Portfolio Value
-        const totalFactor = lastData.totalValue / firstNonZero.totalValue;
-
-        let annualCagrDecimal = 0;
-
-        if (years > 0.5) {
-            annualCagrDecimal = Math.pow(totalFactor, 1 / years) - 1;
-        } else {
-            // Fallback for short history < 6 months
-            // Simple normalized growth if we have at least 2 points
-            if (globalHistoryData.length > 1) {
-                 annualCagrDecimal = Math.pow(totalFactor, 1/Math.max(years, 0.1)) - 1;
-            }
-        }
-        
-        // Convert Annual CAGR to Monthly Compounding Rate: (1 + Annual)^(1/12) - 1
-        cagrMonthlyRate = Math.pow(1 + annualCagrDecimal, 1/12) - 1;
-    }
+    // Fixed 10% Annual CAGR
+    const annualCagrDecimal = 0.10;
+    // Convert Annual CAGR to Monthly Compounding Rate: (1 + Annual)^(1/12) - 1
+    cagrMonthlyRate = Math.pow(1 + annualCagrDecimal, 1/12) - 1;
 
     // Store rates for UI display
     
@@ -629,29 +604,9 @@ const App: React.FC = () => {
           ltmRate = (Math.pow(lastData.totalValue / firstData.totalValue, 1/globalHistoryData.length) - 1) * 100;
       }
 
-      // CAGR - ALIGNED WITH TOTAL VALUE GROWTH (Not ROI)
-      // Find first non-zero total value
-      const firstNonZero = globalHistoryData.find(d => d.totalValue > 0);
-      let cagrMonthly = 0;
-
-      if (firstNonZero && lastData.totalValue > 0) {
-          const startD = new Date(firstNonZero.date);
-          const endD = new Date(lastData.date);
-          const yrs = (endD.getTime() - startD.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
-          
-          const totalFactor = lastData.totalValue / firstNonZero.totalValue;
-          let annualCagr = 0;
-
-          if (yrs > 0.5) {
-              annualCagr = Math.pow(totalFactor, 1/yrs) - 1;
-          } else {
-              // Fallback logic
-              if (globalHistoryData.length > 1) {
-                  annualCagr = Math.pow(totalFactor, 1/Math.max(yrs, 0.1)) - 1;
-              }
-          }
-          cagrMonthly = (Math.pow(1 + annualCagr, 1/12) - 1) * 100;
-      }
+      // CAGR - FIXED 10% ANNUAL DISPLAY
+      const annualCagr = 0.10;
+      const cagrMonthly = (Math.pow(1 + annualCagr, 1/12) - 1) * 100;
 
       return { ltm: ltmRate, cagr: cagrMonthly };
   }, [globalHistoryData]);
@@ -663,9 +618,9 @@ const App: React.FC = () => {
     const ppkData = data as PPKDataRow[];
     const lastData = ppkData[ppkData.length - 1];
 
-    // Fixed Annual CAGR of 6% for Projection as requested
-    const annualCagr = 0.06; 
-    // Monthly Compounding Rate: (1 + 6%)^(1/12) - 1
+    // Fixed Annual CAGR of 12% for Projection as requested (changed from 10%)
+    const annualCagr = 0.12; 
+    // Monthly Compounding Rate: (1 + 12%)^(1/12) - 1
     const monthlyRate = Math.pow(1 + annualCagr, 1/12) - 1;
 
     const projectionPoints: any[] = [];
@@ -704,8 +659,8 @@ const App: React.FC = () => {
   }, [data, portfolioType, showPPKProjection]);
 
   const ppkRateDisplay = useMemo(() => {
-      // Simply return 6.00% as it is fixed for the projection
-      return { cagr: 6.00 };
+      // Simply return 12.00% as it is fixed for the projection
+      return { cagr: 12.00 };
   }, [data, portfolioType]);
 
 
@@ -879,11 +834,19 @@ const App: React.FC = () => {
       } as SummaryStats & { customExitValue?: number };
     } else {
       const row = last as CryptoDataRow | IKEDataRow;
+      
+      // For IKE, calculate tax saved
+      let taxSaved = 0;
+      if (portfolioType === 'IKE') {
+         taxSaved = row.profit > 0 ? row.profit * 0.19 : 0;
+      }
+
       return {
         totalValue: row.totalValue,
         totalProfit: row.profit,
         totalInvestment: row.investment,
-        currentRoi: row.roi
+        currentRoi: row.roi,
+        taxSaved
       };
     }
   }, [data, portfolioType, omfActiveAssets, globalHistoryData, heatmapHistoryData, excludePPK]); // Added excludePPK
@@ -1392,6 +1355,17 @@ const App: React.FC = () => {
                       </div>
                    </div>
                 ) : null}
+
+                {/* NEW: IKE Tax Shield Card */}
+                {portfolioType === 'IKE' && stats.taxSaved !== undefined && (
+                   <StatsCard 
+                     title="Tarcza Podatkowa" 
+                     value={`${(stats.taxSaved).toLocaleString('pl-PL')} zł`} 
+                     subValue="Zaoszczędzony podatek (19%)"
+                     icon={ShieldCheck} 
+                     colorClass="text-cyan-700 bg-cyan-50" 
+                   />
+                )}
               </div>
             )}
 
@@ -1477,7 +1451,9 @@ const App: React.FC = () => {
                   /* Crypto / IKE Visualizations */
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
-                      <h3 className="text-lg font-bold text-slate-800 mb-6">Kapitał vs Wycena</h3>
+                      <h3 className="text-lg font-bold text-slate-800 mb-6">
+                        {portfolioType === 'IKE' ? 'Kapitał vs Wycena (IKE vs Konto Opodatkowane)' : 'Kapitał vs Wycena'}
+                      </h3>
                       <CryptoValueChart data={data} />
                     </div>
                     {/* CryptoProfitChart removed as requested */}

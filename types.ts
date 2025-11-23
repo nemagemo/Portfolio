@@ -43,7 +43,8 @@ export interface CryptoDataRow {
 }
 
 export interface IKEDataRow extends CryptoDataRow {
-  // Identical structure to Crypto, kept separate for future extensibility
+  // Value of the portfolio if it were a standard taxable account (Profit - 19% Tax)
+  taxedTotalValue?: number;
 }
 
 /**
@@ -116,6 +117,7 @@ export interface SummaryStats {
   
   // Crypto/IKE Specific
   totalInvestment?: number;
+  taxSaved?: number; // For IKE: Amount saved due to tax shield (19% of profit)
 }
 
 /**

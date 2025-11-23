@@ -309,10 +309,21 @@ export const parseCSV = (csvText: string, type: PortfolioType, source: 'Online' 
         logicErrors++;
       }
 
+      const totalValue = parseFloat((investment + profit).toFixed(2));
+
+      // Calculate Virtual Taxed Value for IKE
+      let taxedTotalValue = undefined;
+      if (type === 'IKE') {
+         // Tax is 19% of profit, if profit is positive
+         const tax = profit > 0 ? profit * 0.19 : 0;
+         taxedTotalValue = totalValue - tax;
+      }
+
       const rowData = {
         date: dateStr, dateObj,
         investment, profit, roi,
-        totalValue: parseFloat((investment + profit).toFixed(2))
+        totalValue,
+        taxedTotalValue
       };
 
       if (type === 'CRYPTO') {

@@ -567,62 +567,98 @@ export const ContributionComparisonChart: React.FC<ChartProps> = ({ data }) => (
   </div>
 );
 
-export const CryptoValueChart: React.FC<ChartProps> = ({ data }) => (
-  <div className="h-80 w-full">
-    <ResponsiveContainer width="100%" height="100%">
-      <AreaChart data={data as any[]}>
-        <defs>
-          <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8}/>
-            <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
-          </linearGradient>
-          <linearGradient id="colorInvest2" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#64748b" stopOpacity={0.5}/>
-            <stop offset="95%" stopColor="#64748b" stopOpacity={0}/>
-          </linearGradient>
-        </defs>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-        <XAxis 
-          dataKey="date" 
-          tickFormatter={formatDate} 
-          stroke="#94a3b8" 
-          fontSize={12}
-          tickMargin={10}
-        />
-        <YAxis 
-          tickFormatter={(val) => `${(val/1000).toFixed(0)}k`} 
-          stroke="#94a3b8" 
-          fontSize={12}
-        />
-        <Tooltip 
-          formatter={(value: number) => [`${value.toLocaleString('pl-PL')} zł`]}
-          labelFormatter={formatDate}
-          contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }}
-        />
-        <Legend verticalAlign="top" height={36} />
-        <Area 
-          type="monotone" 
-          dataKey="totalValue" 
-          name="Wycena Portfela" 
-          stroke="#8b5cf6" 
-          fillOpacity={1} 
-          fill="url(#colorTotal)" 
-          strokeWidth={2}
-        />
-        <Area 
-          type="monotone" 
-          dataKey="investment" 
-          name="Zainwestowany Kapitał" 
-          stroke="#64748b" 
-          fillOpacity={1} 
-          fill="url(#colorInvest2)" 
-          strokeWidth={2}
-          strokeDasharray="5 5"
-        />
-      </AreaChart>
-    </ResponsiveContainer>
-  </div>
-);
+export const CryptoValueChart: React.FC<ChartProps> = ({ data }) => {
+  const hasTaxedValue = data.length > 0 && 'taxedTotalValue' in data[data.length - 1];
+
+  // Use ComposedChart to allow lines alongside areas
+  return (
+    <div className="h-80 w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <ComposedChart data={data as any[]}>
+          <defs>
+            <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8}/>
+              <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+            </linearGradient>
+            <linearGradient id="colorInvest2" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#64748b" stopOpacity={0.5}/>
+              <stop offset="95%" stopColor="#64748b" stopOpacity={0}/>
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+          <XAxis 
+            dataKey="date" 
+            tickFormatter={formatDate} 
+            stroke="#94a3b8" 
+            fontSize={12}
+            tickMargin={10}
+          />
+          <YAxis 
+            tickFormatter={(val) => `${(val/1000).toFixed(0)}k`} 
+            stroke="#94a3b8" 
+            fontSize={12}
+          />
+          <Tooltip 
+            formatter={(value: number, name: string, item: any) => {
+               const payload = item.payload;
+               if (name === 'taxedTotalValue') {
+                  // Calculate tax saved relative to the taxed scenario
+                  const total = payload.totalValue;
+                  const taxed = value;
+                  const saved = total - taxed;
+                  return [
+                    `${value.toLocaleString('pl-PL')} zł`, 
+                    `Konto Opodatkowane (oszczędzasz: ${saved.toLocaleString('pl-PL')} zł)`
+                  ];
+               }
+               const labels: Record<string, string> = {
+                 totalValue: 'Wycena Portfela',
+                 investment: 'Zainwestowany Kapitał',
+               }
+               return [`${value.toLocaleString('pl-PL')} zł`, labels[name] || name];
+            }}
+            labelFormatter={formatDate}
+            contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+          />
+          <Legend verticalAlign="top" height={36} />
+          
+          <Area 
+            type="monotone" 
+            dataKey="totalValue" 
+            name="Wycena Portfela" 
+            stroke="#8b5cf6" 
+            fillOpacity={1} 
+            fill="url(#colorTotal)" 
+            strokeWidth={2}
+          />
+          <Area 
+            type="monotone" 
+            dataKey="investment" 
+            name="Zainwestowany Kapitał" 
+            stroke="#64748b" 
+            fillOpacity={1} 
+            fill="url(#colorInvest2)" 
+            strokeWidth={2}
+            strokeDasharray="5 5"
+          />
+
+          {/* Virtual Tax Line for IKE */}
+          {hasTaxedValue && (
+            <Line
+              type="monotone"
+              dataKey="taxedTotalValue"
+              name="Konto Opodatkowane"
+              stroke="#64748b"
+              strokeWidth={2}
+              strokeDasharray="3 3"
+              dot={false}
+            />
+          )}
+        </ComposedChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
 
 export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection, showCPI }) => {
   return (
