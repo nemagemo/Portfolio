@@ -37,7 +37,8 @@ import {
   Palette,
   Sun,
   Zap,
-  PenTool
+  PenTool,
+  Trophy
 } from 'lucide-react';
 import { parseCSV, validateOMFIntegrity } from './utils/parser';
 import { AnyDataRow, SummaryStats, ValidationReport, PortfolioType, PPKDataRow, CryptoDataRow, IKEDataRow, OMFValidationReport, OMFDataRow, GlobalHistoryRow } from './types';
@@ -1277,7 +1278,7 @@ export const App: React.FC = () => {
                   <CalendarDays className={theme === 'neon' ? 'text-emerald-400' : 'text-emerald-600'} size={20} />
                 </div>
               </div>
-              <ReturnsHeatmap data={heatmapHistoryData} />
+              <ReturnsHeatmap data={heatmapHistoryData} themeMode={theme} />
             </div>
 
             {/* Seasonality Chart (Separate Card) */}
@@ -1328,6 +1329,7 @@ export const App: React.FC = () => {
                     data={omfActiveAssets} 
                     type="OMF" 
                     omfVariant="active" 
+                    themeMode={theme}
                   />
                 )}
               </div>
@@ -1346,7 +1348,7 @@ export const App: React.FC = () => {
                   </span>
                 </div>
                 {isClosedHistoryExpanded && (
-                  <HistoryTable data={omfClosedAssets} type="OMF" omfVariant="closed" />
+                  <HistoryTable data={omfClosedAssets} type="OMF" omfVariant="closed" themeMode={theme} />
                 )}
               </div>
             </div>
@@ -1464,6 +1466,31 @@ export const App: React.FC = () => {
                      colorClass={theme === 'neon' ? 'text-cyan-400' : "text-cyan-700 bg-cyan-50"} 
                      className={styles.cardContainer}
                    />
+                )}
+
+                {/* NEW: Crypto Best Asset Card */}
+                {portfolioType === 'CRYPTO' && (
+                  (() => {
+                    // Find best active crypto asset
+                    const bestCrypto = omfActiveAssets
+                      .filter(a => a.portfolio === 'Krypto' || a.portfolio === 'CRYPTO')
+                      .sort((a, b) => b.profit - a.profit)[0]; // Sort by absolute profit
+
+                    if (bestCrypto) {
+                      return (
+                        <StatsCard
+                          title="Najlepszy Aktyw"
+                          value={bestCrypto.symbol}
+                          subValue={`${bestCrypto.profit.toLocaleString('pl-PL')} zł`}
+                          trend={bestCrypto.roi}
+                          icon={Trophy}
+                          colorClass={theme === 'neon' ? 'text-yellow-400' : "text-yellow-600 bg-yellow-50"}
+                          className={styles.cardContainer}
+                        />
+                      );
+                    }
+                    return null;
+                  })()
                 )}
               </div>
             )}
@@ -1588,7 +1615,7 @@ export const App: React.FC = () => {
 
             {activeTab === 'history' && portfolioType === 'OMF' && (
               <div className={`${styles.cardContainer} overflow-hidden`}>
-                <HistoryTable data={data} type={portfolioType} />
+                <HistoryTable data={data} type={portfolioType} themeMode={theme} />
               </div>
             )}
           </>
