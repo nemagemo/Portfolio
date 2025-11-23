@@ -50,7 +50,7 @@ import { ResztaKryptoLogo } from '../logos/ResztaKryptoLogo';
 import { ETFBS80TRLogo } from '../logos/ETFBS80TRLogo';
 import { ETHLogo } from '../logos/ETHLogo';
 
-type ThemeMode = 'default' | 'dark' | 'comic' | 'light' | 'neon';
+type ThemeMode = 'light' | 'comic' | 'neon';
 
 interface ChartProps {
   data: AnyDataRow[];
@@ -71,6 +71,7 @@ const CHART_THEMES: Record<ThemeMode, {
   net: string;        // Net Value
   exit: string;       // Exit Value
   projection: string; // Projection Line
+  taxedAccount: string; // Virtual Taxed Account (Yellowish)
   grid: string;       // Grid Lines
   axis: string;       // Axis Text/Lines
   tooltipBg: string;  // Tooltip Background
@@ -81,53 +82,36 @@ const CHART_THEMES: Record<ThemeMode, {
   barProfitPos: string;
   barProfitNeg: string;
 }> = {
-  default: {
-    investment: '#3b82f6', // Blue-500
-    profit: '#10b981',     // Emerald-500
-    employer: '#8b5cf6',   // Violet-500
-    state: '#ec4899',      // Pink-500
-    tax: '#ef4444',        // Red-500
-    net: '#064e3b',        // Emerald-900
-    exit: '#475569',       // Slate-600
-    projection: '#d97706', // Amber-600
-    grid: '#e2e8f0',       // Slate-200
-    axis: '#64748b',       // Slate-500
+  light: {
+    investment: '#475569', // Slate-600 (Professional Blue-Grey)
+    profit: '#059669',     // Emerald-600 (Profit Green)
+    employer: '#7c3aed',   // Violet-600 (Employer/Bonus)
+    state: '#db2777',      // Pink-600 (State/Bonus)
+    tax: '#dc2626',        // Red-600 (Tax - Distinct)
+    net: '#115e59',        // Teal-800 (Net Value - Stronger Contrast)
+    exit: '#b45309',       // Amber-700 (Exit Value - Stronger Contrast/Rust)
+    projection: '#d97706', // Amber-600 (Projection - Gold/Optimism)
+    taxedAccount: '#eab308', // Yellow-500
+    grid: '#e5e7eb',       // Gray-200
+    axis: '#6b7280',       // Gray-500
     tooltipBg: '#ffffff',
-    tooltipText: '#1e293b',
-    tooltipBorder: '#e2e8f0',
-    strokeWidth: 2,
-    pieColors: ['#0ea5e9', '#8b5cf6', '#10b981', '#f59e0b', '#f43f5e', '#64748b'],
-    barProfitPos: '#10b981',
-    barProfitNeg: '#ef4444'
-  },
-  dark: {
-    investment: '#60a5fa', // Blue-400 (Brighter)
-    profit: '#34d399',     // Emerald-400
-    employer: '#a78bfa',   // Violet-400
-    state: '#f472b6',      // Pink-400
-    tax: '#f87171',        // Red-400
-    net: '#6ee7b7',        // Emerald-300
-    exit: '#94a3b8',       // Slate-400
-    projection: '#fbbf24', // Amber-400
-    grid: '#334155',       // Slate-700
-    axis: '#94a3b8',       // Slate-400
-    tooltipBg: '#1e293b',
-    tooltipText: '#f8fafc',
-    tooltipBorder: '#334155',
-    strokeWidth: 2,
-    pieColors: ['#38bdf8', '#c084fc', '#4ade80', '#fcd34d', '#fb7185', '#94a3b8'],
-    barProfitPos: '#34d399',
-    barProfitNeg: '#f87171'
+    tooltipText: '#111827',
+    tooltipBorder: '#e5e7eb',
+    strokeWidth: 2,      
+    pieColors: ['#475569', '#7c3aed', '#059669', '#d97706', '#be123c', '#1e293b'],
+    barProfitPos: '#059669',
+    barProfitNeg: '#b91c1c'
   },
   comic: {
-    investment: '#0ea5e9', // Cyan
-    profit: '#22c55e',     // Green
+    investment: '#0ea5e9', // Cyan (Process Cyan)
+    profit: '#22c55e',     // Bright Green
     employer: '#a855f7',   // Purple
     state: '#ec4899',      // Pink
     tax: '#ef4444',        // Red
-    net: '#000000',        // Black
-    exit: '#57534e',       // Warm Grey
-    projection: '#f59e0b', // Orange
+    net: '#000000',        // Black (Bold Outline Style)
+    exit: '#44403c',       // Stone-700 (Dark Gray)
+    projection: '#f97316', // Bright Orange (Attention)
+    taxedAccount: '#facc15', // Yellow-400 (Bright Yellow)
     grid: '#000000',       // Black Grid
     axis: '#000000',       // Black Axis
     tooltipBg: '#ffffff',
@@ -138,34 +122,16 @@ const CHART_THEMES: Record<ThemeMode, {
     barProfitPos: '#22c55e',
     barProfitNeg: '#ef4444'
   },
-  light: {
-    investment: '#475569', // Slate-600
-    profit: '#059669',     // Emerald-600
-    employer: '#7c3aed',   // Violet-600
-    state: '#db2777',      // Pink-600
-    tax: '#b91c1c',        // Red-700
-    net: '#1e293b',        // Slate-800
-    exit: '#9ca3af',       // Gray-400
-    projection: '#d97706', // Amber-600
-    grid: '#e5e7eb',       // Gray-200
-    axis: '#4b5563',       // Gray-600
-    tooltipBg: '#f9fafb',
-    tooltipText: '#111827',
-    tooltipBorder: '#e5e7eb',
-    strokeWidth: 1.5,      // Thinner Lines
-    pieColors: ['#475569', '#7c3aed', '#059669', '#d97706', '#be123c', '#1e293b'],
-    barProfitPos: '#059669',
-    barProfitNeg: '#b91c1c'
-  },
   neon: {
-    investment: '#22d3ee', // Cyan-400
+    investment: '#22d3ee', // Cyan-400 (Electric Blue)
     profit: '#39ff14',     // Neon Green
     employer: '#d946ef',   // Fuchsia-500
     state: '#f472b6',      // Pink-400
     tax: '#ef4444',        // Red
-    net: '#ccfbf1',        // Teal-100
-    exit: '#94a3b8',       // Slate-400
-    projection: '#facc15', // Yellow-400
+    net: '#22d3ee',        // Cyan (Electric)
+    exit: '#fbbf24',       // Amber (Neon Gold)
+    projection: '#facc15', // Yellow-400 (Neon Gold)
+    taxedAccount: '#fef08a', // Yellow-200 (Pale Neon Yellow)
     grid: '#1e293b',       // Slate-800
     axis: '#67e8f9',       // Cyan-300
     tooltipBg: '#000000',
@@ -217,12 +183,12 @@ interface OMFAllocationProps {
   themeMode?: ThemeMode;
 }
 
-export const OMFAllocationChart: React.FC<OMFAllocationProps> = ({ data, title, themeMode = 'default' }) => {
+export const OMFAllocationChart: React.FC<OMFAllocationProps> = ({ data, title, themeMode = 'light' }) => {
   const t = CHART_THEMES[themeMode];
   
   return (
     <div className="h-80 w-full flex flex-col items-center">
-      {title && <h4 className={`text-sm font-semibold mb-2 ${themeMode === 'dark' ? 'text-slate-400' : themeMode === 'neon' ? 'text-cyan-700' : 'text-slate-500'}`}>{title}</h4>}
+      {title && <h4 className={`text-sm font-semibold mb-2 ${themeMode === 'neon' ? 'text-cyan-700' : 'text-slate-500'}`}>{title}</h4>}
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
@@ -238,7 +204,7 @@ export const OMFAllocationChart: React.FC<OMFAllocationProps> = ({ data, title, 
               <Cell 
                 key={`cell-${index}`} 
                 fill={entry.color || t.pieColors[index % t.pieColors.length]} 
-                stroke={themeMode === 'dark' ? '#1e293b' : themeMode === 'neon' ? '#000' : '#fff'} 
+                stroke={themeMode === 'neon' ? '#000' : '#fff'} 
                 strokeWidth={themeMode === 'comic' ? 2 : 1} 
               />
             ))}
@@ -254,7 +220,7 @@ export const OMFAllocationChart: React.FC<OMFAllocationProps> = ({ data, title, 
   );
 };
 
-export const OMFStructureChart: React.FC<OMFAllocationProps> = ({ data, themeMode = 'default' }) => {
+export const OMFStructureChart: React.FC<OMFAllocationProps> = ({ data, themeMode = 'light' }) => {
   const t = CHART_THEMES[themeMode];
   // Generate a larger palette by repeating/shifting basic pie colors
   const extendedColors = [...t.pieColors, ...t.pieColors].map((c, i) => i % 2 === 0 ? c : c + 'CC'); 
@@ -276,7 +242,7 @@ export const OMFStructureChart: React.FC<OMFAllocationProps> = ({ data, themeMod
               <Cell 
                 key={`cell-${index}`} 
                 fill={entry.color || extendedColors[index % extendedColors.length]} 
-                stroke={themeMode === 'dark' ? '#1e293b' : themeMode === 'neon' ? '#000' : '#fff'} 
+                stroke={themeMode === 'neon' ? '#000' : '#fff'} 
                 strokeWidth={themeMode === 'comic' ? 2 : 1} 
               />
             ))}
@@ -293,8 +259,8 @@ export const OMFStructureChart: React.FC<OMFAllocationProps> = ({ data, themeMod
             wrapperStyle={{ fontSize: '12px', maxHeight: '480px', overflowY: 'auto' }}
             formatter={(value, entry: any) => {
                 const val = entry.payload.value;
-                const textColor = themeMode === 'dark' ? 'text-slate-300' : themeMode === 'neon' ? 'text-cyan-400' : 'text-slate-600';
-                const subTextColor = themeMode === 'dark' ? 'text-slate-500' : themeMode === 'neon' ? 'text-cyan-800' : 'text-slate-400';
+                const textColor = themeMode === 'neon' ? 'text-cyan-400' : 'text-slate-600';
+                const subTextColor = themeMode === 'neon' ? 'text-cyan-800' : 'text-slate-400';
                 return <span className={`${textColor} font-medium ml-1`}>{value} <span className={`${subTextColor} text-xs ml-1`}>({val.toLocaleString('pl-PL')} zł)</span></span>;
             }}
           />
@@ -400,7 +366,7 @@ const TreemapContent = (props: any) => {
   const showText = width > 40 && height > 30;
   const padding = 5;
 
-  const strokeColor = themeMode === 'dark' ? '#1e293b' : themeMode === 'neon' ? '#000' : '#fff';
+  const strokeColor = themeMode === 'neon' ? '#000' : '#fff';
   const strokeWidth = themeMode === 'comic' ? 2 : 2;
 
   return (
@@ -452,7 +418,7 @@ interface OMFTreemapChartProps {
   themeMode?: ThemeMode;
 }
 
-export const OMFTreemapChart: React.FC<OMFTreemapChartProps> = ({ data, themeMode = 'default' }) => {
+export const OMFTreemapChart: React.FC<OMFTreemapChartProps> = ({ data, themeMode = 'light' }) => {
   const t = CHART_THEMES[themeMode];
   
   return (
@@ -463,7 +429,7 @@ export const OMFTreemapChart: React.FC<OMFTreemapChartProps> = ({ data, themeMod
           dataKey="value"
           nameKey="name"
           aspectRatio={4 / 3}
-          stroke={themeMode === 'dark' ? "#1e293b" : themeMode === 'neon' ? '#000' : "#fff"}
+          stroke={themeMode === 'neon' ? '#000' : "#fff"}
           fill="#8884d8"
           content={(props) => <TreemapContent {...props} themeMode={themeMode as ThemeMode} />}
         >
@@ -497,7 +463,7 @@ export const OMFTreemapChart: React.FC<OMFTreemapChartProps> = ({ data, themeMod
 
 // --- Standard Charts ---
 
-export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjection, themeMode = 'default' }) => {
+export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjection, themeMode = 'light' }) => {
   if (data.length === 0) return null;
   const isPPK = 'employeeContribution' in data[0];
   const t = CHART_THEMES[themeMode];
@@ -543,6 +509,7 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjecti
             stroke={t.axis} 
             fontSize={12}
             tickMargin={10}
+            padding={{ left: 10, right: 30 }}
           />
           <YAxis 
             tickFormatter={(val) => `${(val/1000).toFixed(0)}k`} 
@@ -586,8 +553,26 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjecti
                 fillOpacity={0.9}
                 strokeWidth={t.strokeWidth}
               />
-              <Line type="monotone" dataKey="netValue" name="Wartość Netto" stroke={t.net} strokeWidth={t.strokeWidth} dot={false} />
-              <Line type="monotone" dataKey="exitValue" name="Wartość Exit" stroke={t.exit} strokeWidth={t.strokeWidth} dot={false} />
+              
+              {/* Dashed Lines for Net and Exit */}
+              <Line 
+                type="monotone" 
+                dataKey="netValue" 
+                name="Wartość Netto" 
+                stroke={t.net} 
+                strokeWidth={t.strokeWidth} 
+                strokeDasharray="4 4"
+                dot={false} 
+              />
+              <Line 
+                type="monotone" 
+                dataKey="exitValue" 
+                name="Wartość Exit" 
+                stroke={t.exit} 
+                strokeWidth={t.strokeWidth} 
+                strokeDasharray="4 4"
+                dot={false} 
+              />
               
               {showProjection && (
                 <Line 
@@ -631,7 +616,7 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjecti
   );
 };
 
-export const ROIChart: React.FC<ChartProps> = ({ data, themeMode = 'default' }) => {
+export const ROIChart: React.FC<ChartProps> = ({ data, themeMode = 'light' }) => {
   const hasExitRoi = data.length > 0 && 'exitRoi' in data[0];
   const t = CHART_THEMES[themeMode];
 
@@ -646,6 +631,8 @@ export const ROIChart: React.FC<ChartProps> = ({ data, themeMode = 'default' }) 
             stroke={t.axis} 
             fontSize={12}
             tickMargin={10}
+            minTickGap={15}
+            padding={{ left: 10, right: 30 }}
           />
           <YAxis 
             stroke={t.axis} 
@@ -689,7 +676,7 @@ export const ROIChart: React.FC<ChartProps> = ({ data, themeMode = 'default' }) 
   );
 };
 
-export const ContributionComparisonChart: React.FC<ChartProps> = ({ data, themeMode = 'default' }) => {
+export const ContributionComparisonChart: React.FC<ChartProps> = ({ data, themeMode = 'light' }) => {
   const t = CHART_THEMES[themeMode];
   return (
     <div className="h-80 w-full">
@@ -702,6 +689,7 @@ export const ContributionComparisonChart: React.FC<ChartProps> = ({ data, themeM
             stroke={t.axis} 
             fontSize={12}
             tickMargin={10}
+            padding={{ left: 10, right: 30 }}
           />
           <YAxis 
             tickFormatter={(val) => `${(val/1000).toFixed(0)}k`} 
@@ -711,7 +699,7 @@ export const ContributionComparisonChart: React.FC<ChartProps> = ({ data, themeM
           <Tooltip 
             formatter={(value: number) => [`${value.toLocaleString('pl-PL')} zł`]}
             labelFormatter={formatDate}
-            cursor={{fill: themeMode === 'dark' ? '#334155' : themeMode === 'neon' ? '#22d3ee10' : '#f1f5f9'}}
+            cursor={{fill: themeMode === 'neon' ? '#22d3ee10' : '#f1f5f9'}}
             contentStyle={getTooltipStyle(themeMode as ThemeMode)}
           />
           <Legend verticalAlign="top" height={36} />
@@ -724,8 +712,14 @@ export const ContributionComparisonChart: React.FC<ChartProps> = ({ data, themeM
   );
 };
 
-export const CryptoValueChart: React.FC<ChartProps> = ({ data, showTaxComparison, themeMode = 'default' }) => {
-  const hasTaxedValue = data.length > 0 && 'taxedTotalValue' in data[data.length - 1];
+export const CryptoValueChart: React.FC<ChartProps> = ({ data, showTaxComparison, themeMode = 'light' }) => {
+  // Robust check: verify if ANY row actually has the 'taxedTotalValue' property computed.
+  // Just checking the last row (data.length > 0) is usually enough for time series, 
+  // but this ensures we don't show the line if the data type doesn't support it (e.g. Crypto).
+  const hasTaxedValue = useMemo(() => {
+     return data.length > 0 && data.some(d => (d as any).taxedTotalValue !== undefined);
+  }, [data]);
+
   const t = CHART_THEMES[themeMode];
 
   return (
@@ -749,6 +743,8 @@ export const CryptoValueChart: React.FC<ChartProps> = ({ data, showTaxComparison
             stroke={t.axis} 
             fontSize={12}
             tickMargin={10}
+            minTickGap={15}
+            padding={{ left: 10, right: 30 }}
           />
           <YAxis 
             tickFormatter={(val) => `${(val/1000).toFixed(0)}k`} 
@@ -803,7 +799,7 @@ export const CryptoValueChart: React.FC<ChartProps> = ({ data, showTaxComparison
               type="monotone"
               dataKey="taxedTotalValue"
               name="Konto Opodatkowane"
-              stroke={t.axis}
+              stroke={t.taxedAccount} 
               strokeWidth={t.strokeWidth}
               strokeDasharray="3 3"
               dot={false}
@@ -815,7 +811,7 @@ export const CryptoValueChart: React.FC<ChartProps> = ({ data, showTaxComparison
   );
 };
 
-export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection, showCPI, themeMode = 'default' }) => {
+export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection, showCPI, themeMode = 'light' }) => {
   const t = CHART_THEMES[themeMode];
 
   return (
@@ -823,13 +819,13 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection,
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart data={data as any[]}>
           <defs>
-            <linearGradient id="colorInvestGlobal" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={t.investment} stopOpacity={0.8}/>
-              <stop offset="95%" stopColor={t.investment} stopOpacity={0.1}/>
-            </linearGradient>
-            <linearGradient id="colorProfitGlobal" x1="0" y1="0" x2="0" y2="1">
+            <linearGradient id="colorTotalGlobal" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor={t.profit} stopOpacity={0.8}/>
-              <stop offset="95%" stopColor={t.profit} stopOpacity={0.1}/>
+              <stop offset="95%" stopColor={t.profit} stopOpacity={0}/>
+            </linearGradient>
+            <linearGradient id="colorInvestGlobal" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={t.axis} stopOpacity={0.5}/>
+              <stop offset="95%" stopColor={t.axis} stopOpacity={0}/>
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} />
@@ -839,6 +835,7 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection,
             stroke={t.axis} 
             fontSize={12}
             tickMargin={10}
+            padding={{ left: 10, right: 30 }}
           />
           <YAxis 
             tickFormatter={(val) => `${(val/1000).toFixed(0)}k`} 
@@ -848,8 +845,8 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection,
           <Tooltip 
             formatter={(value: number, name: string) => {
                 const labels: Record<string, string> = {
-                    investment: 'Wkład',
-                    profit: 'Zysk',
+                    totalValue: 'Wycena Portfela',
+                    investment: 'Zainwestowany Kapitał',
                     projectedValue: 'Prognoza (Droga do Miliona)',
                     realTotalValue: 'Wartość&CPI'
                 };
@@ -860,24 +857,27 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection,
           />
           <Legend verticalAlign="top" height={36} />
           
+          {/* Total Value - Background Area (Green) */}
+          <Area 
+            type="monotone" 
+            dataKey="totalValue" 
+            name="Wycena Portfela" 
+            stroke={t.profit} 
+            fillOpacity={1}
+            fill="url(#colorTotalGlobal)" 
+            strokeWidth={t.strokeWidth}
+          />
+
+          {/* Investment - Overlay Area (Matches Crypto Chart Style) */}
           <Area 
             type="monotone" 
             dataKey="investment" 
-            name="Wkład" 
-            stackId="1" 
-            stroke={t.investment} 
+            name="Zainwestowany Kapitał" 
+            stroke={t.axis} 
+            fillOpacity={1}
             fill="url(#colorInvestGlobal)" 
             strokeWidth={t.strokeWidth}
-          />
-          
-          <Area 
-            type="monotone" 
-            dataKey="profit" 
-            name="Zysk" 
-            stackId="1" 
-            stroke={t.profit} 
-            fill="url(#colorProfitGlobal)" 
-            strokeWidth={t.strokeWidth}
+            strokeDasharray="5 5"
           />
 
           {showCPI && (
@@ -885,7 +885,7 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection,
               type="monotone" 
               dataKey="realTotalValue" 
               name="Wartość&CPI" 
-              stroke={t.exit} 
+              stroke={t.tax} 
               strokeWidth={t.strokeWidth} 
               strokeDasharray="3 3"
               dot={false} 
@@ -910,7 +910,7 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection,
   );
 };
 
-export const GlobalPerformanceChart: React.FC<ChartProps> = ({ data, themeMode = 'default' }) => {
+export const GlobalPerformanceChart: React.FC<ChartProps> = ({ data, themeMode = 'light' }) => {
   const [showSP500, setShowSP500] = useState(false);
   const [showWIG20, setShowWIG20] = useState(false);
   const t = CHART_THEMES[themeMode];
@@ -925,7 +925,7 @@ export const GlobalPerformanceChart: React.FC<ChartProps> = ({ data, themeMode =
           className={`px-3 py-1 text-xs font-medium rounded-full transition-all ${
             showSP500 
               ? 'bg-slate-700 text-white ring-2 ring-slate-700 ring-offset-1' 
-              : `border border-slate-300 ${themeMode === 'dark' || themeMode === 'neon' ? 'bg-slate-700 text-slate-200' : 'bg-white text-slate-600'} hover:opacity-80`
+              : `border border-slate-300 ${themeMode === 'neon' ? 'bg-slate-700 text-slate-200' : 'bg-white text-slate-600'} hover:opacity-80`
           }`}
         >
           S&P 500
@@ -935,7 +935,7 @@ export const GlobalPerformanceChart: React.FC<ChartProps> = ({ data, themeMode =
           className={`px-3 py-1 text-xs font-medium rounded-full transition-all ${
             showWIG20 
               ? 'bg-purple-800 text-white ring-2 ring-purple-800 ring-offset-1' 
-              : `border border-slate-300 ${themeMode === 'dark' || themeMode === 'neon' ? 'bg-slate-700 text-slate-200' : 'bg-white text-slate-600'} hover:opacity-80`
+              : `border border-slate-300 ${themeMode === 'neon' ? 'bg-slate-700 text-slate-200' : 'bg-white text-slate-600'} hover:opacity-80`
           }`}
         >
           WIG20
@@ -952,6 +952,7 @@ export const GlobalPerformanceChart: React.FC<ChartProps> = ({ data, themeMode =
               stroke={t.axis} 
               fontSize={12}
               tickMargin={10}
+              padding={{ left: 10, right: 30 }}
             />
             <YAxis 
               stroke={t.axis} 
@@ -1024,7 +1025,7 @@ export const GlobalPerformanceChart: React.FC<ChartProps> = ({ data, themeMode =
   );
 };
 
-export const PortfolioAllocationHistoryChart: React.FC<ChartProps> = ({ data, themeMode = 'default' }) => {
+export const PortfolioAllocationHistoryChart: React.FC<ChartProps> = ({ data, themeMode = 'light' }) => {
   const t = CHART_THEMES[themeMode];
   const chartData = data.map(row => {
     const r = row as any;
@@ -1047,6 +1048,7 @@ export const PortfolioAllocationHistoryChart: React.FC<ChartProps> = ({ data, th
             stroke={t.axis} 
             fontSize={12}
             tickMargin={10}
+            padding={{ left: 10, right: 30 }}
           />
           <YAxis 
             stroke={t.axis} 
@@ -1068,7 +1070,7 @@ export const PortfolioAllocationHistoryChart: React.FC<ChartProps> = ({ data, th
   );
 };
 
-export const CapitalStructureHistoryChart: React.FC<ChartProps> = ({ data, themeMode = 'default' }) => {
+export const CapitalStructureHistoryChart: React.FC<ChartProps> = ({ data, themeMode = 'light' }) => {
   if (data.length === 0 || !('employeeContribution' in data[0])) return null;
   const t = CHART_THEMES[themeMode];
 
@@ -1095,6 +1097,7 @@ export const CapitalStructureHistoryChart: React.FC<ChartProps> = ({ data, theme
             stroke={t.axis} 
             fontSize={12}
             tickMargin={10}
+            padding={{ left: 10, right: 30 }}
           />
           <YAxis 
             stroke={t.axis} 
@@ -1133,7 +1136,7 @@ export const CapitalStructureHistoryChart: React.FC<ChartProps> = ({ data, theme
   );
 };
 
-export const SeasonalityChart: React.FC<{ data: any[], themeMode?: ThemeMode }> = ({ data, themeMode = 'default' }) => {
+export const SeasonalityChart: React.FC<{ data: any[], themeMode?: ThemeMode }> = ({ data, themeMode = 'light' }) => {
   if (data.length < 2) return null;
   const t = CHART_THEMES[themeMode];
 
@@ -1245,7 +1248,7 @@ interface PPKStructureBarProps {
   themeMode?: ThemeMode;
 }
 
-export const PPKStructureBar: React.FC<PPKStructureBarProps> = ({ data, themeMode = 'default' }) => {
+export const PPKStructureBar: React.FC<PPKStructureBarProps> = ({ data, themeMode = 'light' }) => {
   if (!data.totalEmployee) return null;
   const t = CHART_THEMES[themeMode];
 

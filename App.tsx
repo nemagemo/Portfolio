@@ -34,7 +34,10 @@ import {
   ArrowUpRight,
   DoorOpen,
   Search,
-  Palette
+  Palette,
+  Sun,
+  Zap,
+  PenTool
 } from 'lucide-react';
 import { parseCSV, validateOMFIntegrity } from './utils/parser';
 import { AnyDataRow, SummaryStats, ValidationReport, PortfolioType, PPKDataRow, CryptoDataRow, IKEDataRow, OMFValidationReport, OMFDataRow, GlobalHistoryRow } from './types';
@@ -100,7 +103,7 @@ const TaxToggleIcon = ({ className }: { className?: string }) => (
 );
 
 // --- THEME DEFINITIONS ---
-type Theme = 'default' | 'dark' | 'comic' | 'light' | 'neon';
+type Theme = 'light' | 'comic' | 'neon';
 
 const themeStyles: Record<Theme, {
   appBg: string;
@@ -112,28 +115,25 @@ const themeStyles: Record<Theme, {
   cardHeaderIconBg: string;
   buttonActive: string;
   buttonInactive: string;
+  // Specific Toggle Colors
+  toggleProjectionActive: string;
+  toggleCPIActive: string;
+  toggleNoPPKActive: string;
 }> = {
-  default: {
+  light: {
     appBg: 'bg-slate-50',
-    text: 'text-slate-900',
+    text: 'text-slate-900 font-sans',
     textSub: 'text-slate-500',
     headerBg: 'bg-white',
     headerBorder: 'border-slate-200',
     cardContainer: 'bg-white rounded-xl shadow-sm border border-slate-200',
-    cardHeaderIconBg: 'bg-slate-50',
+    cardHeaderIconBg: 'bg-slate-50 border border-slate-100',
     buttonActive: 'bg-slate-800 text-white shadow-sm',
-    buttonInactive: 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
-  },
-  dark: {
-    appBg: 'bg-slate-950',
-    text: 'text-slate-100',
-    textSub: 'text-slate-400',
-    headerBg: 'bg-slate-900',
-    headerBorder: 'border-slate-800',
-    cardContainer: 'bg-slate-900 rounded-xl shadow-sm border border-slate-800',
-    cardHeaderIconBg: 'bg-slate-800',
-    buttonActive: 'bg-emerald-600 text-white shadow-sm shadow-emerald-900/20',
-    buttonInactive: 'bg-slate-800 text-slate-400 hover:bg-slate-700 border border-slate-700'
+    buttonInactive: 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200',
+    // Specifics
+    toggleProjectionActive: 'bg-amber-50 text-amber-700 border-amber-200 ring-1 ring-amber-200',
+    toggleCPIActive: 'bg-rose-50 text-rose-700 border-rose-200 ring-1 ring-rose-200',
+    toggleNoPPKActive: 'bg-slate-100 text-slate-800 border-slate-300 ring-1 ring-slate-300',
   },
   comic: {
     appBg: 'bg-yellow-50',
@@ -144,18 +144,11 @@ const themeStyles: Record<Theme, {
     cardContainer: 'bg-white rounded-none border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]',
     cardHeaderIconBg: 'bg-yellow-300 border-2 border-black',
     buttonActive: 'bg-cyan-400 text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-black',
-    buttonInactive: 'bg-white text-black border-2 border-black hover:bg-gray-100 font-bold'
-  },
-  light: {
-    appBg: 'bg-white',
-    text: 'text-gray-900 font-serif',
-    textSub: 'text-gray-500 font-sans',
-    headerBg: 'bg-white',
-    headerBorder: 'border-gray-100',
-    cardContainer: 'bg-gray-50 rounded-md border border-gray-100',
-    cardHeaderIconBg: 'bg-white border border-gray-200',
-    buttonActive: 'bg-gray-900 text-white',
-    buttonInactive: 'bg-white text-gray-500 hover:text-gray-900 border border-gray-200'
+    buttonInactive: 'bg-white text-black border-2 border-black hover:bg-gray-100 font-bold',
+    // Specifics
+    toggleProjectionActive: 'bg-orange-400 text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]',
+    toggleCPIActive: 'bg-pink-400 text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]',
+    toggleNoPPKActive: 'bg-gray-300 text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]',
   },
   neon: {
     appBg: 'bg-[#050505] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-[#050505] to-black',
@@ -166,7 +159,11 @@ const themeStyles: Record<Theme, {
     cardContainer: 'bg-black/40 border border-cyan-500/30 shadow-[0_0_15px_-3px_rgba(6,182,212,0.15)] backdrop-blur-sm rounded-none',
     cardHeaderIconBg: 'bg-cyan-950/30 border border-cyan-500/50 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.2)]',
     buttonActive: 'bg-cyan-950 text-cyan-300 border border-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.3)] font-mono',
-    buttonInactive: 'bg-black text-cyan-800 border border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700 font-mono'
+    buttonInactive: 'bg-black text-cyan-800 border border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700 font-mono',
+    // Specifics
+    toggleProjectionActive: 'bg-yellow-900/30 text-yellow-400 border-yellow-500/50 shadow-[0_0_10px_rgba(250,204,21,0.3)]',
+    toggleCPIActive: 'bg-pink-900/30 text-pink-400 border-pink-500/50 shadow-[0_0_10px_rgba(244,114,182,0.3)]',
+    toggleNoPPKActive: 'bg-slate-800 text-slate-300 border-slate-500',
   }
 };
 
@@ -301,7 +298,7 @@ const OMFIntegrityStatus: React.FC<{ report: OMFValidationReport, theme: Theme }
 
 export const App: React.FC = () => {
   const [portfolioType, setPortfolioType] = useState<PortfolioType>('OMF');
-  const [theme, setTheme] = useState<Theme>('default');
+  const [theme, setTheme] = useState<Theme>('light');
   const styles = themeStyles[theme];
   
   // Use local TS data exclusively (OFFLINE MODE)
@@ -339,6 +336,8 @@ export const App: React.FC = () => {
     setPortfolioType(type);
     // Force reset to dashboard when switching to prevent getting stuck in 'history' tab for portfolios that hide it
     setActiveTab('dashboard');
+    // Reset Tax Toggle to avoid state bleeding between portfolios
+    setShowTaxComparison(false);
   };
 
   useEffect(() => {
@@ -1003,7 +1002,7 @@ export const App: React.FC = () => {
           <div className="w-24"></div>
 
           {/* Portfolio Switcher (Centered) */}
-          <div className={`p-1 rounded-lg flex space-x-1 overflow-x-auto ${theme === 'dark' ? 'bg-slate-800' : theme === 'neon' ? 'bg-black border border-cyan-900/50' : 'bg-slate-100'}`}>
+          <div className={`p-1 rounded-lg flex space-x-1 overflow-x-auto ${theme === 'neon' ? 'bg-black border border-cyan-900/50' : 'bg-slate-100'}`}>
             <button
               onClick={() => handlePortfolioChange('OMF')}
               className={`flex items-center px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${
@@ -1043,12 +1042,28 @@ export const App: React.FC = () => {
           </div>
 
           {/* Theme Switcher (Right) */}
-          <div className="w-24 flex justify-end space-x-1">
-             <button onClick={() => setTheme('default')} className={`w-6 h-6 text-xs font-bold rounded ${theme === 'default' ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-500'}`} title="Default">D</button>
-             <button onClick={() => setTheme('dark')} className={`w-6 h-6 text-xs font-bold rounded ${theme === 'dark' ? 'bg-slate-800 text-white' : 'bg-slate-200 text-slate-500'}`} title="Dark Minimalist">1</button>
-             <button onClick={() => setTheme('comic')} className={`w-6 h-6 text-xs font-bold rounded ${theme === 'comic' ? 'bg-yellow-400 text-black border border-black' : 'bg-slate-200 text-slate-500'}`} title="Comic">2</button>
-             <button onClick={() => setTheme('light')} className={`w-6 h-6 text-xs font-bold rounded ${theme === 'light' ? 'bg-white border border-gray-300 text-black' : 'bg-slate-200 text-slate-500'}`} title="Light Professional">3</button>
-             <button onClick={() => setTheme('neon')} className={`w-6 h-6 text-xs font-bold rounded ${theme === 'neon' ? 'bg-cyan-500 text-black shadow-[0_0_10px_rgba(6,182,212,0.8)]' : 'bg-slate-200 text-slate-500'}`} title="Neon Cyberpunk">4</button>
+          <div className="w-24 flex justify-end space-x-2">
+             <button 
+               onClick={() => setTheme('light')} 
+               className={`p-2 rounded-md transition-all ${theme === 'light' ? 'bg-slate-200 text-slate-800' : 'text-slate-400 hover:bg-slate-100'}`} 
+               title="Professional Light"
+             >
+               <Sun size={16} />
+             </button>
+             <button 
+               onClick={() => setTheme('comic')} 
+               className={`p-2 rounded-md transition-all ${theme === 'comic' ? 'bg-yellow-300 border-2 border-black text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-slate-400 hover:bg-slate-100'}`} 
+               title="Comic"
+             >
+               <Palette size={16} />
+             </button>
+             <button 
+               onClick={() => setTheme('neon')} 
+               className={`p-2 rounded-md transition-all ${theme === 'neon' ? 'bg-cyan-900/50 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.8)]' : 'text-slate-400 hover:bg-slate-100'}`} 
+               title="Neon Cyberpunk"
+             >
+               <Zap size={16} />
+             </button>
           </div>
         </div>
       </header>
@@ -1080,7 +1095,7 @@ export const App: React.FC = () => {
                 value={`${(stats.totalValue || 0).toLocaleString('pl-PL')} zł`} 
                 subValue="Aktywa Otwarte + Gotówka" 
                 icon={LayoutGrid} 
-                colorClass={theme === 'neon' ? 'text-cyan-400' : (theme === 'dark' ? 'text-slate-300 bg-slate-800' : "text-slate-800 bg-slate-100")}
+                colorClass={theme === 'neon' ? 'text-cyan-400' : "text-slate-800 bg-slate-100"}
                 className={styles.cardContainer}
               />
               <StatsCard 
@@ -1154,15 +1169,15 @@ export const App: React.FC = () => {
                 </div>
                 
                 {/* Road to Million & CPI Controls */}
-                <div className={`flex items-center space-x-3 p-2 rounded-lg border ${theme === 'neon' ? 'bg-black/50 border-cyan-900/50' : theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-100'}`}>
+                <div className={`flex items-center space-x-3 p-2 rounded-lg border ${theme === 'neon' ? 'bg-black/50 border-cyan-900/50' : 'bg-slate-50 border-slate-100'}`}>
                    {/* No PPK Button */}
                    <button
                      onClick={() => setExcludePPK(!excludePPK)}
                      disabled={showCPI || showProjection}
                      className={`flex items-center justify-center w-20 px-2 py-1.5 rounded-md transition-all ${
                        excludePPK 
-                         ? theme === 'neon' ? 'bg-cyan-900/50 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.2)]' : 'bg-slate-800 text-white shadow-sm ring-1 ring-slate-900' 
-                         : `bg-transparent ${theme === 'neon' ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : theme === 'dark' ? 'text-slate-400 border-slate-600 hover:text-white' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`
+                         ? styles.toggleNoPPKActive
+                         : `bg-transparent ${theme === 'neon' ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`
                      } ${showCPI || showProjection ? 'opacity-50 cursor-not-allowed' : ''}`}
                      title={excludePPK ? "Pokaż PPK" : "Ukryj PPK"}
                    >
@@ -1174,8 +1189,8 @@ export const App: React.FC = () => {
                      disabled={excludePPK}
                      className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
                        showCPI 
-                         ? theme === 'neon' ? 'bg-pink-900/50 text-pink-400 shadow-[0_0_10px_rgba(236,72,153,0.2)] ring-1 ring-pink-700/50' : 'bg-slate-200 text-slate-800 shadow-sm ring-1 ring-slate-300' 
-                         : `bg-transparent ${theme === 'neon' ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : theme === 'dark' ? 'text-slate-400 border-slate-600 hover:text-white' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`
+                         ? styles.toggleCPIActive
+                         : `bg-transparent ${theme === 'neon' ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`
                      } ${excludePPK ? 'opacity-50 cursor-not-allowed' : ''}`}
                    >
                      CPI
@@ -1188,8 +1203,8 @@ export const App: React.FC = () => {
                      disabled={excludePPK}
                      className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
                        showProjection 
-                         ? theme === 'neon' ? 'bg-yellow-900/50 text-yellow-400 shadow-[0_0_10px_rgba(234,179,8,0.2)] ring-1 ring-yellow-700/50' : 'bg-amber-100 text-amber-700 shadow-sm ring-1 ring-amber-200' 
-                         : `bg-transparent ${theme === 'neon' ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : theme === 'dark' ? 'text-slate-400 border-slate-600 hover:text-white' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`
+                         ? styles.toggleProjectionActive
+                         : `bg-transparent ${theme === 'neon' ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`
                      } ${excludePPK ? 'opacity-50 cursor-not-allowed' : ''}`}
                    >
                      <Milestone size={14} className="mr-2" />
@@ -1198,7 +1213,7 @@ export const App: React.FC = () => {
 
                    {showProjection && (
                      <div className="flex items-center space-x-2 animate-in fade-in slide-in-from-right-4 duration-300">
-                        <div className={`flex rounded-md border p-0.5 ${theme === 'neon' ? 'bg-black border-cyan-900/50' : theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                        <div className={`flex rounded-md border p-0.5 ${theme === 'neon' ? 'bg-black border-cyan-900/50' : 'bg-white border-slate-200'}`}>
                           <button 
                             onClick={() => setProjectionMethod('LTM')}
                             className={`px-2 py-1 text-[10px] font-medium rounded ${projectionMethod === 'LTM' ? (theme === 'neon' ? 'bg-cyan-900 text-cyan-300' : 'bg-slate-800 text-white') : (theme === 'neon' ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')}`}
@@ -1297,7 +1312,7 @@ export const App: React.FC = () => {
             <div className="space-y-8">
               <div className={`${styles.cardContainer} overflow-hidden`}>
                 <div 
-                  className={`px-6 py-4 border-b flex justify-between items-center cursor-pointer transition-colors ${theme === 'neon' ? 'bg-black/20 border-cyan-900/30 hover:bg-cyan-950/10' : theme === 'dark' ? 'bg-slate-900 border-slate-800 hover:bg-slate-800' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}
+                  className={`px-6 py-4 border-b flex justify-between items-center cursor-pointer transition-colors ${theme === 'neon' ? 'bg-black/20 border-cyan-900/30 hover:bg-cyan-950/10' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}
                   onClick={() => setIsActivePositionsExpanded(!isActivePositionsExpanded)}
                 >
                   <div className="flex items-center space-x-2">
@@ -1319,7 +1334,7 @@ export const App: React.FC = () => {
 
               <div className={`${styles.cardContainer} overflow-hidden`}>
                 <div 
-                  className={`px-6 py-4 border-b flex justify-between items-center cursor-pointer transition-colors ${theme === 'neon' ? 'bg-black/20 border-cyan-900/30 hover:bg-cyan-950/10' : theme === 'dark' ? 'bg-slate-900 border-slate-800 hover:bg-slate-800' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}
+                  className={`px-6 py-4 border-b flex justify-between items-center cursor-pointer transition-colors ${theme === 'neon' ? 'bg-black/20 border-cyan-900/30 hover:bg-cyan-950/10' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}
                   onClick={() => setIsClosedHistoryExpanded(!isClosedHistoryExpanded)}
                 >
                   <div className="flex items-center space-x-2">
@@ -1348,7 +1363,7 @@ export const App: React.FC = () => {
                    <div className={`${styles.cardContainer} p-6 hover:shadow-md transition-shadow duration-300`}>
                       <div className="flex items-center justify-between mb-4">
                         <h3 className={`text-sm font-medium ${styles.textSub}`}>Wartość</h3>
-                        <div className={`p-2 rounded-lg ${theme === 'neon' ? 'bg-indigo-900/30 text-indigo-400 border border-indigo-500/50' : theme === 'dark' ? 'bg-indigo-900 text-indigo-200' : 'bg-slate-50 text-indigo-700'}`}>
+                        <div className={`p-2 rounded-lg ${theme === 'neon' ? 'bg-indigo-900/30 text-indigo-400 border border-indigo-500/50' : 'bg-slate-50 text-indigo-700'}`}>
                            <Wallet size={20} />
                         </div>
                       </div>
@@ -1356,7 +1371,7 @@ export const App: React.FC = () => {
                          <span className={`text-2xl font-bold ${styles.text}`}>{`${(stats.totalValue || 0).toLocaleString('pl-PL')} zł`}</span>
                          <div className="flex items-center mt-1 text-sm space-x-2">
                             {/* Exit Value */}
-                            <span className={`flex items-center font-bold text-base ${theme === 'neon' ? 'text-slate-400' : theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
+                            <span className={`flex items-center font-bold text-base ${theme === 'neon' ? 'text-slate-400' : 'text-slate-600'}`}>
                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
                                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                                   <polyline points="16 17 21 12 16 7" />
@@ -1406,7 +1421,7 @@ export const App: React.FC = () => {
                                {stats.totalEmployee ? ((stats.totalProfit / stats.totalEmployee) * 100).toFixed(2) : '0.00'}%
                             </span>
                             {/* Net ROI (Current standard ROI from CSV) */}
-                            <span className={`flex items-center font-normal text-xs ${theme === 'neon' ? 'text-cyan-700' : theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+                            <span className={`flex items-center font-normal text-xs ${theme === 'neon' ? 'text-cyan-700' : 'text-slate-400'}`}>
                                {stats.currentRoi ? stats.currentRoi.toFixed(2) : '0.00'}% netto
                             </span>
                          </div>
@@ -1434,7 +1449,7 @@ export const App: React.FC = () => {
                       </div>
                       <div className="flex flex-col">
                          <span className={`text-2xl font-bold ${styles.text}`}>{monthsToPayout}</span>
-                         <span className={`text-sm mt-1 ${theme === 'neon' ? 'text-cyan-700' : theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>miesięcy (maj 2049)</span>
+                         <span className={`text-sm mt-1 ${theme === 'neon' ? 'text-cyan-700' : 'text-slate-400'}`}>miesięcy (maj 2049)</span>
                       </div>
                    </div>
                 ) : null}
@@ -1443,7 +1458,7 @@ export const App: React.FC = () => {
                 {portfolioType === 'IKE' && stats.taxSaved !== undefined && (
                    <StatsCard 
                      title="Tarcza Podatkowa" 
-                     value={`${(stats.taxSaved).toLocaleString('pl-PL')} zł`} 
+                     value={`${(stats.taxSaved).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`} 
                      subValue="Zaoszczędzony podatek (19%)"
                      icon={ShieldCheck} 
                      colorClass={theme === 'neon' ? 'text-cyan-400' : "text-cyan-700 bg-cyan-50"} 
@@ -1491,16 +1506,22 @@ export const App: React.FC = () => {
                     {/* Make Value Chart Full Width */}
                     <div className={`${styles.cardContainer} p-6 lg:col-span-2`}>
                       <div className="flex flex-col md:flex-row items-center justify-between mb-6 space-y-4 md:space-y-0">
-                        <h3 className={`text-lg font-bold ${styles.text}`}>Wartość Portfela</h3>
+                        <div className="flex flex-col">
+                          <h3 className={`text-lg font-bold ${styles.text}`}>Historyczna Wartość Portfela</h3>
+                          <p className="text-[10px] sm:text-xs text-slate-400 mt-2 font-medium leading-tight max-w-2xl">
+                            Wartość netto = Wartość po odjęciu podatku od wpłaty Pracodawcy<br/>
+                            Wartość Exit = Wartość gdybym w tym momencie zrezygnował z PPK, czyli Wartość netto - 30% wpłat od Pracodawcy - wpłaty od Państwa - 19% podatku od zysku
+                          </p>
+                        </div>
                         
                         {/* Road to Retirement Controls */}
-                        <div className={`flex items-center space-x-4 p-2 rounded-lg border ${theme === 'neon' ? 'bg-black/50 border-cyan-900/50' : theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-100'}`}>
+                        <div className={`flex items-center space-x-4 p-2 rounded-lg border ${theme === 'neon' ? 'bg-black/50 border-cyan-900/50' : 'bg-slate-50 border-slate-100'}`}>
                            <button
                              onClick={() => setShowPPKProjection(!showPPKProjection)}
                              className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
                                showPPKProjection 
-                                 ? theme === 'neon' ? 'bg-amber-900/50 text-amber-400 shadow-[0_0_10px_rgba(234,179,8,0.2)] ring-1 ring-amber-700/50' : 'bg-amber-100 text-amber-700 shadow-sm ring-1 ring-amber-200' 
-                                 : `bg-transparent ${theme === 'neon' ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : theme === 'dark' ? 'text-slate-400 border-slate-600 hover:text-white' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`
+                                 ? styles.toggleProjectionActive
+                                 : `bg-transparent ${theme === 'neon' ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`
                              }`}
                            >
                              <Milestone size={14} className="mr-2" />
@@ -1536,16 +1557,16 @@ export const App: React.FC = () => {
                       <div className="flex items-center justify-between mb-6">
                         <h3 className={`text-lg font-bold ${styles.text}`}>
                           {portfolioType === 'IKE' && showTaxComparison 
-                            ? 'Kapitał vs Wycena (IKE vs Opodatkowane)' 
-                            : 'Kapitał vs Wycena'}
+                            ? 'Historyczna Wartość Portfela (IKE vs Opodatkowane)' 
+                            : 'Historyczna Wartość Portfela'}
                         </h3>
                         {portfolioType === 'IKE' && (
                           <button
                             onClick={() => setShowTaxComparison(!showTaxComparison)}
                             className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
                               showTaxComparison 
-                                ? styles.buttonActive
-                                : styles.buttonInactive
+                                ? styles.toggleCPIActive
+                                : `bg-transparent ${theme === 'neon' ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`
                             }`}
                             title="Pokaż porównanie z kontem opodatkowanym"
                           >

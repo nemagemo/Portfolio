@@ -1,34 +1,35 @@
+
 import React from 'react';
 
 export const PLNLogo: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg viewBox="0 0 200 200" {...props}>
     <defs>
-      <linearGradient id="gold_grad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#fbbf24" />
-        <stop offset="100%" stopColor="#d97706" />
+      <linearGradient id="pln_gold_gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#fcd34d" />
+        <stop offset="50%" stopColor="#d97706" />
+        <stop offset="100%" stopColor="#b45309" />
       </linearGradient>
-      <filter id="flag_shadow" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="1" dy="2" stdDeviation="2" floodOpacity="0.3"/>
+      <filter id="pln_inner_shadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="2" stdDeviation="2" floodOpacity="0.2"/>
       </filter>
     </defs>
+
+    {/* Coin Outer Ring */}
+    <circle cx="100" cy="100" r="96" fill="url(#pln_gold_gradient)" stroke="#92400e" strokeWidth="2" />
     
-    {/* Main Coin */}
-    <circle cx="100" cy="100" r="90" fill="url(#gold_grad)" stroke="#b45309" strokeWidth="8" />
-    <circle cx="100" cy="100" r="75" fill="none" stroke="#b45309" strokeWidth="2" strokeDasharray="10 5" opacity="0.5" />
+    {/* Inner Polish Flag Circle */}
+    <mask id="flag_mask">
+       <circle cx="100" cy="100" r="76" fill="white" />
+    </mask>
     
-    {/* Polish Flag Badge */}
-    <g transform="translate(130, 130)" filter="url(#flag_shadow)">
-        {/* Badge Border/Bg */}
-        <circle cx="25" cy="25" r="30" fill="#b45309" />
-        <circle cx="25" cy="25" r="27" fill="white" />
-        
-        {/* Flag Content */}
-        <g clipPath="url(#flag_clip)">
-            <path d="M-5 25 H 55 V 55 H -5 Z" fill="#dc2626" />
-        </g>
-        <clipPath id="flag_clip">
-            <circle cx="25" cy="25" r="27" />
-        </clipPath>
+    <g mask="url(#flag_mask)">
+        {/* Top White */}
+        <rect x="0" y="0" width="200" height="100" fill="#ffffff" />
+        {/* Bottom Red */}
+        <rect x="0" y="100" width="200" height="100" fill="#dc2626" />
     </g>
+    
+    {/* Inner Ring Border to separate Gold from Flag */}
+    <circle cx="100" cy="100" r="76" fill="none" stroke="#b45309" strokeWidth="4" opacity="0.8" />
   </svg>
 );
