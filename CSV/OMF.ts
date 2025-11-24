@@ -1,4 +1,5 @@
 
+
 export const OMF_DATA = `Status pozycji,Portfel,Typ,Symbol,ISIN,Sektor,Okres inwestycji,Ostatni zakup,Ilość,Obecna wartość,Wartość zakupu,Zysk/Strata,ROI
 Otwarta,PPK,PPK,PPK,,,,,"45,059700","8 047,66 zł","3 335,73 zł","4 711,93 zł","141,26%"
 Otwarta,IKE,ETF,NDIA.L,IE00BZCQB185,,416,2025-07-09,"35,794600","1 289,72 zł","1 371,84 zł","-82,12 zł","-5,99%"
@@ -6,7 +7,7 @@ Zamknięta,IKE,ETF,IWQU.L,IE00BP3QZ601,,122,2025-02-03,"0,000000","953,97 zł","
 Otwarta,IKE,ETF,IUIT.L,IE00B3WJKG14,,416,2025-07-09,"10,792800","1 630,51 zł","1 372,00 zł","258,51 zł","18,84%"
 Otwarta,IKE,ETF,NUKL.DE,IE000M7V94E1,,382,2025-07-09,"8,851500","1 693,28 zł","1 181,43 zł","511,85 zł","43,32%"
 Otwarta,IKE,ETF,ETFBS80TR,PLBSWTR00014,,416,2025-07-11,"3,674600","1 648,24 zł","1 372,02 zł","276,22 zł","20,13%"
-Otwarta,IKE,Akcje,AMZN,US0231351067,Consumer Discretionary,412,2025-07-08,"1,338500","1 107,02 zł","1 047,22 zł","59,80 zł","5,71%"
+Otwarta,IKE,Akcje,AMZN,US0231351067,Consumer Discretionary,408,2025-07-08,"1,338500","1 107,02 zł","1 047,22 zł","59,80 zł","5,71%"
 Otwarta,IKE,Akcje,CRWD,US22788C1053,Information Technology,412,2025-07-08,"0,649400","1 202,67 zł","847,70 zł","354,97 zł","41,87%"
 Otwarta,IKE,Akcje,MSFT,US5949181045,Information Technology,416,2025-07-08,"0,549900","963,04 zł","900,70 zł","62,34 zł","6,92%"
 Otwarta,IKE,Akcje,PLW,PLPLAYW00015,Communication Services,346,2025-07-18,"3,499300","908,07 zł","939,48 zł","-31,41 zł","-3,34%"
@@ -84,4 +85,4 @@ Zamknięta,Krypto,Krypto,BLAZEX,,,719,2024-09-19,"0,000000","5,88 zł","52,47 z�
 Zamknięta,Krypto,Krypto,ALL,,,688,2024-10-04,"0,000000","196,24 zł","223,22 zł","-26,98 zł","-12,08%"
 Zamknięta,Krypto,Krypto,EQU,,,31,2024-01-06,"0,000000","6,03 zł","32,16 zł","-26,13 zł","-81,25%"`;
 
-export const OMF_LAST_UPDATED = '2025-02-18';
+export const OMF_LAST_UPDATED = '2025-11-17';

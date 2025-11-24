@@ -1518,7 +1518,7 @@ export const App: React.FC = () => {
               <GlobalPerformanceChart data={globalHistoryData} themeMode={theme} />
             </div>
 
-            {/* OMF Treemap Chart */}
+            {/* OMF Treemap Chart - Fixed to ensure Heatmap visualization */}
             <div className={`${styles.cardContainer} p-6`}>
               <div className="flex items-center justify-between mb-6">
                 <div>

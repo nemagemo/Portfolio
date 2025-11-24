@@ -1,4 +1,5 @@
 
+
 export const IKE_DATA = `Data,Wkład,Zysk,ROI
 2024-01-01,"558,08 zł","1,88 zł","0,34%"
 2024-02-01,"1 065,28 zł","10,08 zł","0,95%"
@@ -24,4 +25,4 @@ export const IKE_DATA = `Data,Wkład,Zysk,ROI
 2025-10-01,"19 167,20 zł","3 105,85 zł","16,20%"
 2025-11-01,"19 161,92 zł","2 063,83 zł","10,77%"`;
 
-export const IKE_LAST_UPDATED = '2025-02-18';
+export const IKE_LAST_UPDATED = '2025-11-17';
