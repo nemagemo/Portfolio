@@ -375,16 +375,9 @@ export const App: React.FC = () => {
     }
   }, []);
 
-  // --- EFFECT: Initial Fetch & Auto-Refresh Interval ---
+  // --- EFFECT: Initial Fetch Only ---
   useEffect(() => {
-    fetchPrices(); // Initial fetch
-
-    // Set up 60 second polling interval
-    const intervalId = setInterval(() => {
-      fetchPrices();
-    }, 60000); // 60,000 ms = 60 seconds
-
-    return () => clearInterval(intervalId); // Cleanup on unmount
+    fetchPrices(); 
   }, [fetchPrices]);
 
   const handlePortfolioChange = (type: PortfolioType) => {
@@ -1332,16 +1325,10 @@ export const App: React.FC = () => {
                   <RefreshCw size={14} />
                 </button>
               </div>
-              {pricingMode === 'Online' ? (
-                <span className={`text-[10px] ${theme === 'neon' ? 'text-cyan-600' : 'text-blue-500'}`}>
-                  Ceny na żywo z Google Sheets (Auto-refresh 60s)
-                </span>
-              ) : (
-                lastUpdateDate && (
+              {pricingMode !== 'Online' && lastUpdateDate && (
                   <span className={`text-[10px] ${theme === 'neon' ? 'text-slate-600' : 'text-slate-400'}`}>
                     Ostatnia aktualizacja: {lastUpdateDate}
                   </span>
-                )
               )}
            </div>
         ) : (
