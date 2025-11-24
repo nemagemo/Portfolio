@@ -24,7 +24,7 @@ import { PPKDataRow, CryptoDataRow, IKEDataRow, OMFDataRow, AnyDataRow, Validati
  */
 
 // Helper to parse Polish currency strings like "1 097,73 zł" or "95,45 zł"
-const parseCurrency = (val: string): number => {
+export const parseCurrency = (val: string): number => {
   if (!val) return 0;
   
   // Aggressive cleaning: remove everything that is NOT a digit, a minus sign, or a comma/dot.

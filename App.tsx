@@ -38,9 +38,11 @@ import {
   Sun,
   Zap,
   PenTool,
-  Trophy
+  Trophy,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
-import { parseCSV, validateOMFIntegrity } from './utils/parser';
+import { parseCSV, validateOMFIntegrity, parseCurrency } from './utils/parser';
 import { AnyDataRow, SummaryStats, ValidationReport, PortfolioType, PPKDataRow, CryptoDataRow, IKEDataRow, OMFValidationReport, OMFDataRow, GlobalHistoryRow } from './types';
 import { StatsCard } from './components/StatsCard';
 import { ValueCompositionChart, ROIChart, ContributionComparisonChart, CryptoValueChart, OMFAllocationChart, GlobalSummaryChart, GlobalPerformanceChart, OMFStructureChart, OMFTreemapChart, PortfolioAllocationHistoryChart, CapitalStructureHistoryChart, SeasonalityChart } from './components/Charts';
@@ -57,34 +59,28 @@ import { DATA_LAST_UPDATED } from './constants/appData';
 // Import benchmarks & inflation
 import { SP500_DATA, WIG20_DATA } from './constants/benchmarks';
 import { CPI_DATA } from './constants/inflation';
+// Import Fallback Prices
+import { FALLBACK_PRICES } from './constants/fallbackPrices';
+
+// --- CONFIGURATION ---
+const PRICES_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS7p1b_z69_W5vbjwuA-FI_1J2FOPU-iPTXNwOyVkO_NCr7DJ6SPgyn1n2lnK8_fqPMU3mhZonDhR5U/pub?gid=194990672&single=true&output=csv';
 
 /**
  * ============================================================================
  * ARCHITECTURAL CONTEXT FOR AI DEVELOPERS & MAINTAINERS
  * ============================================================================
  * 
- * 1. DATA SOURCE: OFFLINE FIRST
- *    We explicitly switched from fetching CSVs via URL (Google Sheets) to importing
- *    local .ts files containing CSV strings (in folder `CSV/`).
- *    Reason: Netlify/Vite build process does not bundle raw .csv files by default,
- *    causing 404 errors in production. Using .ts modules ensures data is bundled correctly.
+ * 1. DATA SOURCE: HYBRID (OFFLINE + ONLINE PRICES)
+ *    - Transaction History & Quantities are loaded from local .ts files (CSV/OMF.ts).
+ *    - Current Prices are fetched from a Google Sheets CSV URL.
+ *    - If Online fetch fails, we fall back to `fallbackPrices.ts` and finally to the values in `OMF.ts`.
  * 
  * 2. PARSING LOGIC: ROBUST & AGGRESSIVE
  *    The `utils/parser.ts` contains very aggressive regex to clean currency strings.
- *    Reason: Google Sheets exports often contain non-breaking spaces (\u00A0) or
- *    narrow spaces (\u202F) as thousand separators, which `parseFloat` cannot handle.
- *    We strip everything except digits, minus sign, and decimal separator.
  * 
- * 3. CALCULATIONS: TWR & HEATMAP ALIGNMENT
- *    - CAGR, LTM, YTD metrics are calculated using TWR (Time-Weighted Return).
- *    - Heatmap Logic: The return shown in column "May" represents the period 
- *      ending in May (April 1st -> May 1st).
- *    - Calculations for metrics strictly follow this "shifted" logic to match the visual heatmap.
- * 
- * 4. UI STRUCTURE:
- *    - Menu is centered. Logo removed for cleaner look.
- *    - Data integrity messages persist (no auto-hide) to ensure issues with source files are visible.
- *    - OMF is the default starting tab as it aggregates everything.
+ * 3. CALCULATIONS: REAL-TIME REVALUATION
+ *    The App recalculates `Current Value`, `Profit`, and `ROI` for every asset based on
+ *    the latest available price (Online > Fallback > Local CSV).
  */
 
 // Custom Icon for "No PPK"
@@ -304,13 +300,17 @@ export const App: React.FC = () => {
   const [theme, setTheme] = useState<Theme>('light');
   const styles = themeStyles[theme];
   
-  // Use local TS data exclusively (OFFLINE MODE)
+  // Use local TS data exclusively (OFFLINE MODE BASE)
   const [csvSources] = useState({
     PPK: PPK_DATA,
     CRYPTO: KRYPTO_DATA,
     IKE: IKE_DATA,
     OMF: OMF_DATA
   });
+
+  // State for Online Pricing
+  const [onlinePrices, setOnlinePrices] = useState<Record<string, number> | null>(null);
+  const [pricingMode, setPricingMode] = useState<'Offline' | 'Online'>('Offline');
 
   const [data, setData] = useState<AnyDataRow[]>([]);
   const [report, setReport] = useState<ValidationReport | null>(null);
@@ -335,6 +335,44 @@ export const App: React.FC = () => {
   // IKE Tax Comparison State
   const [showTaxComparison, setShowTaxComparison] = useState(false);
 
+  // --- EFFECT: Fetch Online Prices ---
+  useEffect(() => {
+    const fetchPrices = async () => {
+      try {
+        const response = await fetch(PRICES_CSV_URL);
+        if (!response.ok) throw new Error('Failed to fetch prices');
+        const text = await response.text();
+        
+        const lines = text.trim().split('\n');
+        const prices: Record<string, number> = {};
+        
+        // Skip header if present, assume Symbol,Price format
+        lines.forEach((line, idx) => {
+           if (idx === 0 && line.toLowerCase().includes('symbol')) return;
+           const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); // Split by comma, ignore quotes
+           if (parts.length >= 2) {
+              const symbol = parts[0].trim().replace(/^"|"$/g, '');
+              const priceStr = parts[1].trim().replace(/^"|"$/g, '');
+              const price = parseCurrency(priceStr);
+              if (!isNaN(price) && price > 0) {
+                 prices[symbol] = price;
+              }
+           }
+        });
+
+        if (Object.keys(prices).length > 0) {
+           setOnlinePrices(prices);
+           setPricingMode('Online');
+        }
+      } catch (err) {
+        console.warn("Could not fetch online prices, using fallback/offline mode.", err);
+        setPricingMode('Offline');
+      }
+    };
+
+    fetchPrices();
+  }, []);
+
   const handlePortfolioChange = (type: PortfolioType) => {
     setPortfolioType(type);
     // Force reset to dashboard when switching to prevent getting stuck in 'history' tab for portfolios that hide it
@@ -345,13 +383,57 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     try {
-      // Universal Parse with Source Indication ('Offline' because we use local TS files)
+      // Universal Parse with Source Indication
       const result = parseCSV(csvSources[portfolioType], portfolioType, 'Offline');
       
       if (portfolioType === 'OMF') {
         // Special Handling for OMF
-        const omfData = result.data as OMFDataRow[];
+        let omfData = result.data as OMFDataRow[];
         
+        // --- LIVE PRICING INJECTION ---
+        // Use Online Prices if available, otherwise use Fallback Prices (Offline mode)
+        const currentPricing = onlinePrices || FALLBACK_PRICES;
+        const sourceLabel = onlinePrices ? 'Online' : 'Fallback';
+
+        if (currentPricing) {
+           omfData = omfData.map(row => {
+              // Only reprice Active assets
+              if (row.status !== 'Otwarta' && row.status !== 'Gotówka') return row;
+
+              const price = currentPricing[row.symbol];
+              
+              // Special logic for PPK: If symbol matches "PPK", check if price > 1000 (Total Value) or < 1000 (Unit Price)
+              // Simplification: Assume fallback/online map contains UNIT PRICE or TOTAL VALUE for PPK
+              
+              if (price !== undefined && price > 0) {
+                 let newCurrentValue = 0;
+                 
+                 // Heuristic: If price is very close to row.currentValue, assume it's Total Value update
+                 // If row has quantity > 0 and price is reasonable unit price, calculate.
+                 // PPK row often has quantity ~45 and price ~178.
+                 
+                 if (row.quantity > 0) {
+                    newCurrentValue = row.quantity * price;
+                 } else {
+                    // Fallback if quantity missing (e.g. raw total value tracking)
+                    newCurrentValue = price;
+                 }
+
+                 // Recalculate Derived Stats
+                 const newProfit = newCurrentValue - row.purchaseValue;
+                 const newRoi = row.purchaseValue > 0 ? (newProfit / row.purchaseValue) * 100 : 0;
+
+                 return {
+                    ...row,
+                    currentValue: newCurrentValue,
+                    profit: newProfit,
+                    roi: parseFloat(newRoi.toFixed(2))
+                 };
+              }
+              return row;
+           });
+        }
+
         // Run OMF Integrity Check with Source
         const integrity = validateOMFIntegrity(omfData, 'Offline');
         
@@ -384,7 +466,7 @@ export const App: React.FC = () => {
         stats: { totalRows: 0, validRows: 0 }
       });
     }
-  }, [csvSources, portfolioType]);
+  }, [csvSources, portfolioType, onlinePrices]); // Re-run when onlinePrices load
 
   // --- GLOBAL HISTORY DATA (For OMF Chart) ---
   // Merges PPK, Crypto, and IKE timelines
@@ -1080,17 +1162,23 @@ export const App: React.FC = () => {
         {isOfflineValid ? (
            <div className="flex flex-col items-center mb-6 space-y-1">
               <span className={`text-xs font-bold px-3 py-1 rounded-full flex items-center shadow-sm ${
-                  theme === 'neon' 
-                    ? 'bg-slate-800/80 text-slate-400 border border-slate-600/50' 
-                    : 'bg-slate-100 text-slate-500 border border-slate-200'
+                  pricingMode === 'Online'
+                    ? (theme === 'neon' ? 'bg-blue-900/80 text-blue-300 border border-blue-600/50' : 'bg-blue-50 text-blue-600 border border-blue-200')
+                    : (theme === 'neon' ? 'bg-slate-800/80 text-slate-400 border border-slate-600/50' : 'bg-slate-100 text-slate-500 border border-slate-200')
               }`}>
-                 <CheckCircle2 size={14} className="mr-1.5" />
-                 OFFLINE
+                 {pricingMode === 'Online' ? <Wifi size={14} className="mr-1.5" /> : <WifiOff size={14} className="mr-1.5" />}
+                 {pricingMode === 'Online' ? 'ONLINE' : 'OFFLINE'}
               </span>
-              {lastUpdateDate && (
-                <span className={`text-[10px] ${theme === 'neon' ? 'text-slate-600' : 'text-slate-400'}`}>
-                  Ostatnia aktualizacja: {lastUpdateDate}
+              {pricingMode === 'Online' ? (
+                <span className={`text-[10px] ${theme === 'neon' ? 'text-cyan-600' : 'text-blue-500'}`}>
+                  Ceny na żywo z Google Sheets
                 </span>
+              ) : (
+                lastUpdateDate && (
+                  <span className={`text-[10px] ${theme === 'neon' ? 'text-slate-600' : 'text-slate-400'}`}>
+                    Ostatnia aktualizacja: {lastUpdateDate}
+                  </span>
+                )
               )}
            </div>
         ) : (
