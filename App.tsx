@@ -1344,8 +1344,8 @@ export const App: React.FC = () => {
             {/* OMF Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <StatsCard 
-                title="Majątek Netto" 
-                value={`${(stats.totalValue || 0).toLocaleString('pl-PL')} zł`} 
+                title="Wartość Całkowita" 
+                value={`${(stats.totalValue || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`} 
                 subValue="Aktywa Otwarte + Gotówka" 
                 icon={LayoutGrid} 
                 colorClass={theme === 'neon' ? 'text-cyan-400' : "text-slate-800 bg-slate-100"}
@@ -1353,7 +1353,7 @@ export const App: React.FC = () => {
               />
               <StatsCard 
                 title="Zysk" 
-                value={`${(stats.totalProfit || 0).toLocaleString('pl-PL')} zł`}
+                value={`${(stats.totalProfit || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`}
                 trend={stats.profitTrend}
                 trendLabel="m/m"
                 icon={TrendingUp} 
