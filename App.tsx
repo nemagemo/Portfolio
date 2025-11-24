@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { 
   LayoutDashboard, 
   Wallet, 
@@ -40,7 +40,8 @@ import {
   PenTool,
   Trophy,
   Wifi,
-  WifiOff
+  WifiOff,
+  RefreshCw
 } from 'lucide-react';
 import { parseCSV, validateOMFIntegrity, parseCurrency } from './utils/parser';
 import { AnyDataRow, SummaryStats, ValidationReport, PortfolioType, PPKDataRow, CryptoDataRow, IKEDataRow, OMFValidationReport, OMFDataRow, GlobalHistoryRow } from './types';
@@ -311,6 +312,7 @@ export const App: React.FC = () => {
   // State for Online Pricing
   const [onlinePrices, setOnlinePrices] = useState<Record<string, number> | null>(null);
   const [pricingMode, setPricingMode] = useState<'Offline' | 'Online'>('Offline');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [data, setData] = useState<AnyDataRow[]>([]);
   const [report, setReport] = useState<ValidationReport | null>(null);
@@ -335,43 +337,55 @@ export const App: React.FC = () => {
   // IKE Tax Comparison State
   const [showTaxComparison, setShowTaxComparison] = useState(false);
 
-  // --- EFFECT: Fetch Online Prices ---
-  useEffect(() => {
-    const fetchPrices = async () => {
-      try {
-        const response = await fetch(PRICES_CSV_URL);
-        if (!response.ok) throw new Error('Failed to fetch prices');
-        const text = await response.text();
-        
-        const lines = text.trim().split('\n');
-        const prices: Record<string, number> = {};
-        
-        // Skip header if present, assume Symbol,Price format
-        lines.forEach((line, idx) => {
-           if (idx === 0 && line.toLowerCase().includes('symbol')) return;
-           const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); // Split by comma, ignore quotes
-           if (parts.length >= 2) {
-              const symbol = parts[0].trim().replace(/^"|"$/g, '');
-              const priceStr = parts[1].trim().replace(/^"|"$/g, '');
-              const price = parseCurrency(priceStr);
-              if (!isNaN(price) && price > 0) {
-                 prices[symbol] = price;
-              }
-           }
-        });
+  // --- FUNCTION: Fetch Online Prices ---
+  const fetchPrices = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      // Cache busting with timestamp
+      const response = await fetch(`${PRICES_CSV_URL}&t=${Date.now()}`);
+      if (!response.ok) throw new Error('Failed to fetch prices');
+      const text = await response.text();
+      
+      const lines = text.trim().split('\n');
+      const prices: Record<string, number> = {};
+      
+      // Skip header if present, assume Symbol,Price format
+      lines.forEach((line, idx) => {
+         if (idx === 0 && line.toLowerCase().includes('symbol')) return;
+         const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); // Split by comma, ignore quotes
+         if (parts.length >= 2) {
+            const symbol = parts[0].trim().replace(/^"|"$/g, '');
+            const priceStr = parts[1].trim().replace(/^"|"$/g, '');
+            const price = parseCurrency(priceStr);
+            if (!isNaN(price) && price > 0) {
+               prices[symbol] = price;
+            }
+         }
+      });
 
-        if (Object.keys(prices).length > 0) {
-           setOnlinePrices(prices);
-           setPricingMode('Online');
-        }
-      } catch (err) {
-        console.warn("Could not fetch online prices, using fallback/offline mode.", err);
-        setPricingMode('Offline');
+      if (Object.keys(prices).length > 0) {
+         setOnlinePrices(prices);
+         setPricingMode('Online');
       }
-    };
-
-    fetchPrices();
+    } catch (err) {
+      console.warn("Could not fetch online prices, using fallback/offline mode.", err);
+      setPricingMode('Offline');
+    } finally {
+      setIsRefreshing(false);
+    }
   }, []);
+
+  // --- EFFECT: Initial Fetch & Auto-Refresh Interval ---
+  useEffect(() => {
+    fetchPrices(); // Initial fetch
+
+    // Set up 60 second polling interval
+    const intervalId = setInterval(() => {
+      fetchPrices();
+    }, 60000); // 60,000 ms = 60 seconds
+
+    return () => clearInterval(intervalId); // Cleanup on unmount
+  }, [fetchPrices]);
 
   const handlePortfolioChange = (type: PortfolioType) => {
     setPortfolioType(type);
@@ -390,49 +404,64 @@ export const App: React.FC = () => {
         // Special Handling for OMF
         let omfData = result.data as OMFDataRow[];
         
-        // --- LIVE PRICING INJECTION ---
-        // Use Online Prices if available, otherwise use Fallback Prices (Offline mode)
-        const currentPricing = onlinePrices || FALLBACK_PRICES;
-        const sourceLabel = onlinePrices ? 'Online' : 'Fallback';
+        // --- PRICING CASCADE: ONLINE -> FALLBACK -> FILE ---
+        // We no longer switch wholesale between Online/Fallback.
+        // We check per asset:
+        // 1. Is there a valid Online Price?
+        // 2. Is there a valid Fallback Price?
+        // 3. Else keep Original Price.
 
-        if (currentPricing) {
-           omfData = omfData.map(row => {
-              // Only reprice Active assets
-              if (row.status !== 'Otwarta' && row.status !== 'Gotówka') return row;
+        omfData = omfData.map(row => {
+            // Only reprice Active assets
+            if (row.status !== 'Otwarta' && row.status !== 'Gotówka') return row;
 
-              const price = currentPricing[row.symbol];
-              
-              // Special logic for PPK: If symbol matches "PPK", check if price > 1000 (Total Value) or < 1000 (Unit Price)
-              // Simplification: Assume fallback/online map contains UNIT PRICE or TOTAL VALUE for PPK
-              
-              if (price !== undefined && price > 0) {
-                 let newCurrentValue = 0;
-                 
-                 // Heuristic: If price is very close to row.currentValue, assume it's Total Value update
-                 // If row has quantity > 0 and price is reasonable unit price, calculate.
-                 // PPK row often has quantity ~45 and price ~178.
-                 
-                 if (row.quantity > 0) {
-                    newCurrentValue = row.quantity * price;
-                 } else {
-                    // Fallback if quantity missing (e.g. raw total value tracking)
-                    newCurrentValue = price;
-                 }
+            let newPrice: number | undefined = undefined;
 
-                 // Recalculate Derived Stats
-                 const newProfit = newCurrentValue - row.purchaseValue;
-                 const newRoi = row.purchaseValue > 0 ? (newProfit / row.purchaseValue) * 100 : 0;
+            // Priority 1: Online Price
+            if (onlinePrices && onlinePrices[row.symbol] > 0) {
+                newPrice = onlinePrices[row.symbol];
+            }
 
-                 return {
+            // Priority 2: Fallback Price (if Online is missing or invalid)
+            if (newPrice === undefined && FALLBACK_PRICES[row.symbol] > 0) {
+                newPrice = FALLBACK_PRICES[row.symbol];
+            }
+
+            // Priority 3: Keep Original (row.currentValue is TOTAL value in file)
+            // But we need to calculate based on Price * Quantity for updates
+            // If no newPrice found, we just return the row as is.
+            
+            if (newPrice !== undefined && newPrice > 0) {
+                let newCurrentValue = 0;
+                
+                // Heuristic for PPK or Funds:
+                // If row has quantity, multiply.
+                // If row has NO quantity (0), assume the price given in fallback/online IS the total value 
+                // (though fallback usually stores unit prices, some users might put total values in fallback for tracking funds)
+                // However, strictly speaking: Value = Qty * Price.
+                
+                if (row.quantity > 0) {
+                    newCurrentValue = row.quantity * newPrice;
+                } else {
+                    // Fallback if quantity missing (e.g. raw total value tracking like pure cash)
+                    // Or if the user treats "Price" as "Total Value" in the source (less common now with standardized flow)
+                    newCurrentValue = newPrice;
+                }
+
+                // Recalculate Derived Stats
+                const newProfit = newCurrentValue - row.purchaseValue;
+                const newRoi = row.purchaseValue > 0 ? (newProfit / row.purchaseValue) * 100 : 0;
+
+                return {
                     ...row,
                     currentValue: newCurrentValue,
                     profit: newProfit,
                     roi: parseFloat(newRoi.toFixed(2))
-                 };
-              }
-              return row;
-           });
-        }
+                };
+            }
+
+            return row;
+        });
 
         // Run OMF Integrity Check with Source
         const integrity = validateOMFIntegrity(omfData, 'Offline');
@@ -492,21 +521,102 @@ export const App: React.FC = () => {
     const ikeMap = new Map<string, { inv: number, profit: number }>();
     ikeData.forEach(row => ikeMap.set(row.date, { inv: row.investment, profit: row.profit }));
 
-    // Union of all dates across portfolios
+    // --- LIVE DATA OVERRIDE ---
+    // Calculate current totals from omfActiveAssets (which includes online prices)
+    // SNOWBALL EFFECT LOGIC:
+    // For Crypto and IKE, "Investment" should be: Open Purchase Value - Closed Profit.
+    // This ensures realized gains re-invested are tracked as profit, not new capital.
+    
+    // 1. Calculate Closed Profit per portfolio
+    const closedProfits = {
+        IKE: 0,
+        CRYPTO: 0
+    };
+    
+    // We need to process OMF raw text to get closed assets if omfClosedAssets is not available in this scope?
+    // Actually we have omfClosedAssets from state, but we should use it carefully.
+    // Better to parse OMF here briefly to be self-contained or pass it in dep array.
+    // We added `omfClosedAssets` to deps.
+    
+    omfClosedAssets.forEach(asset => {
+        if (asset.portfolio === 'IKE' || asset.portfolio === 'ike') closedProfits.IKE += asset.profit;
+        if (asset.portfolio === 'Krypto' || asset.portfolio === 'CRYPTO') closedProfits.CRYPTO += asset.profit;
+    });
+
+    const liveTotals = {
+      PPK: { inv: 0, val: 0 },
+      CRYPTO: { inv: 0, val: 0 }, // inv here will be RAW sum of open positions
+      IKE: { inv: 0, val: 0 },    // inv here will be RAW sum of open positions
+      CASH: { inv: 0, val: 0 } 
+    };
+
+    omfActiveAssets.forEach(asset => {
+      if (asset.portfolio === 'PPK') {
+        liveTotals.PPK.inv += asset.purchaseValue;
+        liveTotals.PPK.val += asset.currentValue;
+      } else if (asset.portfolio === 'Krypto' || asset.portfolio === 'CRYPTO') {
+        liveTotals.CRYPTO.inv += asset.purchaseValue;
+        liveTotals.CRYPTO.val += asset.currentValue;
+      } else if (asset.portfolio === 'IKE' || asset.portfolio === 'ike') {
+        liveTotals.IKE.inv += asset.purchaseValue;
+        liveTotals.IKE.val += asset.currentValue;
+      } else if (asset.portfolio === 'Gotówka') {
+        liveTotals.CASH.inv += asset.purchaseValue;
+        liveTotals.CASH.val += asset.currentValue;
+      }
+    });
+
+    // Apply Snowball Adjustment for LIVE point
+    // Net Investment = Open Purchase Sum - Closed Profit Sum
+    const liveNetInvIKE = liveTotals.IKE.inv - closedProfits.IKE;
+    const liveNetInvCrypto = liveTotals.CRYPTO.inv - closedProfits.CRYPTO;
+
+    // Determine the Union of all dates across portfolios
     const allDates = new Set([...ppkMap.keys(), ...cryptoMap.keys(), ...ikeMap.keys()]);
     const sortedDates = Array.from(allDates).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+
+    // --- DYNAMIC UPDATE OF LAST HISTORY POINT ---
+    if (sortedDates.length > 0) {
+      const lastDate = sortedDates[sortedDates.length - 1];
+      
+      // Override PPK if we have live data
+      if (liveTotals.PPK.val > 0) {
+        ppkMap.set(lastDate, {
+          inv: liveTotals.PPK.inv,
+          profit: liveTotals.PPK.val - liveTotals.PPK.inv
+        });
+      }
+
+      // Override Crypto (With Snowball Logic)
+      if (liveTotals.CRYPTO.val > 0) {
+        // Profit = Total Value - Net Investment
+        const liveProfitCrypto = liveTotals.CRYPTO.val - liveNetInvCrypto;
+        cryptoMap.set(lastDate, {
+          inv: liveNetInvCrypto,
+          profit: liveProfitCrypto
+        });
+      }
+
+      // Override IKE (With Snowball Logic)
+      if (liveTotals.IKE.val > 0) {
+        const liveProfitIKE = liveTotals.IKE.val - liveNetInvIKE;
+        ikeMap.set(lastDate, {
+          inv: liveNetInvIKE,
+          profit: liveProfitIKE
+        });
+      }
+    }
 
     // State variables to hold "last known value" to fill gaps (Forward Fill logic)
     let lastPPK = { inv: 0, profit: 0 };
     let lastCrypto = { inv: 0, profit: 0 };
     let lastIKE = { inv: 0, profit: 0 };
     
-    // Variables for Cumulative TWR Calculation (Strictly Crypto + IKE, No PPK)
+    // Variables for Cumulative TWR Calculation
     let twrProduct = 1;
     let prevTwrVal = 0;
     let prevTwrInv = 0;
 
-    // Variable for Inflation Calculation
     let cumulativeInflation = 1.0;
 
     // Benchmarks Baseline
@@ -524,38 +634,35 @@ export const App: React.FC = () => {
       if (cryptoMap.has(date)) lastCrypto = cryptoMap.get(date)!;
       if (ikeMap.has(date)) lastIKE = ikeMap.get(date)!;
 
-      // Apply Exclusion Logic for PPK
-      // If excludePPK is true, we force PPK contribution to 0 for the current row logic
       const currentPPKInv = excludePPK ? 0 : lastPPK.inv;
       const currentPPKProfit = excludePPK ? 0 : lastPPK.profit;
 
-      // Global Totals (Possibly Excluding PPK)
-      const totalInvestment = currentPPKInv + lastCrypto.inv + lastIKE.inv;
-      const totalProfit = currentPPKProfit + lastCrypto.profit + lastIKE.profit;
+      const isCurrentMonth = index === sortedDates.length - 1;
+      const cashInv = isCurrentMonth ? liveTotals.CASH.inv : 0;
+      const cashVal = isCurrentMonth ? liveTotals.CASH.val : 0;
+      const cashProfit = cashVal - cashInv; 
+
+      const totalInvestment = currentPPKInv + lastCrypto.inv + lastIKE.inv + cashInv;
+      const totalProfit = currentPPKProfit + lastCrypto.profit + lastIKE.profit + cashProfit;
       const totalValue = totalInvestment + totalProfit;
       
-      // --- Cumulative TWR Calculation (Strictly Crypto + IKE, No PPK) ---
+      // TWR Logic
       const currCrypto = cryptoMap.get(date) || lastCrypto;
       const currIKE = ikeMap.get(date) || lastIKE;
       
       const currTwrInv = currCrypto.inv + currIKE.inv;
       const currTwrProfit = currCrypto.profit + currIKE.profit;
-      const currTwrVal = currTwrInv + currTwrProfit; // Total Value = Inv + Profit
+      const currTwrVal = currTwrInv + currTwrProfit;
 
-      // Calculate period return
       if (index > 0) {
          const flow = currTwrInv - prevTwrInv;
-         
-         // TWR Assumption: Cash flows occur at the BEGINNING of the period (Flow at Start).
          const denominator = prevTwrVal + flow;
-         
          if (denominator !== 0) {
              const gain = currTwrVal - prevTwrVal - flow;
              const r = gain / denominator;
              twrProduct *= (1 + r);
          }
       } else {
-         // Handle first month (Index 0)
          if (currTwrInv > 0) {
              const r = currTwrProfit / currTwrInv;
              twrProduct *= (1 + r);
@@ -565,29 +672,19 @@ export const App: React.FC = () => {
       prevTwrVal = currTwrVal;
       prevTwrInv = currTwrInv;
 
-      // --- Real Value Calculation (Inflation Adjusted) ---
-      // CPI_DATA is Month-over-Month.
-      // If we are at date X, we apply the inflation that occurred *during* that month (or ending at that month).
-      // We assume the portfolio starts at index 1.0 relative to start date.
-      
       if (index > 0) {
-         // Lookup inflation for this specific month
-         // CPI_DATA keys map to the row date (e.g. "2023-04-01" has 0.7% inflation)
          const inflationRate = CPI_DATA[date] || 0;
          cumulativeInflation *= (1 + inflationRate);
       }
       
       const realTotalValue = totalValue / cumulativeInflation;
 
-      // For Allocation Chart
-      // If excludePPK is true, ppkVal should be 0 so it disappears from charts
       const ppkVal = excludePPK ? 0 : (lastPPK.inv + lastPPK.profit);
       const cryptoVal = lastCrypto.inv + lastCrypto.profit;
       const ikeVal = lastIKE.inv + lastIKE.profit;
       
       const sumVal = ppkVal + cryptoVal + ikeVal;
 
-      // Benchmarks Calculation
       const [yStr, mStr, dStr] = date.split('-');
       let nextY = parseInt(yStr);
       let nextM = parseInt(mStr) + 1;
@@ -608,7 +705,7 @@ export const App: React.FC = () => {
         investment: totalInvestment,
         profit: totalProfit,
         totalValue: totalValue, 
-        realTotalValue, // Add this new calculated field
+        realTotalValue,
         roi: totalInvestment > 0 ? (totalProfit / totalInvestment) * 100 : 0,
         cumulativeTwr: (twrProduct - 1) * 100,
         
@@ -622,7 +719,7 @@ export const App: React.FC = () => {
     });
 
     return history;
-  }, [csvSources, excludePPK]); // Add excludePPK as dependency
+  }, [csvSources, excludePPK, omfActiveAssets, omfClosedAssets]); // Added omfClosedAssets dependency
 
   // Use global date constant
   const lastUpdateDate = DATA_LAST_UPDATED;
@@ -839,16 +936,60 @@ export const App: React.FC = () => {
   const stats: SummaryStats | null = useMemo(() => {
     if (portfolioType === 'OMF') {
        // OMF Stats Calculation 
-       // Update: If excludePPK is active, we filter the active assets to calculate "Net Worth" and "Invested" correctly
+       
+       // 1. Calculate Value (Sum of all Current Values)
+       // If excludePPK, filter out PPK
        const assetsToSum = excludePPK 
           ? omfActiveAssets.filter(a => a.portfolio !== 'PPK') 
           : omfActiveAssets;
 
        const totalValue = assetsToSum.reduce((acc, row) => acc + row.currentValue, 0);
-       const totalInvestedSnapshot = assetsToSum.reduce((acc, row) => acc + row.purchaseValue, 0);
 
-       let aggregatedProfit = 0;
-       let totalRoi = 0;
+       // 2. Calculate Net Investment (Snowball Effect)
+       // - For PPK: Just Employee Contribution (purchaseValue)
+       // - For Cash: Just Value
+       // - For IKE/Crypto: Open Purchase Value MINUS Closed Profit (Realized Gains reinvested are not new external capital)
+       
+       let totalInvestedSnapshot = 0;
+
+       const ppkInvested = assetsToSum
+          .filter(a => a.portfolio === 'PPK')
+          .reduce((acc, r) => acc + r.purchaseValue, 0);
+
+       const cashInvested = assetsToSum
+          .filter(a => a.portfolio === 'Gotówka')
+          .reduce((acc, r) => acc + r.purchaseValue, 0);
+
+       const otherAssets = assetsToSum.filter(a => a.portfolio !== 'PPK' && a.portfolio !== 'Gotówka');
+       const otherOpenPurchase = otherAssets.reduce((acc, r) => acc + r.purchaseValue, 0);
+
+       // Calculate Closed Profit for IKE/Crypto (if not excluded)
+       let closedProfitOffset = 0;
+       if (!excludePPK) {
+          // Include all closed (except maybe PPK if it had any closed, but PPK usually doesn't close partially like this)
+          // Let's filter for relevant portfolios just in case
+           const closedRelevant = omfClosedAssets.filter(a => a.portfolio !== 'Gotówka'); 
+           closedProfitOffset = closedRelevant.reduce((acc, r) => acc + r.profit, 0);
+       } else {
+           // Only IKE/Crypto
+           const closedRelevant = omfClosedAssets.filter(a => a.portfolio !== 'PPK' && a.portfolio !== 'Gotówka');
+           closedProfitOffset = closedRelevant.reduce((acc, r) => acc + r.profit, 0);
+       }
+
+       // NET INVESTMENT FORMULA: (Open Purchase) - (Closed Profit)
+       const otherNetInvested = otherOpenPurchase - closedProfitOffset;
+
+       totalInvestedSnapshot = ppkInvested + cashInvested + otherNetInvested;
+
+       // Recalculate Total Profit based on Net Investment
+       // Profit = Value - Invested
+       const aggregatedProfit = totalValue - totalInvestedSnapshot;
+       
+       // ROI
+       const totalRoi = totalInvestedSnapshot > 0 
+          ? (aggregatedProfit / totalInvestedSnapshot) * 100 
+          : 0;
+
        let profitTrend = 0;
        let cagr = 0;
        let ltm = 0;
@@ -856,9 +997,7 @@ export const App: React.FC = () => {
 
        if (globalHistoryData.length > 0) {
          const current = globalHistoryData[globalHistoryData.length - 1];
-         aggregatedProfit = current.profit;
-         totalRoi = current.roi;
-
+         
          // MoM Trend
          if (globalHistoryData.length > 1) {
              const prevPeriod = globalHistoryData[globalHistoryData.length - 2];
@@ -870,13 +1009,11 @@ export const App: React.FC = () => {
          }
 
          // --- PERFORMANCE METRICS (CAGR, LTM, YTD) ---
-         // Use globalHistoryData which includes PPK + Crypto + IKE
          const perfData = globalHistoryData;
          
          if (perfData.length > 0) {
              const currentIndex = perfData.length - 1;
              
-             // Function to calculate accumulated TWR from a start index to an end index
              const calculateAccumulatedTWR = (startIdx: number, endIdx: number) => {
                 let product = 1;
                 for (let i = startIdx; i <= endIdx; i++) {
@@ -1068,6 +1205,22 @@ export const App: React.FC = () => {
     return Math.max(0, months);
   }, [portfolioType]);
 
+  // Calculate months since start for OMF
+  const investmentDuration = useMemo(() => {
+    if (globalHistoryData.length === 0) return { months: 0, startDate: '-' };
+    const start = globalHistoryData[0].date;
+    const end = globalHistoryData[globalHistoryData.length - 1].date;
+    
+    const d1 = new Date(start);
+    const d2 = new Date(end);
+    
+    let months = (d2.getFullYear() - d1.getFullYear()) * 12;
+    months -= d1.getMonth();
+    months += d2.getMonth();
+    
+    return { months: Math.max(0, months), startDate: start };
+  }, [globalHistoryData]);
+
   const getTextColorClass = (type: string) => {
     if (theme === 'neon') return 'text-cyan-400';
     switch(type) {
@@ -1161,17 +1314,27 @@ export const App: React.FC = () => {
         {/* Data Status Section */}
         {isOfflineValid ? (
            <div className="flex flex-col items-center mb-6 space-y-1">
-              <span className={`text-xs font-bold px-3 py-1 rounded-full flex items-center shadow-sm ${
-                  pricingMode === 'Online'
-                    ? (theme === 'neon' ? 'bg-blue-900/80 text-blue-300 border border-blue-600/50' : 'bg-blue-50 text-blue-600 border border-blue-200')
-                    : (theme === 'neon' ? 'bg-slate-800/80 text-slate-400 border border-slate-600/50' : 'bg-slate-100 text-slate-500 border border-slate-200')
-              }`}>
-                 {pricingMode === 'Online' ? <Wifi size={14} className="mr-1.5" /> : <WifiOff size={14} className="mr-1.5" />}
-                 {pricingMode === 'Online' ? 'ONLINE' : 'OFFLINE'}
-              </span>
+              <div className="flex items-center space-x-2">
+                <span className={`text-xs font-bold px-3 py-1 rounded-full flex items-center shadow-sm ${
+                    pricingMode === 'Online'
+                      ? (theme === 'neon' ? 'bg-blue-900/80 text-blue-300 border border-blue-600/50' : 'bg-blue-50 text-blue-600 border border-blue-200')
+                      : (theme === 'neon' ? 'bg-slate-800/80 text-slate-400 border border-slate-600/50' : 'bg-slate-100 text-slate-500 border border-slate-200')
+                }`}>
+                   {pricingMode === 'Online' ? <Wifi size={14} className="mr-1.5" /> : <WifiOff size={14} className="mr-1.5" />}
+                   {pricingMode === 'Online' ? 'ONLINE' : 'OFFLINE'}
+                </span>
+                <button 
+                  onClick={fetchPrices}
+                  disabled={isRefreshing}
+                  className={`p-1 rounded-full transition-all ${isRefreshing ? 'animate-spin' : ''} ${theme === 'neon' ? 'text-cyan-500 hover:bg-cyan-900/30' : 'text-slate-400 hover:bg-slate-100'}`}
+                  title="Odśwież ceny"
+                >
+                  <RefreshCw size={14} />
+                </button>
+              </div>
               {pricingMode === 'Online' ? (
                 <span className={`text-[10px] ${theme === 'neon' ? 'text-cyan-600' : 'text-blue-500'}`}>
-                  Ceny na żywo z Google Sheets
+                  Ceny na żywo z Google Sheets (Auto-refresh 60s)
                 </span>
               ) : (
                 lastUpdateDate && (
@@ -1213,16 +1376,16 @@ export const App: React.FC = () => {
               <StatsCard 
                 title="Zainwestowano" 
                 value={`${(stats.totalInvestment || 0).toLocaleString('pl-PL')} zł`} 
-                subValue="Kapitał (OMF)" 
+                subValue="Aktywa + Gotówka" 
                 icon={Wallet} 
                 colorClass={theme === 'neon' ? 'text-blue-400' : "text-blue-600 bg-blue-50"} 
                 className={styles.cardContainer}
               />
               <StatsCard 
-                title="Pozycja Gotówkowa" 
-                value={`${(omfActiveAssets.filter(a => a.symbol === 'PLN').reduce((acc, c) => acc + c.currentValue, 0) || 0).toLocaleString('pl-PL')} zł`} 
-                subValue="PLN" 
-                icon={Banknote} 
+                title="Czas od Startu" 
+                value={`${investmentDuration.months} miesięcy`} 
+                subValue={`Start: ${investmentDuration.startDate}`} 
+                icon={Timer} 
                 colorClass={theme === 'neon' ? 'text-violet-400' : "text-violet-600 bg-violet-50"} 
                 className={styles.cardContainer}
               />
@@ -1366,7 +1529,7 @@ export const App: React.FC = () => {
                   <LayoutTemplate className={theme === 'neon' ? 'text-cyan-400' : 'text-cyan-600'} size={20} />
                 </div>
               </div>
-              <OMFTreemapChart data={omfStructureData} themeMode={theme} />
+              <OMFStructureChart data={omfStructureData} themeMode={theme} />
             </div>
 
             {/* Heatmap */}

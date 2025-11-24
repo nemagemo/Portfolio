@@ -16,6 +16,11 @@ W plikach CSV oraz logice aplikacji dla portfela PPK obowiązuje następująca d
 ### OMF - Wkład Własny w PPK
 W pliku `OMF.ts`, kolumna `Wartość Zakupu` dla wiersza PPK reprezentuje **wyłącznie** wkład własny pracownika (składki potrącone z pensji). Wpłaty pracodawcy i państwa nie są wliczane do tej kolumny, aby zachować spójność z definicją "Zainwestowanego Kapitału" użytkownika.
 
+### OMF - Zainwestowany Kapitał w IKE i Krypto (Efekt Kuli Śnieżnej)
+W pliku `OMF.ts` oraz w wyliczeniach historycznych dla portfeli **IKE** oraz **Krypto**, obowiązuje specjalna zasada obliczania **Wkładu (Zainwestowano)**, aby uwzględnić efekt reinwestycji zysków (Kula Śnieżna):
+*   **Formuła:** `Wkład = Suma(Wartość Zakupu Aktywów Otwartych) - Suma(Zysk z Aktywów Zamkniętych)`.
+*   **Cel:** Ponieważ zysk z zamkniętych pozycji jest reinwestowany w nowe pozycje (zwiększając ich `Wartość Zakupu`), musimy odjąć ten zrealizowany zysk, aby uzyskać kwotę faktycznie wpłaconą "z zewnątrz" (z kieszeni użytkownika).
+
 ---
 
 ## NOWE: Model Hybrydowy (Transakcje + Wycena + Snapshoty)
@@ -45,21 +50,25 @@ Użytkownik podaje **KWOTĘ CAŁKOWITĄ (KOSZT)** w PLN lub **ILOŚĆ JEDNOSTEK 
     *   **Kupno (PPK - Specjalne):**
         *   **Oblicz:** Koszt Transakcji = Ilość * Cena (lub podana kwota).
         *   **Aktualizuj `Ilość`:** Zawsze dodaj Nowe Jednostki do `OMF.Ilość`.
-        *   **Aktualizuj `Obecna Wartość`:** DODAJ Koszt Transakcji do `OMF.Obecna Wartość`.
+        *   **Aktualizuj `Obecna Wartość`:** DODAJ Koszt Transakcji do `OMF.Obecna Wartość` (niezależnie od źródła).
         *   **Aktualizuj `Wartość Zakupu`:**
             *   Jeśli źródło to **Pracownik**: DODAJ Koszt Transakcji do `OMF.Wartość Zakupu`.
             *   Jeśli źródło to **Pracodawca** lub **Państwo**: **NIE** zmieniaj `OMF.Wartość Zakupu`.
 3.  **Natychmiastowa Synchronizacja Historii (`CSV/PPK.ts`, `CSV/Krypto.ts`, `CSV/IKE.ts`):**
     *   Zidentyfikuj plik historii odpowiadający portfelowi.
-    *   **Agregacja:** Zsumuj `Wartość Zakupu` oraz `Obecna Wartość` dla wszystkich aktywów tego portfela w `OMF.ts` (Tylko status "Otwarta"/"Gotówka").
+    *   **Agregacja:** Oblicz sumy dla danego portfela na podstawie zaktualizowanego `OMF.ts` (tylko pozycje 'Otwarta'/'Gotówka').
     *   **Aktualizacja:** Znajdź **ostatni wiersz** w odpowiednim pliku historii.
         *   **IKE/Krypto:**
-            *   Kolumna `Wkład` = Suma `Wartość Zakupu` z OMF.
-            *   Kolumna `Zysk` = Suma `Obecna Wartość` - Suma `Wartość Zakupu`.
+            *   `Wkład` = Suma(`Wartość Zakupu` Otwartych) - Suma(`Zysk` Zamkniętych).
+            *   `Zysk` = Suma(`Obecna Wartość` Otwartych) - `Wkład`.
+            *   `ROI` = (Zysk / Wkład) * 100.
         *   **PPK:**
-            *   Kolumna `Pracownik` = Suma `Wartość Zakupu` z OMF.
-            *   **WAŻNE:** Jeśli transakcja dotyczyła **Pracodawcy** lub **Państwa**, zaktualizuj odpowiednią kolumnę (`Pracodawca` lub `Państwo`) w ostatnim wierszu historii, dodając do niej kwotę tej konkretnej transakcji. W przeciwnym razie zysk funduszu zostanie błędnie zawyżony.
-            *   Przelicz `Wartość Całkowita` (jako Suma Obecna Wartość z OMF) i `Zysk Funduszu` (Wartość - Składki).
+            *   Zidentyfikuj, czy transakcja dotyczyła Pracownika, Pracodawcy czy Państwa.
+            *   **Jeśli Pracownik:** Zwiększ kolumnę `Pracownik` w ostatnim wierszu o kwotę wpłaty.
+            *   **Jeśli Pracodawca:** Zwiększ kolumnę `Pracodawca` w ostatnim wierszu o kwotę wpłaty.
+            *   **Jeśli Państwo:** Zwiększ kolumnę `Państwo` w ostatnim wierszu o kwotę wpłaty.
+            *   **Zawsze:** Zwiększ `Wartość Całkowita` w ostatnim wierszu o kwotę wpłaty.
+            *   **Przelicz:** `Zysk Funduszu` = `Wartość Całkowita` - (`Pracownik` + `Pracodawca` + `Państwo`).
 4.  **Logowanie Transakcji (`CSV/Transactions.ts`):**
     *   Dopisz nowy wiersz na końcu pliku `CSV/Transactions.ts`.
     *   **Format:** `Data,Portfel,Typ,Symbol,Ilość,Koszt,Waluta`.
@@ -80,12 +89,14 @@ Wszystkie ceny podawane przez użytkownika są już **w PLN**.
 2.  **Edycja `CSV/OMF.ts`:**
     *   Iteruj przez wiersze (tylko `Status: Otwarta` / `Gotówka`).
     *   **Oblicz:**
-        *   Cena jedn.: `Nowa Obecna Wartość = Ilość * Cena`.
-        *   Wartość całk.: `Nowa Obecna Wartość = Podana Wartość`.
+        *   Dla aktywów z ilością > 0: `Nowa Obecna Wartość = Ilość * Cena`.
+        *   Dla aktywów kwotowych (np. PPK jeśli brak ilości, Gotówka): `Nowa Obecna Wartość = Podana Cena`.
     *   **Zaktualizuj:** Nadpisz `Obecna wartość`. Przelicz `Zysk` i `ROI`.
 3.  **Synchronizacja Historii (Ostatni Miesiąc):**
-    *   Dla każdego portfela zsumuj `Obecna Wartość` i `Wartość Zakupu` z OMF (tylko Otwarte).
-    *   Zaktualizuj **ostatni wiersz** w plikach historii (`CSV/IKE.ts` itd.) nowymi sumami.
+    *   Dla każdego portfela (PPK, IKE, Krypto) zsumuj `Obecna Wartość` z OMF (tylko Otwarte).
+    *   **IKE/Krypto:** Oblicz `Wkład` = Suma(Otwarta.WartośćZakupu) - Suma(Zamknięta.Zysk).
+    *   **PPK:** Pobierz `Wartość Zakupu` (Pracownik) z OMF.
+    *   Zaktualizuj **ostatni wiersz** w plikach historii (`CSV/IKE.ts` itd.) wpisując nowe sumy wartości i przeliczając Zysk/ROI.
 4.  **Raport:** Podaj nową wartość portfela.
 
 ### Polecenie: `ZamknijMiesiac`
@@ -94,14 +105,16 @@ Wszystkie ceny podawane przez użytkownika są już **w PLN**.
 
 **Procedura:**
 1.  **Agregacja z `CSV/OMF.ts`:**
-    *   Oblicz sumy `Wartość Zakupu` i `Obecna Wartość` dla każdego portfela (Tylko Otwarte/Gotówka).
+    *   Oblicz sumy `Obecna Wartość` dla każdego portfela (Tylko Otwarte/Gotówka).
+    *   Oblicz `Wartość Zakupu` (Wkład) wg zasad specyficznych (PPK = Tylko Pracownik; IKE/Krypto = Otwarte.Zakup - Zamknięte.Zysk).
 2.  **Edycja plików historii:**
     *   Dopisz **nowy wiersz** na końcu każdego pliku z podaną datą.
-    *   **IKE/Krypto:** `Wkład`, `Zysk`, `ROI` z wyliczonych sum.
+    *   **IKE/Krypto:** `Wkład` (skorygowany), `Zysk` (Wartość - Wkład), `ROI`.
     *   **PPK:**
         *   `Pracownik`: Suma `Wartość Zakupu` z OMF.
-        *   `Pracodawca` i `Państwo`: Przepisz z poprzedniego miesiąca (chyba że masz info o zmianie).
-        *   `Całkowity Zysk`: Różnica wartości i wkładu pracownika.
+        *   `Pracodawca` i `Państwo`: Przepisz z poprzedniego miesiąca (chyba że masz info o zmianie w transakcjach).
+        *   `Wartość Całkowita`: Suma `Obecna Wartość` PPK z OMF.
+        *   `Zysk Funduszu`: Różnica Wartości i sumy składek.
 3.  **Raport:** Potwierdź utworzenie snapshotu.
 
 ### Polecenie: `UpdateDate`
