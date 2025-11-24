@@ -69,14 +69,10 @@ W plikach CSV oraz logice aplikacji dla portfela PPK obowiązuje następująca d
 
 2.  **Konwersja:**
     *   Dla każdego pliku CSV (np. `Dane.csv`) utwórz lub zaktualizuj odpowiadający mu plik `.ts` (np. `Dane.ts`) w folderze `CSV/`.
-    *   Nazwa zmiennej eksportowanej powinna być w formacie `UPPER_SNAKE_CASE` z sufiksem `_DATA`.
-        *   `PPK.csv` -> `export const PPK_DATA = ...`
-        *   `Krypto.csv` -> `export const KRYPTO_DATA = ...` (Uwaga: zachowaj spójność nazewnictwa, jeśli plik TS nazywa się `Krypto.ts`, zmienna to `KRYPTO_DATA`).
-        *   `IKE.csv` -> `export const IKE_DATA = ...`
-        *   `OMF.csv` -> `export const OMF_DATA = ...`
+    *   Nazwa zmiennej z danymi: format `UPPER_SNAKE_CASE` z sufiksem `_DATA`.
 
 3.  **Szablon Pliku TS:**
-    *   Zawartość pliku `.ts` powinna wyglądać następująco (użyj backticks `` ` `` do objęcia stringa):
+    *   Zawartość pliku `.ts` powinna wyglądać następująco. NIE generuj zmiennej `_LAST_UPDATED`.
 
     ```typescript
     export const NAZWA_PLIKU_DATA = `[TUTAJ WKLEJ CAŁĄ ZAWARTOŚĆ PLIKU CSV]`;
@@ -84,3 +80,25 @@ W plikach CSV oraz logice aplikacji dla portfela PPK obowiązuje następująca d
 
 4.  **Weryfikacja:**
     *   Upewnij się, że wklejona zawartość CSV jest kompletna i zawiera nagłówki.
+
+---
+
+## Polecenie: `UpdateDate`
+
+**Wyzwalacz:** Użytkownik pisze "Wykonaj polecenie UpdateDate [RRRR-MM-DD]" (np. `UpdateDate 2025-05-01`).
+
+**Cel:** Ręczna aktualizacja globalnej daty ważności danych wyświetlanej w aplikacji.
+
+**Procedura (Algorytm):**
+
+1.  **Pobranie daty:**
+    *   Pobierz datę podaną przez użytkownika w poleceniu.
+
+2.  **Aktualizacja:**
+    *   Zaktualizuj plik `constants/appData.ts`.
+    *   Nadpisz zmienną `DATA_LAST_UPDATED`.
+
+3.  **Szablon Pliku `constants/appData.ts`:**
+    ```typescript
+    export const DATA_LAST_UPDATED = 'RRRR-MM-DD';
+    ```

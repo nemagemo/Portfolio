@@ -75,3 +75,5 @@ Zamknięta,IKE,Akcje,FAST,Industrials,124,2024-10-03,"0,000000","273,09 zł","26
 Zamknięta,IKE,Akcje,PAYX,Information Technology,251,2025-02-11,"0,000000","735,51 zł","700,87 zł","34,64 zł","4,94%"
 Zamknięta,Krypto,Krypto,BTC,,630,2024-11-22,"0,000000","1 046,91 zł","463,18 zł","583,73 zł","126,03%"
 Zamknięta,Krypto,Krypto,GLQ,,91,2024-03-06,"0,000000","456,46 zł","52,47 zł","403,99 zł","769,94%"`;
+
+export const OMF_LAST_UPDATED = '2025-02-18';

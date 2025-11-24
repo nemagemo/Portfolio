@@ -52,6 +52,8 @@ import { PPK_DATA } from './CSV/PPK';
 import { KRYPTO_DATA } from './CSV/Krypto';
 import { IKE_DATA } from './CSV/IKE';
 import { OMF_DATA } from './CSV/OMF';
+// Import global settings
+import { DATA_LAST_UPDATED } from './constants/appData';
 // Import benchmarks & inflation
 import { SP500_DATA, WIG20_DATA } from './constants/benchmarks';
 import { CPI_DATA } from './constants/inflation';
@@ -539,6 +541,9 @@ export const App: React.FC = () => {
 
     return history;
   }, [csvSources, excludePPK]); // Add excludePPK as dependency
+
+  // Use global date constant
+  const lastUpdateDate = DATA_LAST_UPDATED;
 
   // --- ROAD TO MILLION PROJECTION LOGIC (OMF) ---
   const chartDataWithProjection = useMemo(() => {
@@ -1073,11 +1078,20 @@ export const App: React.FC = () => {
         
         {/* Data Status Section */}
         {isOfflineValid ? (
-           <div className="flex justify-center mb-6">
-              <span className={`text-xs font-bold px-3 py-1 rounded-full flex items-center shadow-sm ${theme === 'neon' ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-500/50' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'}`}>
+           <div className="flex flex-col items-center mb-6 space-y-1">
+              <span className={`text-xs font-bold px-3 py-1 rounded-full flex items-center shadow-sm ${
+                  theme === 'neon' 
+                    ? 'bg-slate-800/80 text-slate-400 border border-slate-600/50' 
+                    : 'bg-slate-100 text-slate-500 border border-slate-200'
+              }`}>
                  <CheckCircle2 size={14} className="mr-1.5" />
                  OFFLINE
               </span>
+              {lastUpdateDate && (
+                <span className={`text-[10px] ${theme === 'neon' ? 'text-slate-600' : 'text-slate-400'}`}>
+                  Ostatnia aktualizacja: {lastUpdateDate}
+                </span>
+              )}
            </div>
         ) : (
            <>
@@ -1537,7 +1551,7 @@ export const App: React.FC = () => {
                           <h3 className={`text-lg font-bold ${styles.text}`}>Historyczna Wartość Portfela</h3>
                           <p className="text-[10px] sm:text-xs text-slate-400 mt-2 font-medium leading-tight max-w-2xl">
                             Wartość netto = Wartość po odjęciu podatku od wpłaty Pracodawcy<br/>
-                            Wartość Exit = Wartość gdybym w tym momencie zrezygnował z PPK, czyli Wartość netto - 30% wpłat od Pracodawcy - wpłaty od Państwa - 19% podatku od zysku
+                            Wartość Exit = Wartość netto - 30% wpłat od Pracodawcy - wpłaty od Państwa - 19% podatku od zysku
                           </p>
                         </div>
                         

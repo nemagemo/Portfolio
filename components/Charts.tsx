@@ -89,7 +89,7 @@ const CHART_THEMES: Record<ThemeMode, {
     state: '#db2777',      // Pink-600 (State/Bonus)
     tax: '#dc2626',        // Red-600 (Tax - Distinct)
     net: '#115e59',        // Teal-800 (Net Value - Stronger Contrast)
-    exit: '#b45309',       // Amber-700 (Exit Value - Stronger Contrast/Rust)
+    exit: '#eab308',       // Yellow-500 (Exit Value - Bright Yellow/Amber)
     projection: '#d97706', // Amber-600 (Projection - Gold/Optimism)
     taxedAccount: '#eab308', // Yellow-500
     grid: '#e5e7eb',       // Gray-200
@@ -109,7 +109,7 @@ const CHART_THEMES: Record<ThemeMode, {
     state: '#ec4899',      // Pink
     tax: '#ef4444',        // Red
     net: '#000000',        // Black (Bold Outline Style)
-    exit: '#44403c',       // Stone-700 (Dark Gray)
+    exit: '#facc15',       // Yellow-400 (Bright Yellow)
     projection: '#f97316', // Bright Orange (Attention)
     taxedAccount: '#facc15', // Yellow-400 (Bright Yellow)
     grid: '#000000',       // Black Grid
@@ -128,7 +128,7 @@ const CHART_THEMES: Record<ThemeMode, {
     employer: '#d946ef',   // Fuchsia-500
     state: '#f472b6',      // Pink-400
     tax: '#ef4444',        // Red
-    net: '#22d3ee',        // Cyan (Electric)
+    net: '#1e3a8a',        // Dark Blue (High Contrast against Green)
     exit: '#fbbf24',       // Amber (Neon Gold)
     projection: '#facc15', // Yellow-400 (Neon Gold)
     taxedAccount: '#fef08a', // Yellow-200 (Pale Neon Yellow)
@@ -1056,7 +1056,7 @@ export const PortfolioAllocationHistoryChart: React.FC<ChartProps> = ({ data, th
             tickFormatter={(val) => `${(val * 100).toFixed(0)}%`}
           />
           <Tooltip 
-            formatter={(value: number) => [`${(value * 100).toFixed(1)}%`]} 
+            formatter={(value: number) => [`${value.toFixed(2)}%`]} 
             labelFormatter={formatDate}
             contentStyle={getTooltipStyle(themeMode as ThemeMode)}
           />
