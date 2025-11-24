@@ -1,6 +1,6 @@
 
 export const OMF_DATA = `Status pozycji,Portfel,Typ,Symbol,Sektor,Okres inwestycji,Ostatni zakup,Ilość,Obecna wartość,Wartość zakupu,Zysk/Strata,ROI
-Otwarta,PPK,PPK,PPK,,,,"0,000000","7 747,45 zł","3 335,73 zł","4 411,72 zł","132,26%"
+Otwarta,PPK,PPK,PPK,,,,"45,059700","7 747,45 zł","3 335,73 zł","4 411,72 zł","132,26%"
 Otwarta,IKE,ETF,NDIA.L,IE00BZCQB185,415,2025-07-09,"35,794600","1 292,51 zł","1 371,84 zł","-79,33 zł","-5,78%"
 Zamknięta,IKE,ETF,IWQU.L,IE00BP3QZ601,122,2025-02-03,"0,000000","953,97 zł","929,13 zł","24,84 zł","2,67%"
 Otwarta,IKE,ETF,IUIT.L,IE00B3WJKG14,415,2025-07-09,"10,792800","1 597,81 zł","1 372,00 zł","225,81 zł","16,46%"

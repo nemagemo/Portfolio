@@ -13,6 +13,9 @@ W plikach CSV oraz logice aplikacji dla portfela PPK obowiązuje następująca d
 *   Oznacza to, że "Całkowity Zysk" to wszystko, co użytkownik posiada ponad swój własny wkład ("Pracownik").
 *   Przy wizualizacji struktury kapitału (np. wykresy skumulowane), aby składniki sumowały się do 100% Wartości Portfela, należy używać: **Wkład Pracownika + Wkład Pracodawcy + Dopłaty Państwa + Zysk Funduszu**. Nie należy używać "Całkowitego Zysku" jako osobnej warstwy w sumowaniu, ponieważ zawiera on już w sobie Pracodawcę i Państwo.
 
+### OMF - Wkład Własny w PPK
+W pliku `OMF.ts`, kolumna `Wartość Zakupu` dla wiersza PPK reprezentuje **wyłącznie** wkład własny pracownika (składki potrącone z pensji). Wpłaty pracodawcy i państwa nie są wliczane do tej kolumny, aby zachować spójność z definicją "Zainwestowanego Kapitału" użytkownika.
+
 ---
 
 ## NOWE: Model Hybrydowy (Transakcje + Wycena + Snapshoty)
@@ -23,27 +26,32 @@ Aplikacja działa w trybie Offline, ale dane są aktualizowane w modelu hybrydow
 
 **Wyzwalacz:** Użytkownik opisuje transakcję naturalnym językiem.
 *   *Przykład 1:* "Kupiłem 0,25 akcji AMZN za 300zł na IKE dnia 2025-05-01".
-*   *Przykład 2:* "Wpłata PPK 300zł" (lub "Kupno PPK za 300zł").
+*   *Przykład 2:* "Kupno PPK: 1.2 jednostki Pracownik po 50zł, 0.8 jednostki Pracodawca po 50zł".
 
 **Zasada Kosztu:**
-Użytkownik podaje **KWOTĘ CAŁKOWITĄ (KOSZT)** jaką poniósł, a nie cenę jednostkową.
-*   Jeżeli użytkownik pisze "za 300zł", oznacza to, że `Wartość Zakupu` wzrasta o 300 PLN.
+Użytkownik podaje **KWOTĘ CAŁKOWITĄ (KOSZT)** w PLN lub **ILOŚĆ JEDNOSTEK i CENĘ JEDNOSTKOWĄ**.
 
 **Procedura:**
-1.  **Analiza:** Zidentyfikuj: Typ (Kupno/Sprzedaż), Symbol (np. AMZN, PPK), Ilość (jeśli podana), Koszt Całkowity (PLN), Datę, Portfel.
+1.  **Analiza:** Zidentyfikuj: Typ (Kupno/Sprzedaż), Symbol (np. AMZN, PPK), Ilość, Koszt Całkowity (PLN), Datę, Portfel.
 2.  **Edycja `CSV/OMF.ts`:**
     *   Znajdź odpowiedni wiersz dla danego aktywa (Symbol + Portfel). Jeśli nie istnieje, utwórz nowy.
-    *   **Kupno:**
+    *   **Kupno (Standardowe):**
         *   `Ilość`: Dodaj podaną ilość do obecnej.
-        *   `Wartość Zakupu`: Dodaj podany **Koszt Całkowity** do obecnej wartości zakupu.
+        *   `Wartość Zakupu`: Dodaj podany koszt do obecnej wartości zakupu.
         *   `Ostatni zakup`: Zaktualizuj datę.
-        *   `Obecna Wartość`: Tymczasowo dodaj **Koszt Całkowity** do `Obecna Wartość` (aby zachować spójność do czasu następnej aktualizacji cen rynkowych).
+        *   `Obecna Wartość`: Tymczasowo dodaj koszt do `Obecna Wartość`.
+    *   **Kupno (PPK - Specjalne):**
+        *   Transakcje PPK mogą być rozbite na źródła: "Pracownik", "Pracodawca", "Państwo".
+        *   **Oblicz:** Nowe Jednostki = Podana Ilość. Koszt Transakcji = Ilość * Cena (lub podana kwota).
+        *   **Aktualizuj `Ilość`:** Zawsze dodaj Nowe Jednostki do `OMF.Ilość`.
+        *   **Aktualizuj `Wartość Zakupu`:**
+            *   Jeśli źródło to **Pracownik**: DODAJ Koszt Transakcji do `OMF.Wartość Zakupu`.
+            *   Jeśli źródło to **Pracodawca** lub **Państwo**: **NIE** zmieniaj `OMF.Wartość Zakupu` (traktujemy to jako bonus/zysk zewnętrzny).
+        *   **Aktualizuj `Obecna Wartość`:** Dodaj Koszt Transakcji do `OMF.Obecna Wartość` (niezależnie od źródła).
     *   **Sprzedaż:**
         *   `Ilość`: Odejmij sprzedaną ilość.
         *   `Wartość Zakupu`: Zmniejsz proporcjonalnie do sprzedanej ilości.
-        *   Jeśli `Ilość` == 0, zmień `Status pozycji` na "Zamknięta", a wynik przenieś do `Zysk/Strata`.
-3.  **Dla PPK:** Traktuj "Wpłatę" lub "Kupno" jako zwiększenie `Wartość Zakupu` i `Obecna Wartość` w wierszu PPK w `OMF.ts`.
-4.  **Raport:** Potwierdź wykonanie zmian w pliku, wymieniając zaktualizowane wartości.
+3.  **Raport:** Potwierdź wykonanie zmian w pliku, wymieniając zaktualizowane wartości.
 
 ### Polecenie: `AktualizujCeny`
 
@@ -51,8 +59,6 @@ Użytkownik podaje **KWOTĘ CAŁKOWITĄ (KOSZT)** jaką poniósł, a nie cenę j
 
 **Zasada Walutowa (PLN):**
 Wszystkie ceny jednostkowe (lub wartości całościowe) podawane przez użytkownika w tym poleceniu są już **przeliczone na PLN**.
-*   AI **nie powinna** dokonywać przeliczania walut (np. USD na PLN), chyba że użytkownik wyraźnie o to poprosi w treści wiadomości.
-*   Przyjmujemy: `Cena wejściowa` = `Cena w PLN`.
 
 **Procedura:**
 1.  **Źródło Cen:**
@@ -62,8 +68,8 @@ Wszystkie ceny jednostkowe (lub wartości całościowe) podawane przez użytkown
     *   Przejdź przez każdy wiersz o statusie "Otwarta".
     *   Znajdź cenę dla danego `Symbolu`.
     *   **Obliczenia:**
-        *   *Akcje/Krypto/ETF:* `Nowa Obecna Wartość = Ilość * Cena Rynkowa (PLN)`.
-        *   *PPK:* Jeśli podano cenę dla "PPK", traktuj ją jako **całkowitą wartość portfela** (chyba że użytkownik i dane operują na jednostkach uczestnictwa, wtedy `Ilość * Cena`).
+        *   *Standard:* `Nowa Obecna Wartość = Ilość * Cena Rynkowa (PLN)`.
+        *   *PPK:* Jeśli podano cenę jednostkową dla PPK: `Nowa Wartość = Ilość (Suma jednostek) * Cena Jednostki`. Jeśli podano wartość całkowitą, użyj jej bezpośrednio.
     *   Zaktualizuj kolumnę `Obecna Wartość`.
     *   Przelicz pochodne: `Zysk/Strata` (`Obecna Wartość - Wartość Zakupu`) oraz `ROI`.
 3.  **Zapis:** Zaktualizuj treść `OMF_DATA` w pliku `CSV/OMF.ts`.
