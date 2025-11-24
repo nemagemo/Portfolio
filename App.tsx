@@ -54,7 +54,10 @@ import { ReturnsHeatmap } from './components/ReturnsHeatmap';
 import { PPK_DATA } from './CSV/PPK';
 import { KRYPTO_DATA } from './CSV/Krypto';
 import { IKE_DATA } from './CSV/IKE';
-import { OMF_DATA } from './CSV/OMF';
+// NEW: Import Split OMF Data
+import { OMF_OPEN_DATA, OMF_LAST_UPDATED } from './CSV/OMFopen';
+import { OMF_CLOSED_DATA } from './CSV/OMFclosed';
+
 // Import global settings
 import { DATA_LAST_UPDATED } from './constants/appData';
 // Import benchmarks & inflation
@@ -72,15 +75,15 @@ const PRICES_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS7p1b_z
  * ============================================================================
  * 
  * 1. DATA SOURCE: HYBRID (OFFLINE + ONLINE PRICES)
- *    - Transaction History & Quantities are loaded from local .ts files (CSV/OMF.ts).
+ *    - Transaction History & Quantities are loaded from local .ts files (CSV/OMFopen.ts & CSV/OMFclosed.ts).
  *    - Current Prices are fetched from a Google Sheets CSV URL.
- *    - If Online fetch fails, we fall back to `fallbackPrices.ts` and finally to the values in `OMF.ts`.
+ *    - If Online fetch fails, we fall back to `fallbackPrices.ts` and finally to the values in `OMFopen.ts`.
  * 
  * 2. PARSING LOGIC: ROBUST & AGGRESSIVE
  *    The `utils/parser.ts` contains very aggressive regex to clean currency strings.
  * 
  * 3. CALCULATIONS: REAL-TIME REVALUATION
- *    The App recalculates `Current Value`, `Profit`, and `ROI` for every asset based on
+ *    The App recalculates `Current Value`, `Profit`, and `ROI` for every asset in OMFopen based on
  *    the latest available price (Online > Fallback > Local CSV).
  */
 
@@ -301,12 +304,13 @@ export const App: React.FC = () => {
   const [theme, setTheme] = useState<Theme>('light');
   const styles = themeStyles[theme];
   
-  // Use local TS data exclusively (OFFLINE MODE BASE)
+  // Use local TS data exclusively (OFFLINE BASE)
   const [csvSources] = useState({
     PPK: PPK_DATA,
     CRYPTO: KRYPTO_DATA,
     IKE: IKE_DATA,
-    OMF: OMF_DATA
+    OMF_OPEN: OMF_OPEN_DATA,
+    OMF_CLOSED: OMF_CLOSED_DATA
   });
 
   // State for Online Pricing
@@ -366,6 +370,9 @@ export const App: React.FC = () => {
       if (Object.keys(prices).length > 0) {
          setOnlinePrices(prices);
          setPricingMode('Online');
+      } else {
+         // If parsed but empty
+         setPricingMode('Offline');
       }
     } catch (err) {
       console.warn("Could not fetch online prices, using fallback/offline mode.", err);
@@ -390,22 +397,19 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     try {
-      // Universal Parse with Source Indication
-      const result = parseCSV(csvSources[portfolioType], portfolioType, 'Offline');
-      
       if (portfolioType === 'OMF') {
-        // Special Handling for OMF
-        let omfData = result.data as OMFDataRow[];
-        
-        // --- PRICING CASCADE: ONLINE -> FALLBACK -> FILE ---
-        // We no longer switch wholesale between Online/Fallback.
-        // We check per asset:
-        // 1. Is there a valid Online Price?
-        // 2. Is there a valid Fallback Price?
-        // 3. Else keep Original Price.
+        // --- OMF SPLIT PARSING ---
+        // 1. Parse Open Positions
+        const openRes = parseCSV(csvSources.OMF_OPEN, 'OMF', 'Offline');
+        let omfOpenRows = openRes.data as OMFDataRow[];
 
-        omfData = omfData.map(row => {
-            // Only reprice Active assets
+        // 2. Parse Closed Positions
+        const closedRes = parseCSV(csvSources.OMF_CLOSED, 'OMF', 'Offline');
+        const omfClosedRows = closedRes.data as OMFDataRow[];
+
+        // --- PRICING CASCADE FOR OPEN POSITIONS ---
+        omfOpenRows = omfOpenRows.map(row => {
+            // Sanity check
             if (row.status !== 'Otwarta' && row.status !== 'Gotówka') return row;
 
             let newPrice: number | undefined = undefined;
@@ -415,29 +419,18 @@ export const App: React.FC = () => {
                 newPrice = onlinePrices[row.symbol];
             }
 
-            // Priority 2: Fallback Price (if Online is missing or invalid)
+            // Priority 2: Fallback Price
             if (newPrice === undefined && FALLBACK_PRICES[row.symbol] > 0) {
                 newPrice = FALLBACK_PRICES[row.symbol];
             }
 
-            // Priority 3: Keep Original (row.currentValue is TOTAL value in file)
-            // But we need to calculate based on Price * Quantity for updates
-            // If no newPrice found, we just return the row as is.
-            
             if (newPrice !== undefined && newPrice > 0) {
                 let newCurrentValue = 0;
-                
-                // Heuristic for PPK or Funds:
-                // If row has quantity, multiply.
-                // If row has NO quantity (0), assume the price given in fallback/online IS the total value 
-                // (though fallback usually stores unit prices, some users might put total values in fallback for tracking funds)
-                // However, strictly speaking: Value = Qty * Price.
                 
                 if (row.quantity > 0) {
                     newCurrentValue = row.quantity * newPrice;
                 } else {
-                    // Fallback if quantity missing (e.g. raw total value tracking like pure cash)
-                    // Or if the user treats "Price" as "Total Value" in the source (less common now with standardized flow)
+                    // Fallback if quantity missing (assumes price is total value, e.g. Cash)
                     newCurrentValue = newPrice;
                 }
 
@@ -452,27 +445,25 @@ export const App: React.FC = () => {
                     roi: parseFloat(newRoi.toFixed(2))
                 };
             }
-
             return row;
         });
 
-        // Run OMF Integrity Check with Source
-        const integrity = validateOMFIntegrity(omfData, 'Offline');
-        
-        // Standard Validation Report is also available from parseCSV, but we prioritize OMFIntegrity
-        setOmfReport(integrity); 
-        setReport(result.report); // Also keep basic parse report for structure errors
+        // Combine for validation/integrity check
+        const combinedData = [...omfOpenRows, ...omfClosedRows];
 
-        // Filter Data
-        const active = omfData.filter(r => r.status === 'Otwarta' || (r.status === 'Gotówka' && r.symbol === 'PLN'));
-        const closed = omfData.filter(r => r.status === 'Zamknięta');
+        // Run OMF Integrity Check
+        const integrity = validateOMFIntegrity(combinedData, 'Offline');
         
-        setOmfActiveAssets(active);
-        setOmfClosedAssets(closed);
-        setData(omfData); // Full data for reference
+        setOmfReport(integrity); 
+        setReport(openRes.report); // Prioritize Open report for basic errors
+
+        setOmfActiveAssets(omfOpenRows);
+        setOmfClosedAssets(omfClosedRows);
+        setData(combinedData); // Full data for reference
 
       } else {
-        // Standard Handling
+        // Standard Handling for PPK, IKE, CRYPTO
+        const result = parseCSV(csvSources[portfolioType], portfolioType, 'Offline');
         setData(result.data);
         setReport(result.report);
         setOmfReport(null);
@@ -491,7 +482,6 @@ export const App: React.FC = () => {
   }, [csvSources, portfolioType, onlinePrices]); // Re-run when onlinePrices load
 
   // --- GLOBAL HISTORY DATA (For OMF Chart) ---
-  // Merges PPK, Crypto, and IKE data into a single timeline.
   const globalHistoryData = useMemo<GlobalHistoryRow[]>(() => {
     const ppkRes = parseCSV(csvSources.PPK, 'PPK', 'Offline');
     const cryptoRes = parseCSV(csvSources.CRYPTO, 'CRYPTO', 'Offline');
@@ -515,21 +505,8 @@ export const App: React.FC = () => {
     ikeData.forEach(row => ikeMap.set(row.date, { inv: row.investment, profit: row.profit }));
 
     // --- LIVE DATA OVERRIDE ---
-    // Calculate current totals from omfActiveAssets (which includes online prices)
-    // SNOWBALL EFFECT LOGIC:
-    // For Crypto and IKE, "Investment" should be: Open Purchase Value - Closed Profit.
-    // This ensures realized gains re-invested are tracked as profit, not new capital.
-    
-    // 1. Calculate Closed Profit per portfolio
-    const closedProfits = {
-        IKE: 0,
-        CRYPTO: 0
-    };
-    
-    // We need to process OMF raw text to get closed assets if omfClosedAssets is not available in this scope?
-    // Actually we have omfClosedAssets from state, but we should use it carefully.
-    // Better to parse OMF here briefly to be self-contained or pass it in dep array.
-    // We added `omfClosedAssets` to deps.
+    // Calculate Closed Profits from omfClosedAssets (Snowball Effect)
+    const closedProfits = { IKE: 0, CRYPTO: 0 };
     
     omfClosedAssets.forEach(asset => {
         if (asset.portfolio === 'IKE' || asset.portfolio === 'ike') closedProfits.IKE += asset.profit;
@@ -560,7 +537,6 @@ export const App: React.FC = () => {
     });
 
     // Apply Snowball Adjustment for LIVE point
-    // Net Investment = Open Purchase Sum - Closed Profit Sum
     const liveNetInvIKE = liveTotals.IKE.inv - closedProfits.IKE;
     const liveNetInvCrypto = liveTotals.CRYPTO.inv - closedProfits.CRYPTO;
 
@@ -582,7 +558,6 @@ export const App: React.FC = () => {
 
       // Override Crypto (With Snowball Logic)
       if (liveTotals.CRYPTO.val > 0) {
-        // Profit = Total Value - Net Investment
         const liveProfitCrypto = liveTotals.CRYPTO.val - liveNetInvCrypto;
         cryptoMap.set(lastDate, {
           inv: liveNetInvCrypto,
@@ -605,14 +580,11 @@ export const App: React.FC = () => {
     let lastCrypto = { inv: 0, profit: 0 };
     let lastIKE = { inv: 0, profit: 0 };
     
-    // Variables for Cumulative TWR Calculation
     let twrProduct = 1;
     let prevTwrVal = 0;
     let prevTwrInv = 0;
-
     let cumulativeInflation = 1.0;
 
-    // Benchmarks Baseline
     let startSP500 = 0;
     let startWIG20 = 0;
     
@@ -701,21 +673,19 @@ export const App: React.FC = () => {
         realTotalValue,
         roi: totalInvestment > 0 ? (totalProfit / totalInvestment) * 100 : 0,
         cumulativeTwr: (twrProduct - 1) * 100,
-        
         ppkShare: sumVal > 0 ? ppkVal / sumVal : 0,
         cryptoShare: sumVal > 0 ? cryptoVal / sumVal : 0,
         ikeShare: sumVal > 0 ? ikeVal / sumVal : 0,
-
         sp500Return,
         wig20Return
       };
     });
 
     return history;
-  }, [csvSources, excludePPK, omfActiveAssets, omfClosedAssets]); // Added omfClosedAssets dependency
+  }, [csvSources, excludePPK, omfActiveAssets, omfClosedAssets]);
 
-  // Use global date constant
-  const lastUpdateDate = DATA_LAST_UPDATED;
+  // Use global date constant (from OMF open update)
+  const lastUpdateDate = OMF_LAST_UPDATED;
 
   // --- ROAD TO MILLION PROJECTION LOGIC (OMF) ---
   const chartDataWithProjection = useMemo(() => {
@@ -724,18 +694,13 @@ export const App: React.FC = () => {
     const lastData = globalHistoryData[globalHistoryData.length - 1];
     if (!lastData) return globalHistoryData;
 
-    // 1. Calculate Growth Rate based on selected method
-    
-    // LTM (Last Twelve Months) Average Monthly Growth
-    // Look back 12 months
-    let ltmMonthlyRate = 0.01; // Fallback 1%
+    // 1. Calculate Growth Rate
+    let ltmMonthlyRate = 0.01; 
     if (globalHistoryData.length >= 12) {
        const prevData = globalHistoryData[globalHistoryData.length - 12];
        const growthFactor = lastData.totalValue / prevData.totalValue;
-       // (Final / Start)^(1/12) - 1
        ltmMonthlyRate = Math.pow(growthFactor, 1/12) - 1;
     } else {
-       // Use All time if less than 12 months
        const firstData = globalHistoryData[0];
        if (firstData.totalValue > 0) {
           const months = globalHistoryData.length;
@@ -744,39 +709,25 @@ export const App: React.FC = () => {
        }
     }
 
-    // 2. CAGR - FIXED 10% ANNUAL (Requested Update)
-    let cagrMonthlyRate = 0.005; // Fallback
-
-    // Fixed 10% Annual CAGR
+    // 2. CAGR - FIXED 10% ANNUAL
     const annualCagrDecimal = 0.10;
-    // Convert Annual CAGR to Monthly Compounding Rate: (1 + Annual)^(1/12) - 1
-    cagrMonthlyRate = Math.pow(1 + annualCagrDecimal, 1/12) - 1;
+    const cagrMonthlyRate = Math.pow(1 + annualCagrDecimal, 1/12) - 1;
 
-    // Store rates for UI display
-    
     const monthlyRate = projectionMethod === 'LTM' ? ltmMonthlyRate : cagrMonthlyRate;
     
-    // If rate is negative or zero, projection is flat or downwards, handled gracefully
-    // Only project if we have value
     if (lastData.totalValue <= 0) return globalHistoryData;
 
     const projectionPoints: GlobalHistoryRow[] = [];
     let currentValue = lastData.totalValue;
     let currentDate = new Date(lastData.date);
     const targetValue = 1000000;
-    
-    // Safety break: max 30 years (360 months)
     let iterations = 0;
     
     while (currentValue < targetValue && iterations < 360) {
        iterations++;
-       // Increment Month
        currentDate.setMonth(currentDate.getMonth() + 1);
-       
-       // Compound Interest
        currentValue = currentValue * (1 + monthlyRate);
        
-       // Generate Date String YYYY-MM-DD
        const y = currentDate.getFullYear();
        const m = String(currentDate.getMonth() + 1).padStart(2, '0');
        const d = String(currentDate.getDate()).padStart(2, '0');
@@ -784,9 +735,9 @@ export const App: React.FC = () => {
 
        projectionPoints.push({
          date: dateStr,
-         investment: 0, // Optional: Could project investment growth too, but let's keep simple
+         investment: 0, 
          profit: 0,
-         totalValue: 0, // We don't fill historical bars
+         totalValue: 0, 
          projectedValue: currentValue,
          roi: 0,
          cumulativeTwr: 0,
@@ -794,13 +745,11 @@ export const App: React.FC = () => {
        });
     }
 
-    // Add the starting point for the line (connect to last historical point)
     const connectionPoint = {
         ...lastData,
         projectedValue: lastData.totalValue
     };
 
-    // Replace last point in history with connected point, append projection
     const historyWithConnection = [...globalHistoryData];
     historyWithConnection[historyWithConnection.length - 1] = connectionPoint;
 
@@ -838,9 +787,7 @@ export const App: React.FC = () => {
     const ppkData = data as PPKDataRow[];
     const lastData = ppkData[ppkData.length - 1];
 
-    // Fixed Annual CAGR of 12% for Projection as requested (changed from 10%)
     const annualCagr = 0.12; 
-    // Monthly Compounding Rate: (1 + 12%)^(1/12) - 1
     const monthlyRate = Math.pow(1 + annualCagr, 1/12) - 1;
 
     const projectionPoints: any[] = [];
@@ -848,7 +795,6 @@ export const App: React.FC = () => {
     let currentDate = new Date(lastData.date);
     const targetDate = new Date('2049-05-01');
 
-    // Loop until May 2049
     while (currentDate < targetDate) {
         currentDate.setMonth(currentDate.getMonth() + 1);
         currentValue = currentValue * (1 + monthlyRate);
@@ -860,12 +806,10 @@ export const App: React.FC = () => {
 
         projectionPoints.push({
             date: dateStr,
-            // Historical fields are undefined, so areas won't render
             projectedTotalValue: currentValue
         });
     }
 
-    // Connect last historical point
     const connectionPoint = {
         ...lastData,
         projectedTotalValue: lastData.totalValue
@@ -879,7 +823,6 @@ export const App: React.FC = () => {
   }, [data, portfolioType, showPPKProjection]);
 
   const ppkRateDisplay = useMemo(() => {
-      // Simply return 12.00% as it is fixed for the projection
       return { cagr: 12.00 };
   }, [data, portfolioType]);
 
@@ -888,7 +831,6 @@ export const App: React.FC = () => {
   const heatmapHistoryData = useMemo(() => {
     if (portfolioType !== 'OMF') return [];
 
-    // Only parse Crypto and IKE
     const cryptoRes = parseCSV(csvSources.CRYPTO, 'CRYPTO', 'Offline');
     const ikeRes = parseCSV(csvSources.IKE, 'IKE', 'Offline');
 
@@ -930,8 +872,7 @@ export const App: React.FC = () => {
     if (portfolioType === 'OMF') {
        // OMF Stats Calculation 
        
-       // 1. Calculate Value (Sum of all Current Values)
-       // If excludePPK, filter out PPK
+       // 1. Calculate Value (Sum of all Current Values) - exclude PPK if toggled
        const assetsToSum = excludePPK 
           ? omfActiveAssets.filter(a => a.portfolio !== 'PPK') 
           : omfActiveAssets;
@@ -939,10 +880,6 @@ export const App: React.FC = () => {
        const totalValue = assetsToSum.reduce((acc, row) => acc + row.currentValue, 0);
 
        // 2. Calculate Net Investment (Snowball Effect)
-       // - For PPK: Just Employee Contribution (purchaseValue)
-       // - For Cash: Just Value
-       // - For IKE/Crypto: Open Purchase Value MINUS Closed Profit (Realized Gains reinvested are not new external capital)
-       
        let totalInvestedSnapshot = 0;
 
        const ppkInvested = assetsToSum
@@ -956,29 +893,22 @@ export const App: React.FC = () => {
        const otherAssets = assetsToSum.filter(a => a.portfolio !== 'PPK' && a.portfolio !== 'Gotówka');
        const otherOpenPurchase = otherAssets.reduce((acc, r) => acc + r.purchaseValue, 0);
 
-       // Calculate Closed Profit for IKE/Crypto (if not excluded)
+       // Calculate Closed Profit for IKE/Crypto
        let closedProfitOffset = 0;
        if (!excludePPK) {
-          // Include all closed (except maybe PPK if it had any closed, but PPK usually doesn't close partially like this)
-          // Let's filter for relevant portfolios just in case
            const closedRelevant = omfClosedAssets.filter(a => a.portfolio !== 'Gotówka'); 
            closedProfitOffset = closedRelevant.reduce((acc, r) => acc + r.profit, 0);
        } else {
-           // Only IKE/Crypto
            const closedRelevant = omfClosedAssets.filter(a => a.portfolio !== 'PPK' && a.portfolio !== 'Gotówka');
            closedProfitOffset = closedRelevant.reduce((acc, r) => acc + r.profit, 0);
        }
 
-       // NET INVESTMENT FORMULA: (Open Purchase) - (Closed Profit)
        const otherNetInvested = otherOpenPurchase - closedProfitOffset;
-
        totalInvestedSnapshot = ppkInvested + cashInvested + otherNetInvested;
 
-       // Recalculate Total Profit based on Net Investment
        // Profit = Value - Invested
        const aggregatedProfit = totalValue - totalInvestedSnapshot;
        
-       // ROI
        const totalRoi = totalInvestedSnapshot > 0 
           ? (aggregatedProfit / totalInvestedSnapshot) * 100 
           : 0;
@@ -990,8 +920,6 @@ export const App: React.FC = () => {
 
        if (globalHistoryData.length > 0) {
          const current = globalHistoryData[globalHistoryData.length - 1];
-         
-         // MoM Trend
          if (globalHistoryData.length > 1) {
              const prevPeriod = globalHistoryData[globalHistoryData.length - 2];
              if (prevPeriod.profit !== 0) {
@@ -1001,9 +929,8 @@ export const App: React.FC = () => {
              }
          }
 
-         // --- PERFORMANCE METRICS (CAGR, LTM, YTD) ---
+         // Performance Metrics
          const perfData = globalHistoryData;
-         
          if (perfData.length > 0) {
              const currentIndex = perfData.length - 1;
              
@@ -1011,15 +938,11 @@ export const App: React.FC = () => {
                 let product = 1;
                 for (let i = startIdx; i <= endIdx; i++) {
                    if (i <= 0) continue; 
-                   
                    const prev = perfData[i-1];
                    const curr = perfData[i];
-                   
                    const prevVal = prev['totalValue'] !== undefined ? prev['totalValue'] : (prev.investment + prev.profit);
                    const currVal = curr['totalValue'] !== undefined ? curr['totalValue'] : (curr.investment + curr.profit);
-                   
                    const flow = curr.investment - prev.investment; 
-                   
                    const denominator = prevVal + flow;
                    if (denominator !== 0) {
                       const gain = currVal - prevVal - flow;
@@ -1030,7 +953,6 @@ export const App: React.FC = () => {
                 return (product - 1) * 100;
              };
 
-             // --- CAGR (Real ROI based on GLOBAL data) ---
              const startDate = new Date(perfData[0].date);
              const currentDate = new Date(perfData[currentIndex].date);
              const years = (currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
@@ -1046,7 +968,6 @@ export const App: React.FC = () => {
                 cagr = currentTotalRoi;
              }
 
-             // --- YTD (TWR on GLOBAL data) ---
              const currentYear = new Date().getFullYear();
              const firstIndexThisYear = perfData.findIndex(d => new Date(d.date).getFullYear() === currentYear);
              
@@ -1054,7 +975,6 @@ export const App: React.FC = () => {
                 ytd = calculateAccumulatedTWR(firstIndexThisYear, currentIndex);
              }
 
-             // --- LTM (TWR on GLOBAL data) ---
              const ltmStartIdx = Math.max(1, currentIndex - 11); 
              ltm = calculateAccumulatedTWR(ltmStartIdx, currentIndex);
          }
@@ -1089,17 +1009,12 @@ export const App: React.FC = () => {
         totalState: row.stateContribution,
         currentRoi: row.roi,
         currentExitRoi: row.exitRoi,
-        // Storing exitValue as a custom property in the stat object for the card
         customExitValue: exitValue
       } as SummaryStats & { customExitValue?: number };
     } else {
       const row = last as CryptoDataRow | IKEDataRow;
-      
-      // For IKE, calculate tax saved
       let taxSaved = 0;
       if (portfolioType === 'IKE') {
-         // Calculate Tax Saved based on CLOSED positions from OMF data
-         // logic: Sum of profits from closed IKE positions * 19%
          if (omfClosedAssets.length > 0) {
             const ikeClosedProfits = omfClosedAssets
               .filter(a => a.portfolio === 'IKE' || a.portfolio === 'ike')
@@ -1107,7 +1022,6 @@ export const App: React.FC = () => {
             
             taxSaved = ikeClosedProfits > 0 ? ikeClosedProfits * 0.19 : 0;
          } else {
-            // Fallback to old logic if no closed assets (or before OMF parsing)
             taxSaved = row.profit > 0 ? row.profit * 0.19 : 0;
          }
       }
@@ -1120,9 +1034,8 @@ export const App: React.FC = () => {
         taxSaved
       };
     }
-  }, [data, portfolioType, omfActiveAssets, omfClosedAssets, globalHistoryData, heatmapHistoryData, excludePPK]); // Added omfClosedAssets to deps
+  }, [data, portfolioType, omfActiveAssets, omfClosedAssets, globalHistoryData, heatmapHistoryData, excludePPK]); 
 
-  // --- OMF Structure Data Calculation ---
   const omfStructureData = useMemo(() => {
     if (portfolioType !== 'OMF' || omfActiveAssets.length === 0) return [];
     
@@ -1169,48 +1082,39 @@ export const App: React.FC = () => {
 
   const ppkFlowData = useMemo(() => {
     if (!stats || portfolioType !== 'PPK') return [];
-    
     const employee = stats.totalEmployee || 0;
     const employer = stats.totalEmployer || 0;
     const state = stats.totalState || 0;
     const fundResult = (stats.totalValue || 0) - (employee + employer + state);
 
     return [
-      { name: 'Pracownik', value: employee, fill: '#3b82f6' }, // Blue
-      { name: 'Pracodawca', value: employer, fill: '#8b5cf6' }, // Violet
-      { name: 'Państwo', value: state, fill: '#ec4899' }, // Pink
-      { name: 'Wynik Funduszu', value: fundResult, fill: fundResult >= 0 ? '#10b981' : '#ef4444' }, // Green/Red
-      { name: 'Wartość Portfela', value: stats.totalValue || 0, isTotal: true, fill: '#6366f1' } // Indigo
+      { name: 'Pracownik', value: employee, fill: '#3b82f6' },
+      { name: 'Pracodawca', value: employer, fill: '#8b5cf6' },
+      { name: 'Państwo', value: state, fill: '#ec4899' },
+      { name: 'Wynik Funduszu', value: fundResult, fill: fundResult >= 0 ? '#10b981' : '#ef4444' },
+      { name: 'Wartość Portfela', value: stats.totalValue || 0, isTotal: true, fill: '#6366f1' }
     ];
   }, [stats, portfolioType]);
 
-  // PPK Time to Payout Calculation
   const monthsToPayout = useMemo(() => {
     if (portfolioType !== 'PPK') return 0;
-    
     const targetDate = new Date('2049-05-01');
     const now = new Date();
-    
     let months = (targetDate.getFullYear() - now.getFullYear()) * 12;
     months -= now.getMonth();
     months += targetDate.getMonth();
-    
     return Math.max(0, months);
   }, [portfolioType]);
 
-  // Calculate months since start for OMF
   const investmentDuration = useMemo(() => {
     if (globalHistoryData.length === 0) return { months: 0, startDate: '-' };
     const start = globalHistoryData[0].date;
     const end = globalHistoryData[globalHistoryData.length - 1].date;
-    
     const d1 = new Date(start);
     const d2 = new Date(end);
-    
     let months = (d2.getFullYear() - d1.getFullYear()) * 12;
     months -= d1.getMonth();
     months += d2.getMonth();
-    
     return { months: Math.max(0, months), startDate: start };
   }, [globalHistoryData]);
 
@@ -1232,106 +1136,32 @@ export const App: React.FC = () => {
       {/* Header */}
       <header className={`${styles.headerBg} ${styles.headerBorder} border-b sticky top-0 z-50 transition-colors duration-300`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          {/* Empty Left Space for Balance */}
           <div className="w-24"></div>
-
-          {/* Portfolio Switcher (Centered) */}
           <div className={`p-1 rounded-lg flex space-x-1 overflow-x-auto ${theme === 'neon' ? 'bg-black border border-cyan-900/50' : 'bg-slate-100'}`}>
-            <button
-              onClick={() => handlePortfolioChange('OMF')}
-              className={`flex items-center px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${
-                portfolioType === 'OMF' ? styles.buttonActive : styles.buttonInactive
-              }`}
-            >
-              <LayoutGrid size={16} className="mr-2 hidden sm:block" />
-              OMF
-            </button>
-            <button
-              onClick={() => handlePortfolioChange('PPK')}
-              className={`flex items-center px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${
-                portfolioType === 'PPK' ? styles.buttonActive : styles.buttonInactive
-              }`}
-            >
-              <Briefcase size={16} className="mr-2 hidden sm:block" />
-              PPK
-            </button>
-            <button
-              onClick={() => handlePortfolioChange('CRYPTO')}
-              className={`flex items-center px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${
-                portfolioType === 'CRYPTO' ? styles.buttonActive : styles.buttonInactive
-              }`}
-            >
-              <Coins size={16} className="mr-2 hidden sm:block" />
-              Krypto
-            </button>
-            <button
-              onClick={() => handlePortfolioChange('IKE')}
-              className={`flex items-center px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${
-                portfolioType === 'IKE' ? styles.buttonActive : styles.buttonInactive
-              }`}
-            >
-              <PiggyBank size={16} className="mr-2 hidden sm:block" />
-              IKE
-            </button>
+            <button onClick={() => handlePortfolioChange('OMF')} className={`flex items-center px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'OMF' ? styles.buttonActive : styles.buttonInactive}`}><LayoutGrid size={16} className="mr-2 hidden sm:block" />OMF</button>
+            <button onClick={() => handlePortfolioChange('PPK')} className={`flex items-center px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'PPK' ? styles.buttonActive : styles.buttonInactive}`}><Briefcase size={16} className="mr-2 hidden sm:block" />PPK</button>
+            <button onClick={() => handlePortfolioChange('CRYPTO')} className={`flex items-center px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'CRYPTO' ? styles.buttonActive : styles.buttonInactive}`}><Coins size={16} className="mr-2 hidden sm:block" />Krypto</button>
+            <button onClick={() => handlePortfolioChange('IKE')} className={`flex items-center px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'IKE' ? styles.buttonActive : styles.buttonInactive}`}><PiggyBank size={16} className="mr-2 hidden sm:block" />IKE</button>
           </div>
-
-          {/* Theme Switcher (Right) */}
           <div className="w-24 flex justify-end space-x-2">
-             <button 
-               onClick={() => setTheme('light')} 
-               className={`p-2 rounded-md transition-all ${theme === 'light' ? 'bg-slate-200 text-slate-800' : 'text-slate-400 hover:bg-slate-100'}`} 
-               title="Professional Light"
-             >
-               <Sun size={16} />
-             </button>
-             <button 
-               onClick={() => setTheme('comic')} 
-               className={`p-2 rounded-md transition-all ${theme === 'comic' ? 'bg-yellow-300 border-2 border-black text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-slate-400 hover:bg-slate-100'}`} 
-               title="Comic"
-             >
-               <Palette size={16} />
-             </button>
-             <button 
-               onClick={() => setTheme('neon')} 
-               className={`p-2 rounded-md transition-all ${theme === 'neon' ? 'bg-cyan-900/50 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.8)]' : 'text-slate-400 hover:bg-slate-100'}`} 
-               title="Neon Cyberpunk"
-             >
-               <Zap size={16} />
-             </button>
+             <button onClick={() => setTheme('light')} className={`p-2 rounded-md transition-all ${theme === 'light' ? 'bg-slate-200 text-slate-800' : 'text-slate-400 hover:bg-slate-100'}`} title="Professional Light"><Sun size={16} /></button>
+             <button onClick={() => setTheme('comic')} className={`p-2 rounded-md transition-all ${theme === 'comic' ? 'bg-yellow-300 border-2 border-black text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-slate-400 hover:bg-slate-100'}`} title="Comic"><Palette size={16} /></button>
+             <button onClick={() => setTheme('neon')} className={`p-2 rounded-md transition-all ${theme === 'neon' ? 'bg-cyan-900/50 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.8)]' : 'text-slate-400 hover:bg-slate-100'}`} title="Neon Cyberpunk"><Zap size={16} /></button>
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        {/* Data Status Section */}
         {isOfflineValid ? (
            <div className="flex flex-col items-center mb-6 space-y-1">
               <div className="flex items-center space-x-2">
-                <button 
-                  onClick={fetchPrices}
-                  disabled={isRefreshing}
-                  className={`text-xs font-bold px-3 py-1 rounded-full flex items-center shadow-sm transition-all ${
-                    isRefreshing ? 'opacity-75 cursor-wait' : 'hover:opacity-80 active:scale-95'
-                  } ${
-                    pricingMode === 'Online'
-                      ? (theme === 'neon' ? 'bg-blue-900/80 text-blue-300 border border-blue-600/50' : 'bg-blue-50 text-blue-600 border border-blue-200')
-                      : (theme === 'neon' ? 'bg-slate-800/80 text-slate-400 border border-slate-600/50' : 'bg-slate-100 text-slate-500 border border-slate-200')
-                }`}
-                  title="Kliknij, aby odświeżyć ceny"
-                >
-                   {isRefreshing ? (
-                      <RefreshCw size={14} className="mr-1.5 animate-spin" />
-                   ) : (
-                      pricingMode === 'Online' ? <Wifi size={14} className="mr-1.5" /> : <WifiOff size={14} className="mr-1.5" />
-                   )}
+                <button onClick={fetchPrices} disabled={isRefreshing} className={`text-xs font-bold px-3 py-1 rounded-full flex items-center shadow-sm transition-all ${isRefreshing ? 'opacity-75 cursor-wait' : 'hover:opacity-80 active:scale-95'} ${pricingMode === 'Online' ? (theme === 'neon' ? 'bg-blue-900/80 text-blue-300 border border-blue-600/50' : 'bg-blue-50 text-blue-600 border border-blue-200') : (theme === 'neon' ? 'bg-slate-800/80 text-slate-400 border border-slate-600/50' : 'bg-slate-100 text-slate-500 border border-slate-200')}`} title="Kliknij, aby odświeżyć ceny">
+                   {isRefreshing ? (<RefreshCw size={14} className="mr-1.5 animate-spin" />) : (pricingMode === 'Online' ? <Wifi size={14} className="mr-1.5" /> : <WifiOff size={14} className="mr-1.5" />)}
                    {pricingMode === 'Online' ? 'ONLINE' : 'OFFLINE'}
                 </button>
               </div>
               {pricingMode !== 'Online' && lastUpdateDate && (
-                  <span className={`text-[10px] ${theme === 'neon' ? 'text-slate-600' : 'text-slate-400'}`}>
-                    Ostatnia aktualizacja: {lastUpdateDate}
-                  </span>
+                  <span className={`text-[10px] ${theme === 'neon' ? 'text-slate-600' : 'text-slate-400'}`}>Ostatnia aktualizacja: {lastUpdateDate}</span>
               )}
            </div>
         ) : (
@@ -1341,368 +1171,152 @@ export const App: React.FC = () => {
            </>
         )}
 
-        {/* OMF VIEW */}
         {portfolioType === 'OMF' && stats ? (
           <div className="space-y-8">
-            {/* OMF Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <StatsCard 
-                title="Wartość Całkowita" 
-                value={`${(stats.totalValue || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`} 
-                subValue="Aktywa Otwarte + Gotówka" 
-                icon={LayoutGrid} 
-                colorClass={theme === 'neon' ? 'text-cyan-400' : "text-slate-800 bg-slate-100"}
-                className={styles.cardContainer}
-              />
-              <StatsCard 
-                title="Zysk" 
-                value={`${(stats.totalProfit || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`}
-                trend={stats.profitTrend}
-                trendLabel="m/m"
-                icon={TrendingUp} 
-                colorClass={theme === 'neon' ? 'text-emerald-400' : "text-emerald-600 bg-emerald-50"} 
-                className={styles.cardContainer}
-              />
-              <StatsCard 
-                title="Zainwestowano" 
-                value={`${(stats.totalInvestment || 0).toLocaleString('pl-PL')} zł`} 
-                subValue="Aktywa + Gotówka" 
-                icon={Wallet} 
-                colorClass={theme === 'neon' ? 'text-blue-400' : "text-blue-600 bg-blue-50"} 
-                className={styles.cardContainer}
-              />
-              <StatsCard 
-                title="Czas od Startu" 
-                value={`${investmentDuration.months}`} 
-                subValue="msc" 
-                icon={Timer} 
-                colorClass={theme === 'neon' ? 'text-violet-400' : "text-violet-600 bg-violet-50"} 
-                className={styles.cardContainer}
-              />
+              <StatsCard title="Wartość Całkowita" value={`${(stats.totalValue || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`} subValue="Aktywa Otwarte + Gotówka" icon={LayoutGrid} colorClass={theme === 'neon' ? 'text-cyan-400' : "text-slate-800 bg-slate-100"} className={styles.cardContainer} />
+              <StatsCard title="Zysk" value={`${(stats.totalProfit || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`} trend={stats.profitTrend} trendLabel="m/m" icon={TrendingUp} colorClass={theme === 'neon' ? 'text-emerald-400' : "text-emerald-600 bg-emerald-50"} className={styles.cardContainer} />
+              <StatsCard title="Zainwestowano" value={`${(stats.totalInvestment || 0).toLocaleString('pl-PL')} zł`} subValue="Aktywa + Gotówka" icon={Wallet} colorClass={theme === 'neon' ? 'text-blue-400' : "text-blue-600 bg-blue-50"} className={styles.cardContainer} />
+              <StatsCard title="Czas od Startu" value={`${investmentDuration.months}`} subValue="msc" icon={Timer} colorClass={theme === 'neon' ? 'text-violet-400' : "text-violet-600 bg-violet-50"} className={styles.cardContainer} />
             </div>
 
-            {/* Performance Metrics Grid */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <StatsCard 
-                title="Całkowite ROI" 
-                value={`${(stats.currentRoi || 0).toFixed(2)}%`} 
-                icon={Percent}
-                colorClass={theme === 'neon' ? 'text-indigo-400' : "text-indigo-600 bg-indigo-50"} 
-                className={styles.cardContainer}
-              />
-              <StatsCard 
-                title="CAGR" 
-                value={`${(stats.cagr || 0).toFixed(2)}%`} 
-                subValue="(ROI Based)"
-                icon={Activity}
-                colorClass={theme === 'neon' ? 'text-purple-400' : "text-purple-600 bg-purple-50"} 
-                className={styles.cardContainer}
-              />
-              <StatsCard 
-                title="LTM" 
-                value={`${(stats.ltm || 0).toFixed(2)}%`} 
-                subValue="(TWR)"
-                icon={Timer}
-                colorClass={theme === 'neon' ? 'text-amber-400' : "text-amber-600 bg-amber-50"} 
-                className={styles.cardContainer}
-              />
-              <StatsCard 
-                title="YTD" 
-                value={`${(stats.ytd || 0).toFixed(2)}%`} 
-                subValue="(TWR)"
-                icon={Calendar}
-                colorClass={theme === 'neon' ? 'text-teal-400' : "text-teal-600 bg-teal-50"} 
-                className={styles.cardContainer}
-              />
+              <StatsCard title="Całkowite ROI" value={`${(stats.currentRoi || 0).toFixed(2)}%`} icon={Percent} colorClass={theme === 'neon' ? 'text-indigo-400' : "text-indigo-600 bg-indigo-50"} className={styles.cardContainer} />
+              <StatsCard title="CAGR" value={`${(stats.cagr || 0).toFixed(2)}%`} subValue="(ROI Based)" icon={Activity} colorClass={theme === 'neon' ? 'text-purple-400' : "text-purple-600 bg-purple-50"} className={styles.cardContainer} />
+              <StatsCard title="LTM" value={`${(stats.ltm || 0).toFixed(2)}%`} subValue="(TWR)" icon={Timer} colorClass={theme === 'neon' ? 'text-amber-400' : "text-amber-600 bg-amber-50"} className={styles.cardContainer} />
+              <StatsCard title="YTD" value={`${(stats.ytd || 0).toFixed(2)}%`} subValue="(TWR)" icon={Calendar} colorClass={theme === 'neon' ? 'text-teal-400' : "text-teal-600 bg-teal-50"} className={styles.cardContainer} />
             </div>
 
-            {/* Global Portfolio History & Road to Million */}
             <div className={`${styles.cardContainer} p-6`}>
               <div className="flex flex-col md:flex-row items-center justify-between mb-6 space-y-4 md:space-y-0">
                 <div>
                   <h3 className={`text-lg font-bold ${styles.text}`}>Historia Old Man Fund</h3>
                   <p className={`text-sm ${styles.textSub}`}>Wkład Łączny vs Zysk Łączny (PPK + Krypto + IKE)</p>
                 </div>
-                
-                {/* Road to Million & CPI Controls */}
                 <div className={`flex items-center space-x-3 p-2 rounded-lg border ${theme === 'neon' ? 'bg-black/50 border-cyan-900/50' : 'bg-slate-50 border-slate-100'}`}>
-                   {/* No PPK Button */}
-                   <button
-                     onClick={() => setExcludePPK(!excludePPK)}
-                     disabled={showCPI || showProjection}
-                     className={`flex items-center justify-center w-20 px-2 py-1.5 rounded-md transition-all ${
-                       excludePPK 
-                         ? styles.toggleNoPPKActive
-                         : `bg-transparent ${theme === 'neon' ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`
-                     } ${showCPI || showProjection ? 'opacity-50 cursor-not-allowed' : ''}`}
-                     title={excludePPK ? "Pokaż PPK" : "Ukryj PPK"}
-                   >
+                   <button onClick={() => setExcludePPK(!excludePPK)} disabled={showCPI || showProjection} className={`flex items-center justify-center w-20 px-2 py-1.5 rounded-md transition-all ${excludePPK ? styles.toggleNoPPKActive : `bg-transparent ${theme === 'neon' ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`} ${showCPI || showProjection ? 'opacity-50 cursor-not-allowed' : ''}`} title={excludePPK ? "Pokaż PPK" : "Ukryj PPK"}>
                      <NoPPKIcon className="w-full h-4" />
                    </button>
-
-                   <button
-                     onClick={() => setShowCPI(!showCPI)}
-                     disabled={excludePPK}
-                     className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
-                       showCPI 
-                         ? styles.toggleCPIActive
-                         : `bg-transparent ${theme === 'neon' ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`
-                     } ${excludePPK ? 'opacity-50 cursor-not-allowed' : ''}`}
-                   >
-                     CPI
-                   </button>
-
+                   <button onClick={() => setShowCPI(!showCPI)} disabled={excludePPK} className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${showCPI ? styles.toggleCPIActive : `bg-transparent ${theme === 'neon' ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`} ${excludePPK ? 'opacity-50 cursor-not-allowed' : ''}`}>CPI</button>
                    <div className={`w-px h-6 mx-1 ${theme === 'neon' ? 'bg-cyan-900/50' : 'bg-slate-200'}`}></div>
-
-                   <button
-                     onClick={() => setShowProjection(!showProjection)}
-                     disabled={excludePPK}
-                     className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
-                       showProjection 
-                         ? styles.toggleProjectionActive
-                         : `bg-transparent ${theme === 'neon' ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`
-                     } ${excludePPK ? 'opacity-50 cursor-not-allowed' : ''}`}
-                   >
-                     <Milestone size={14} className="mr-2" />
-                     Droga do Miliona
-                   </button>
-
+                   <button onClick={() => setShowProjection(!showProjection)} disabled={excludePPK} className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${showProjection ? styles.toggleProjectionActive : `bg-transparent ${theme === 'neon' ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`} ${excludePPK ? 'opacity-50 cursor-not-allowed' : ''}`}><Milestone size={14} className="mr-2" />Droga do Miliona</button>
                    {showProjection && (
                      <div className="flex items-center space-x-2 animate-in fade-in slide-in-from-right-4 duration-300">
                         <div className={`flex rounded-md border p-0.5 ${theme === 'neon' ? 'bg-black border-cyan-900/50' : 'bg-white border-slate-200'}`}>
-                          <button 
-                            onClick={() => setProjectionMethod('LTM')}
-                            className={`px-2 py-1 text-[10px] font-medium rounded ${projectionMethod === 'LTM' ? (theme === 'neon' ? 'bg-cyan-900 text-cyan-300' : 'bg-slate-800 text-white') : (theme === 'neon' ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')}`}
-                          >
-                            LTM
-                          </button>
-                          <button 
-                            onClick={() => setProjectionMethod('CAGR')}
-                            className={`px-2 py-1 text-[10px] font-medium rounded ${projectionMethod === 'CAGR' ? (theme === 'neon' ? 'bg-cyan-900 text-cyan-300' : 'bg-slate-800 text-white') : (theme === 'neon' ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')}`}
-                          >
-                            CAGR
-                          </button>
+                          <button onClick={() => setProjectionMethod('LTM')} className={`px-2 py-1 text-[10px] font-medium rounded ${projectionMethod === 'LTM' ? (theme === 'neon' ? 'bg-cyan-900 text-cyan-300' : 'bg-slate-800 text-white') : (theme === 'neon' ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')}`}>LTM</button>
+                          <button onClick={() => setProjectionMethod('CAGR')} className={`px-2 py-1 text-[10px] font-medium rounded ${projectionMethod === 'CAGR' ? (theme === 'neon' ? 'bg-cyan-900 text-cyan-300' : 'bg-slate-800 text-white') : (theme === 'neon' ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')}`}>CAGR</button>
                         </div>
-                        <span className={`text-[10px] font-mono ${styles.textSub}`}>
-                          +{projectionMethod === 'LTM' ? rateDisplay.ltm.toFixed(2) : rateDisplay.cagr.toFixed(2)}% m/m
-                        </span>
+                        <span className={`text-[10px] font-mono ${styles.textSub}`}>+{projectionMethod === 'LTM' ? rateDisplay.ltm.toFixed(2) : rateDisplay.cagr.toFixed(2)}% m/m</span>
                      </div>
                    )}
                 </div>
               </div>
-              
               <GlobalSummaryChart data={chartDataWithProjection} showProjection={showProjection} showCPI={showCPI} themeMode={theme} />
             </div>
 
-            {/* Global Performance Chart */}
             <div className={`${styles.cardContainer} p-6`}>
               <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h3 className={`text-lg font-bold ${styles.text}`}>Efektywność Old Man Fund</h3>
-                  <p className={`text-sm ${styles.textSub}`}>Analiza stopy zwrotu (ROI) oraz TWR w czasie</p>
-                </div>
-                <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}>
-                  <TrendingUp className={theme === 'neon' ? 'text-purple-400' : 'text-purple-600'} size={20} />
-                </div>
+                <div><h3 className={`text-lg font-bold ${styles.text}`}>Efektywność Old Man Fund</h3><p className={`text-sm ${styles.textSub}`}>Analiza stopy zwrotu (ROI) oraz TWR w czasie</p></div>
+                <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><TrendingUp className={theme === 'neon' ? 'text-purple-400' : 'text-purple-600'} size={20} /></div>
               </div>
               <GlobalPerformanceChart data={globalHistoryData} themeMode={theme} />
             </div>
 
-            {/* OMF Treemap Chart - Fixed to ensure Heatmap visualization */}
             <div className={`${styles.cardContainer} p-6`}>
               <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h3 className={`text-lg font-bold ${styles.text}`}>Mapa Aktywów (Heatmap)</h3>
-                  <p className={`text-sm ${styles.textSub}`}>Wielkość kafelka = Wartość, Kolor = Wynik</p>
-                </div>
-                <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}>
-                  <LayoutTemplate className={theme === 'neon' ? 'text-cyan-400' : 'text-cyan-600'} size={20} />
-                </div>
+                <div><h3 className={`text-lg font-bold ${styles.text}`}>Mapa Aktywów (Heatmap)</h3><p className={`text-sm ${styles.textSub}`}>Wielkość kafelka = Wartość, Kolor = Wynik</p></div>
+                <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><LayoutTemplate className={theme === 'neon' ? 'text-cyan-400' : 'text-cyan-600'} size={20} /></div>
               </div>
               <OMFTreemapChart data={omfStructureData} themeMode={theme} />
             </div>
 
-            {/* Heatmap */}
             <div className={`${styles.cardContainer} p-6 overflow-x-auto`}>
               <div className="flex items-center justify-between mb-6 min-w-[600px]">
-                <div>
-                  <h3 className={`text-lg font-bold ${styles.text}`}>Miesięczne Stopy Zwrotu</h3>
-                  <p className={`text-sm ${styles.textSub}`}>Analiza efektywności portfela (Crypto + IKE) bez uwzględnienia PPK</p>
-                </div>
-                <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}>
-                  <CalendarDays className={theme === 'neon' ? 'text-emerald-400' : 'text-emerald-600'} size={20} />
-                </div>
+                <div><h3 className={`text-lg font-bold ${styles.text}`}>Miesięczne Stopy Zwrotu</h3><p className={`text-sm ${styles.textSub}`}>Analiza efektywności portfela (Crypto + IKE) bez uwzględnienia PPK</p></div>
+                <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><CalendarDays className={theme === 'neon' ? 'text-emerald-400' : 'text-emerald-600'} size={20} /></div>
               </div>
               <ReturnsHeatmap data={heatmapHistoryData} themeMode={theme} />
             </div>
 
-            {/* Seasonality Chart (Separate Card) */}
             <div className={`${styles.cardContainer} p-6`}>
               <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h3 className={`text-lg font-bold ${styles.text}`}>Sezonowość</h3>
-                  <p className={`text-sm ${styles.textSub}`}>Średnia stopa zwrotu w poszczególnych miesiącach</p>
-                </div>
-                <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}>
-                  <Snowflake className={theme === 'neon' ? 'text-blue-400' : 'text-blue-600'} size={20} />
-                </div>
+                <div><h3 className={`text-lg font-bold ${styles.text}`}>Sezonowość</h3><p className={`text-sm ${styles.textSub}`}>Średnia stopa zwrotu w poszczególnych miesiącach</p></div>
+                <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><Snowflake className={theme === 'neon' ? 'text-blue-400' : 'text-blue-600'} size={20} /></div>
               </div>
               <SeasonalityChart data={heatmapHistoryData} themeMode={theme} />
             </div>
 
-            {/* Portfolio Allocation History Chart */}
             <div className={`${styles.cardContainer} p-6`}>
               <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h3 className={`text-lg font-bold ${styles.text}`}>Historia Alokacji Portfela</h3>
-                  <p className={`text-sm ${styles.textSub}`}>Zmiana udziału procentowego PPK, Crypto i IKE w czasie</p>
-                </div>
-                <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}>
-                  <PieChart className={theme === 'neon' ? 'text-blue-400' : 'text-blue-600'} size={20} />
-                </div>
+                <div><h3 className={`text-lg font-bold ${styles.text}`}>Historia Alokacji Portfela</h3><p className={`text-sm ${styles.textSub}`}>Zmiana udziału procentowego PPK, Crypto i IKE w czasie</p></div>
+                <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><PieChart className={theme === 'neon' ? 'text-blue-400' : 'text-blue-600'} size={20} /></div>
               </div>
               <PortfolioAllocationHistoryChart data={globalHistoryData} themeMode={theme} />
             </div>
 
-            {/* Tables */}
             <div className="space-y-8">
               <div className={`${styles.cardContainer} overflow-hidden`}>
-                <div 
-                  className={`px-6 py-4 border-b flex justify-between items-center cursor-pointer transition-colors ${theme === 'neon' ? 'bg-black/20 border-cyan-900/30 hover:bg-cyan-950/10' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}
-                  onClick={() => setIsActivePositionsExpanded(!isActivePositionsExpanded)}
-                >
-                  <div className="flex items-center space-x-2">
-                     <h3 className={`text-lg font-bold ${styles.text}`}>Aktywne Pozycje</h3>
-                     {isActivePositionsExpanded ? <ChevronUp size={20} className={theme === 'neon' ? 'text-cyan-600' : 'text-slate-400'}/> : <ChevronDown size={20} className={theme === 'neon' ? 'text-cyan-600' : 'text-slate-400'}/>}
-                  </div>
-                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${theme === 'neon' ? 'bg-emerald-900/40 text-emerald-400 border border-emerald-700/50' : 'bg-emerald-100 text-emerald-700'}`}>
-                    {omfActiveAssets.length} pozycji
-                  </span>
+                <div className={`px-6 py-4 border-b flex justify-between items-center cursor-pointer transition-colors ${theme === 'neon' ? 'bg-black/20 border-cyan-900/30 hover:bg-cyan-950/10' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`} onClick={() => setIsActivePositionsExpanded(!isActivePositionsExpanded)}>
+                  <div className="flex items-center space-x-2"><h3 className={`text-lg font-bold ${styles.text}`}>Aktywne Pozycje</h3>{isActivePositionsExpanded ? <ChevronUp size={20} className={theme === 'neon' ? 'text-cyan-600' : 'text-slate-400'}/> : <ChevronDown size={20} className={theme === 'neon' ? 'text-cyan-600' : 'text-slate-400'}/>}</div>
+                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${theme === 'neon' ? 'bg-emerald-900/40 text-emerald-400 border border-emerald-700/50' : 'bg-emerald-100 text-emerald-700'}`}>{omfActiveAssets.length} pozycji</span>
                 </div>
-                {isActivePositionsExpanded && (
-                  <HistoryTable 
-                    data={omfActiveAssets} 
-                    type="OMF" 
-                    omfVariant="active" 
-                    themeMode={theme}
-                  />
-                )}
+                {isActivePositionsExpanded && (<HistoryTable data={omfActiveAssets} type="OMF" omfVariant="active" themeMode={theme} />)}
               </div>
 
               <div className={`${styles.cardContainer} overflow-hidden`}>
-                <div 
-                  className={`px-6 py-4 border-b flex justify-between items-center cursor-pointer transition-colors ${theme === 'neon' ? 'bg-black/20 border-cyan-900/30 hover:bg-cyan-950/10' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}
-                  onClick={() => setIsClosedHistoryExpanded(!isClosedHistoryExpanded)}
-                >
-                  <div className="flex items-center space-x-2">
-                     <h3 className={`text-lg font-bold ${styles.text}`}>Historia Zamkniętych Pozycji</h3>
-                     {isClosedHistoryExpanded ? <ChevronUp size={20} className={theme === 'neon' ? 'text-cyan-600' : 'text-slate-400'}/> : <ChevronDown size={20} className={theme === 'neon' ? 'text-cyan-600' : 'text-slate-400'}/>}
-                  </div>
-                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${theme === 'neon' ? 'bg-slate-800 text-slate-400 border border-slate-700' : 'bg-slate-200 text-slate-600'}`}>
-                    {omfClosedAssets.length} pozycji
-                  </span>
+                <div className={`px-6 py-4 border-b flex justify-between items-center cursor-pointer transition-colors ${theme === 'neon' ? 'bg-black/20 border-cyan-900/30 hover:bg-cyan-950/10' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`} onClick={() => setIsClosedHistoryExpanded(!isClosedHistoryExpanded)}>
+                  <div className="flex items-center space-x-2"><h3 className={`text-lg font-bold ${styles.text}`}>Historia Zamkniętych Pozycji</h3>{isClosedHistoryExpanded ? <ChevronUp size={20} className={theme === 'neon' ? 'text-cyan-600' : 'text-slate-400'}/> : <ChevronDown size={20} className={theme === 'neon' ? 'text-cyan-600' : 'text-slate-400'}/>}</div>
+                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${theme === 'neon' ? 'bg-slate-800 text-slate-400 border border-slate-700' : 'bg-slate-200 text-slate-600'}`}>{omfClosedAssets.length} pozycji</span>
                 </div>
-                {isClosedHistoryExpanded && (
-                  <HistoryTable data={omfClosedAssets} type="OMF" omfVariant="closed" themeMode={theme} />
-                )}
+                {isClosedHistoryExpanded && (<HistoryTable data={omfClosedAssets} type="OMF" omfVariant="closed" themeMode={theme} />)}
               </div>
             </div>
           </div>
         ) : (
-          /* STANDARD VIEW (PPK, CRYPTO, IKE) */
           <>
-            {/* Stats Grid */}
             {stats && (
               <div className={`grid grid-cols-1 gap-6 mb-4 ${portfolioType === 'PPK' ? 'lg:grid-cols-3 xl:grid-cols-4' : 'lg:grid-cols-4'}`}>
-                
                 {portfolioType === 'PPK' ? (
-                   // CUSTOM "WARTOŚĆ" CARD FOR PPK (With Exit Value)
                    <div className={`${styles.cardContainer} p-6 hover:shadow-md transition-shadow duration-300`}>
                       <div className="flex items-center justify-between mb-4">
                         <h3 className={`text-sm font-medium ${styles.textSub}`}>Wartość</h3>
-                        <div className={`p-2 rounded-lg ${theme === 'neon' ? 'bg-indigo-900/30 text-indigo-400 border border-indigo-500/50' : 'bg-slate-50 text-indigo-700'}`}>
-                           <Wallet size={20} />
-                        </div>
+                        <div className={`p-2 rounded-lg ${theme === 'neon' ? 'bg-indigo-900/30 text-indigo-400 border border-indigo-500/50' : 'bg-slate-50 text-indigo-700'}`}><Wallet size={20} /></div>
                       </div>
                       <div className="flex flex-col">
                          <span className={`text-2xl font-bold ${styles.text}`}>{`${(stats.totalValue || 0).toLocaleString('pl-PL')} zł`}</span>
                          <div className="flex items-center mt-1 text-sm space-x-2">
-                            {/* Exit Value */}
                             <span className={`flex items-center font-bold text-base ${theme === 'neon' ? 'text-slate-400' : 'text-slate-600'}`}>
-                               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
-                                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                                  <polyline points="16 17 21 12 16 7" />
-                                  <line x1="21" y1="12" x2="9" y2="12" />
-                                  {/* Custom "Running man" stick figure approximation */}
-                                  <path d="M13 10l-2 3l2 3" strokeWidth="1.5" /> 
-                                  <circle cx="13" cy="8" r="1.5" fill="currentColor" stroke="none"/>
-                               </svg>
+                               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /><path d="M13 10l-2 3l2 3" strokeWidth="1.5" /><circle cx="13" cy="8" r="1.5" fill="currentColor" stroke="none"/></svg>
                                {((stats as any).customExitValue || 0).toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł
                             </span>
                          </div>
                       </div>
                    </div>
-                ) : (
-                  <StatsCard 
-                    title="Wartość Całkowita" 
-                    value={`${(stats.totalValue || 0).toLocaleString('pl-PL')} zł`} 
-                    icon={Wallet} 
-                    colorClass={getTextColorClass(portfolioType)}
-                    className={styles.cardContainer}
-                  />
-                )}
+                ) : (<StatsCard title="Wartość Całkowita" value={`${(stats.totalValue || 0).toLocaleString('pl-PL')} zł`} icon={Wallet} colorClass={getTextColorClass(portfolioType)} className={styles.cardContainer} />)}
 
-                <StatsCard 
-                  title={portfolioType === 'PPK' ? "Wkład Własny" : "Zainwestowano"} 
-                  value={`${(stats.totalInvestment ?? stats.totalEmployee ?? 0).toLocaleString('pl-PL')} zł`} 
-                  icon={Building2} 
-                  colorClass={getTextColorClass(portfolioType)}
-                  className={styles.cardContainer}
-                />
+                <StatsCard title={portfolioType === 'PPK' ? "Wkład Własny" : "Zainwestowano"} value={`${(stats.totalInvestment ?? stats.totalEmployee ?? 0).toLocaleString('pl-PL')} zł`} icon={Building2} colorClass={getTextColorClass(portfolioType)} className={styles.cardContainer} />
                 
                 {portfolioType === 'PPK' && stats.totalState !== undefined ? (
-                   // CUSTOM "ZYSK" CARD FOR PPK
                    <div className={`${styles.cardContainer} p-6 hover:shadow-md transition-shadow duration-300`}>
                       <div className="flex items-center justify-between mb-4">
                         <h3 className={`text-sm font-medium ${styles.textSub}`}>Zysk</h3>
-                        <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg} ${theme === 'neon' ? 'text-emerald-400' : 'text-emerald-600'}`}>
-                           <TrendingUp size={20} />
-                        </div>
+                        <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg} ${theme === 'neon' ? 'text-emerald-400' : 'text-emerald-600'}`}><TrendingUp size={20} /></div>
                       </div>
                       <div className="flex flex-col">
                          <span className={`text-2xl font-bold ${styles.text}`}>{`${(stats.totalProfit || 0).toLocaleString('pl-PL')} zł`}</span>
                          <div className="flex items-center mt-1 text-sm space-x-2">
-                            {/* Gross ROI (Profit / Employee Contribution) */}
-                            <span className={`flex items-center font-bold text-base ${theme === 'neon' ? 'text-emerald-400' : 'text-emerald-600'}`}>
-                               <ArrowUpRight size={18} className="mr-0.5" />
-                               {stats.totalEmployee ? ((stats.totalProfit / stats.totalEmployee) * 100).toFixed(2) : '0.00'}%
-                            </span>
-                            {/* Net ROI (Current standard ROI from CSV) */}
-                            <span className={`flex items-center font-normal text-xs ${theme === 'neon' ? 'text-cyan-700' : 'text-slate-400'}`}>
-                               {stats.currentRoi ? stats.currentRoi.toFixed(2) : '0.00'}% netto
-                            </span>
+                            <span className={`flex items-center font-bold text-base ${theme === 'neon' ? 'text-emerald-400' : 'text-emerald-600'}`}><ArrowUpRight size={18} className="mr-0.5" />{stats.totalEmployee ? ((stats.totalProfit / stats.totalEmployee) * 100).toFixed(2) : '0.00'}%</span>
+                            <span className={`flex items-center font-normal text-xs ${theme === 'neon' ? 'text-cyan-700' : 'text-slate-400'}`}>{stats.currentRoi ? stats.currentRoi.toFixed(2) : '0.00'}% netto</span>
                          </div>
                       </div>
                    </div>
-                ) : (
-                  <StatsCard 
-                    title="Zysk/Strata" 
-                    value={`${(stats.totalProfit || 0).toLocaleString('pl-PL')} zł`} 
-                    trend={stats.currentRoi || 0} 
-                    icon={TrendingUp} 
-                    colorClass={theme === 'neon' ? ((stats.totalProfit || 0) >= 0 ? "text-emerald-400" : "text-rose-400") : ((stats.totalProfit || 0) >= 0 ? "text-emerald-600" : "text-rose-600")} 
-                    className={styles.cardContainer}
-                  />
-                )}
+                ) : (<StatsCard title="Zysk/Strata" value={`${(stats.totalProfit || 0).toLocaleString('pl-PL')} zł`} trend={stats.currentRoi || 0} icon={TrendingUp} colorClass={theme === 'neon' ? ((stats.totalProfit || 0) >= 0 ? "text-emerald-400" : "text-rose-400") : ((stats.totalProfit || 0) >= 0 ? "text-emerald-600" : "text-rose-600")} className={styles.cardContainer} />)}
 
                 {portfolioType === 'PPK' ? (
-                   // CUSTOM "CZAS DO WYPŁATY" CARD FOR PPK (Clean, No Background Icon)
                    <div className={`${styles.cardContainer} p-6 hover:shadow-md transition-shadow duration-300`}>
                       <div className="flex items-center justify-between mb-4">
                         <h3 className={`text-sm font-medium ${styles.textSub}`}>Czas do wypłaty</h3>
-                        <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg} ${theme === 'neon' ? 'text-amber-400' : 'text-amber-600'}`}>
-                           <Timer size={20} />
-                        </div>
+                        <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg} ${theme === 'neon' ? 'text-amber-400' : 'text-amber-600'}`}><Timer size={20} /></div>
                       </div>
                       <div className="flex flex-col">
                          <span className={`text-2xl font-bold ${styles.text}`}>{monthsToPayout}</span>
@@ -1711,38 +1325,15 @@ export const App: React.FC = () => {
                    </div>
                 ) : null}
 
-                {/* NEW: IKE Tax Shield Card */}
                 {portfolioType === 'IKE' && stats.taxSaved !== undefined && (
-                   <StatsCard 
-                     title="Tarcza Podatkowa" 
-                     value={`${(stats.taxSaved).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`} 
-                     subValue="Zaoszczędzony podatek (19%)"
-                     icon={ShieldCheck} 
-                     colorClass={theme === 'neon' ? 'text-cyan-400' : "text-cyan-700 bg-cyan-50"} 
-                     className={styles.cardContainer}
-                   />
+                   <StatsCard title="Tarcza Podatkowa" value={`${(stats.taxSaved).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`} subValue="Zaoszczędzony podatek (19%)" icon={ShieldCheck} colorClass={theme === 'neon' ? 'text-cyan-400' : "text-cyan-700 bg-cyan-50"} className={styles.cardContainer} />
                 )}
 
-                {/* NEW: Crypto Best Asset Card */}
                 {portfolioType === 'CRYPTO' && (
                   (() => {
-                    // Find best active crypto asset
-                    const bestCrypto = omfActiveAssets
-                      .filter(a => a.portfolio === 'Krypto' || a.portfolio === 'CRYPTO')
-                      .sort((a, b) => b.profit - a.profit)[0]; // Sort by absolute profit
-
+                    const bestCrypto = omfActiveAssets.filter(a => a.portfolio === 'Krypto' || a.portfolio === 'CRYPTO').sort((a, b) => b.profit - a.profit)[0];
                     if (bestCrypto) {
-                      return (
-                        <StatsCard
-                          title="Najlepszy Aktyw"
-                          value={bestCrypto.symbol}
-                          subValue={`${bestCrypto.profit.toLocaleString('pl-PL')} zł`}
-                          trend={bestCrypto.roi}
-                          icon={Trophy}
-                          colorClass={theme === 'neon' ? 'text-yellow-400' : "text-yellow-600 bg-yellow-50"}
-                          className={styles.cardContainer}
-                        />
-                      );
+                      return (<StatsCard title="Najlepszy Aktyw" value={bestCrypto.symbol} subValue={`${bestCrypto.profit.toLocaleString('pl-PL')} zł`} trend={bestCrypto.roi} icon={Trophy} colorClass={theme === 'neon' ? 'text-yellow-400' : "text-yellow-600 bg-yellow-50"} className={styles.cardContainer} />);
                     }
                     return null;
                   })()
@@ -1750,32 +1341,11 @@ export const App: React.FC = () => {
               </div>
             )}
 
-            {/* Tabs */}
             {(portfolioType === 'OMF') && (
               <div className={`border-b mb-8 ${styles.headerBorder}`}>
                 <nav className="-mb-px flex space-x-8">
-                  <button
-                    onClick={() => setActiveTab('dashboard')}
-                    className={`pb-4 px-1 border-b-2 font-medium text-sm flex items-center ${
-                      activeTab === 'dashboard'
-                        ? `border-slate-500 ${styles.text}`
-                        : `border-transparent ${styles.textSub} hover:border-slate-300`
-                    }`}
-                  >
-                    <LayoutDashboard className="w-4 h-4 mr-2" />
-                    Dashboard
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('history')}
-                    className={`pb-4 px-1 border-b-2 font-medium text-sm flex items-center ${
-                      activeTab === 'history'
-                        ? `border-slate-500 ${styles.text}`
-                        : `border-transparent ${styles.textSub} hover:border-slate-300`
-                    }`}
-                  >
-                    <FileText className="w-4 h-4 mr-2" />
-                    Historia
-                  </button>
+                  <button onClick={() => setActiveTab('dashboard')} className={`pb-4 px-1 border-b-2 font-medium text-sm flex items-center ${activeTab === 'dashboard' ? `border-slate-500 ${styles.text}` : `border-transparent ${styles.textSub} hover:border-slate-300`}`}><LayoutDashboard className="w-4 h-4 mr-2" />Dashboard</button>
+                  <button onClick={() => setActiveTab('history')} className={`pb-4 px-1 border-b-2 font-medium text-sm flex items-center ${activeTab === 'history' ? `border-slate-500 ${styles.text}` : `border-transparent ${styles.textSub} hover:border-slate-300`}`}><FileText className="w-4 h-4 mr-2" />Historia</button>
                 </nav>
               </div>
             )}
@@ -1783,79 +1353,37 @@ export const App: React.FC = () => {
             {activeTab === 'dashboard' && (
               <div className="space-y-8">
                 {portfolioType === 'PPK' ? (
-                  /* PPK Visualizations (Dashboard Only) */
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Make Value Chart Full Width */}
                     <div className={`${styles.cardContainer} p-6 lg:col-span-2`}>
                       <div className="flex flex-col md:flex-row items-center justify-between mb-6 space-y-4 md:space-y-0">
                         <div className="flex flex-col">
                           <h3 className={`text-lg font-bold ${styles.text}`}>Historyczna Wartość Portfela</h3>
-                          <p className="text-[10px] sm:text-xs text-slate-400 mt-2 font-medium leading-tight max-w-2xl">
-                            Wartość netto = Wartość po odjęciu podatku od wpłaty Pracodawcy<br/>
-                            Wartość Exit = Wartość netto - 30% wpłat od Pracodawcy - wpłaty od Państwa - 19% podatku od zysku
-                          </p>
+                          <p className="text-[10px] sm:text-xs text-slate-400 mt-2 font-medium leading-tight max-w-2xl">Wartość netto = Wartość po odjęciu podatku od wpłaty Pracodawcy<br/>Wartość Exit = Wartość netto - 30% wpłat od Pracodawcy - wpłaty od Państwa - 19% podatku od zysku</p>
                         </div>
-                        
-                        {/* Road to Retirement Controls */}
                         <div className={`flex items-center space-x-4 p-2 rounded-lg border ${theme === 'neon' ? 'bg-black/50 border-cyan-900/50' : 'bg-slate-50 border-slate-100'}`}>
-                           <button
-                             onClick={() => setShowPPKProjection(!showPPKProjection)}
-                             className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
-                               showPPKProjection 
-                                 ? styles.toggleProjectionActive
-                                 : `bg-transparent ${theme === 'neon' ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`
-                             }`}
-                           >
-                             <Milestone size={14} className="mr-2" />
-                             Droga do Emerytury
-                           </button>
-
-                           {showPPKProjection && (
-                             <span className={`text-[10px] font-mono ${styles.textSub} animate-in fade-in slide-in-from-right-4 duration-300`}>
-                               +{ppkRateDisplay.cagr.toFixed(2)}% m/m (CAGR)
-                             </span>
-                           )}
+                           <button onClick={() => setShowPPKProjection(!showPPKProjection)} className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${showPPKProjection ? styles.toggleProjectionActive : `bg-transparent ${theme === 'neon' ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`}`}><Milestone size={14} className="mr-2" />Droga do Emerytury</button>
+                           {showPPKProjection && (<span className={`text-[10px] font-mono ${styles.textSub} animate-in fade-in slide-in-from-right-4 duration-300`}>+{ppkRateDisplay.cagr.toFixed(2)}% m/m (CAGR)</span>)}
                         </div>
                       </div>
                       <ValueCompositionChart data={ppkChartDataWithProjection} showProjection={showPPKProjection} themeMode={theme} />
                     </div>
                     
-                    {/* ROI Chart */}
                     <div className={`${styles.cardContainer} p-6 lg:col-span-2`}>
                       <h3 className={`text-lg font-bold ${styles.text} mb-6`}>ROI w czasie</h3>
                       <ROIChart data={data} themeMode={theme} />
                     </div>
 
-                    {/* Capital Structure History Chart (Full Width below ROI) */}
                     <div className={`${styles.cardContainer} p-6 lg:col-span-2`}>
                       <h3 className={`text-lg font-bold ${styles.text} mb-6`}>Struktura Kapitału w czasie</h3>
                       <CapitalStructureHistoryChart data={data} themeMode={theme} />
                     </div>
                   </div>
                 ) : (
-                  /* Crypto / IKE Visualizations */
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div className={`${styles.cardContainer} p-6 lg:col-span-2`}>
                       <div className="flex items-center justify-between mb-6">
-                        <h3 className={`text-lg font-bold ${styles.text}`}>
-                          {portfolioType === 'IKE' && showTaxComparison 
-                            ? 'Historyczna Wartość Portfela (IKE vs Opodatkowane)' 
-                            : 'Historyczna Wartość Portfela'}
-                        </h3>
-                        {portfolioType === 'IKE' && (
-                          <button
-                            onClick={() => setShowTaxComparison(!showTaxComparison)}
-                            className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
-                              showTaxComparison 
-                                ? styles.toggleCPIActive
-                                : `bg-transparent ${theme === 'neon' ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`
-                            }`}
-                            title="Pokaż porównanie z kontem opodatkowanym"
-                          >
-                            <TaxToggleIcon className="w-4 h-4 mr-2" />
-                            Belka
-                          </button>
-                        )}
+                        <h3 className={`text-lg font-bold ${styles.text}`}>{portfolioType === 'IKE' && showTaxComparison ? 'Historyczna Wartość Portfela (IKE vs Opodatkowane)' : 'Historyczna Wartość Portfela'}</h3>
+                        {portfolioType === 'IKE' && (<button onClick={() => setShowTaxComparison(!showTaxComparison)} className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${showTaxComparison ? styles.toggleCPIActive : `bg-transparent ${theme === 'neon' ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`}`} title="Pokaż porównanie z kontem opodatkowanym"><TaxToggleIcon className="w-4 h-4 mr-2" />Belka</button>)}
                       </div>
                       <CryptoValueChart data={data} showTaxComparison={showTaxComparison} themeMode={theme} />
                     </div>

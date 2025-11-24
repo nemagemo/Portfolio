@@ -10,15 +10,12 @@
 
 export const FALLBACK_PRICES: Record<string, number> = {
   // Waluty / Gotówka
-  'PLN': 1.0,
-  'USD': 4.05,
-  'EUR': 4.35,
-  'GBP': 5.15,
+  'PLN': 1.00,
 
   // PPK (Cena jednostki)
   'PPK': 176.75,
 
-  // Akcje / ETF (Ostatnia aktualizacja: 2025-11-24)
+  // Akcje / ETF
   'NDIA.L': 36.04,
   'IUIT.L': 151.06,
   'NUKL.DE': 191.24,
@@ -40,7 +37,7 @@ export const FALLBACK_PRICES: Record<string, number> = {
   'ROL': 220.33,
   'FRO': 28.50,
 
-  // Krypto (Ostatnia aktualizacja: 2025-11-24)
+  // Krypto
   'POL': 0.50,
   'ETH': 10841.58,
   'NEAR': 7.06,
