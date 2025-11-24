@@ -491,7 +491,7 @@ export const App: React.FC = () => {
   }, [csvSources, portfolioType, onlinePrices]); // Re-run when onlinePrices load
 
   // --- GLOBAL HISTORY DATA (For OMF Chart) ---
-  // Merges PPK, Crypto, and IKE timelines
+  // Merges PPK, Crypto, and IKE data into a single timeline.
   const globalHistoryData = useMemo<GlobalHistoryRow[]>(() => {
     const ppkRes = parseCSV(csvSources.PPK, 'PPK', 'Offline');
     const cryptoRes = parseCSV(csvSources.CRYPTO, 'CRYPTO', 'Offline');
@@ -1308,21 +1308,24 @@ export const App: React.FC = () => {
         {isOfflineValid ? (
            <div className="flex flex-col items-center mb-6 space-y-1">
               <div className="flex items-center space-x-2">
-                <span className={`text-xs font-bold px-3 py-1 rounded-full flex items-center shadow-sm ${
-                    pricingMode === 'Online'
-                      ? (theme === 'neon' ? 'bg-blue-900/80 text-blue-300 border border-blue-600/50' : 'bg-blue-50 text-blue-600 border border-blue-200')
-                      : (theme === 'neon' ? 'bg-slate-800/80 text-slate-400 border border-slate-600/50' : 'bg-slate-100 text-slate-500 border border-slate-200')
-                }`}>
-                   {pricingMode === 'Online' ? <Wifi size={14} className="mr-1.5" /> : <WifiOff size={14} className="mr-1.5" />}
-                   {pricingMode === 'Online' ? 'ONLINE' : 'OFFLINE'}
-                </span>
                 <button 
                   onClick={fetchPrices}
                   disabled={isRefreshing}
-                  className={`p-1 rounded-full transition-all ${isRefreshing ? 'animate-spin' : ''} ${theme === 'neon' ? 'text-cyan-500 hover:bg-cyan-900/30' : 'text-slate-400 hover:bg-slate-100'}`}
-                  title="Odśwież ceny"
+                  className={`text-xs font-bold px-3 py-1 rounded-full flex items-center shadow-sm transition-all ${
+                    isRefreshing ? 'opacity-75 cursor-wait' : 'hover:opacity-80 active:scale-95'
+                  } ${
+                    pricingMode === 'Online'
+                      ? (theme === 'neon' ? 'bg-blue-900/80 text-blue-300 border border-blue-600/50' : 'bg-blue-50 text-blue-600 border border-blue-200')
+                      : (theme === 'neon' ? 'bg-slate-800/80 text-slate-400 border border-slate-600/50' : 'bg-slate-100 text-slate-500 border border-slate-200')
+                }`}
+                  title="Kliknij, aby odświeżyć ceny"
                 >
-                  <RefreshCw size={14} />
+                   {isRefreshing ? (
+                      <RefreshCw size={14} className="mr-1.5 animate-spin" />
+                   ) : (
+                      pricingMode === 'Online' ? <Wifi size={14} className="mr-1.5" /> : <WifiOff size={14} className="mr-1.5" />
+                   )}
+                   {pricingMode === 'Online' ? 'ONLINE' : 'OFFLINE'}
                 </button>
               </div>
               {pricingMode !== 'Online' && lastUpdateDate && (
