@@ -15,90 +15,103 @@ W plikach CSV oraz logice aplikacji dla portfela PPK obowiązuje następująca d
 
 ---
 
-## Polecenie: `ChangeLogos`
+## NOWE: Model Hybrydowy (Transakcje + Wycena + Snapshoty)
 
-**Wyzwalacz:** Użytkownik pisze "Wykonaj polecenie ChangeLogos" (lub podobne).
+Aplikacja działa w trybie Offline, ale dane są aktualizowane w modelu hybrydowym. Głównym plikiem stanu bieżącego jest `CSV/OMF.ts`.
 
-**Cel:** Automatyzacja procesu dodawania nowych logotypów aktywów do aplikacji poprzez konwersję surowych plików SVG na komponenty Reacta.
+### Polecenie: `RejestrujTransakcje`
 
-**Procedura (Algorytm):**
+**Wyzwalacz:** Użytkownik opisuje transakcję naturalnym językiem.
+*   *Przykład 1:* "Kupiłem 0,25 akcji AMZN za 300zł na IKE dnia 2025-05-01".
+*   *Przykład 2:* "Wpłata PPK 300zł" (lub "Kupno PPK za 300zł").
 
-1.  **Skanowanie:**
-    *   Sprawdź zawartość folderu `logos/`.
-    *   Zidentyfikuj wszystkie pliki z rozszerzeniem `.svg` (np. `XYZ.svg`).
+**Zasada Kosztu:**
+Użytkownik podaje **KWOTĘ CAŁKOWITĄ (KOSZT)** jaką poniósł, a nie cenę jednostkową.
+*   Jeżeli użytkownik pisze "za 300zł", oznacza to, że `Wartość Zakupu` wzrasta o 300 PLN.
 
-2.  **Konwersja:**
-    *   Dla każdego znalezionego pliku SVG utwórz (lub nadpisz) plik `.tsx` w tym samym folderze.
-    *   **Nazwa pliku:** `[NazwaZPliku]Logo.tsx` (np. `XYZ.svg` -> `XYZLogo.tsx`).
-    *   **Nazwa komponentu:** `[NazwaZPliku]Logo` (np. `XYZLogo`).
+**Procedura:**
+1.  **Analiza:** Zidentyfikuj: Typ (Kupno/Sprzedaż), Symbol (np. AMZN, PPK), Ilość (jeśli podana), Koszt Całkowity (PLN), Datę, Portfel.
+2.  **Edycja `CSV/OMF.ts`:**
+    *   Znajdź odpowiedni wiersz dla danego aktywa (Symbol + Portfel). Jeśli nie istnieje, utwórz nowy.
+    *   **Kupno:**
+        *   `Ilość`: Dodaj podaną ilość do obecnej.
+        *   `Wartość Zakupu`: Dodaj podany **Koszt Całkowity** do obecnej wartości zakupu.
+        *   `Ostatni zakup`: Zaktualizuj datę.
+        *   `Obecna Wartość`: Tymczasowo dodaj **Koszt Całkowity** do `Obecna Wartość` (aby zachować spójność do czasu następnej aktualizacji cen rynkowych).
+    *   **Sprzedaż:**
+        *   `Ilość`: Odejmij sprzedaną ilość.
+        *   `Wartość Zakupu`: Zmniejsz proporcjonalnie do sprzedanej ilości.
+        *   Jeśli `Ilość` == 0, zmień `Status pozycji` na "Zamknięta", a wynik przenieś do `Zysk/Strata`.
+3.  **Dla PPK:** Traktuj "Wpłatę" lub "Kupno" jako zwiększenie `Wartość Zakupu` i `Obecna Wartość` w wierszu PPK w `OMF.ts`.
+4.  **Raport:** Potwierdź wykonanie zmian w pliku, wymieniając zaktualizowane wartości.
 
-3.  **Szablon Komponentu:**
-    *   Kod musi być poprawnym komponentem funkcyjnym React.
-    *   Komponent musi przyjmować propsy `React.SVGProps<SVGSVGElement>` i przekazywać je do elementu `<svg>` (spread attributes `...props`).
-    *   Należy zachować oryginalny `viewBox` z pliku SVG.
-    *   Należy przekonwertować atrybuty SVG na format JSX (np. `fill-rule` -> `fillRule`, `stroke-width` -> `strokeWidth`).
-    *   Jeśli SVG zawiera style inline, należy je przenieść do atrybutów lub zachować w obiekcie `style`.
+### Polecenie: `AktualizujCeny`
 
-    *Wzór kodu:*
-    ```tsx
-    import React from 'react';
+**Wyzwalacz:** Użytkownik wkleja listę cen (np. z Google Sheets: "Symbol, Cena") lub pisze "Aktualizuj ceny używając fallback".
 
-    export const NAZWALogo: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-      <svg viewBox="0 0 [ORYGINALNA_SZEROKOSC] [ORYGINALNA_WYSOKOSC]" {...props}>
-        {/* Tu wstaw treść SVG (ścieżki, kształty) */}
-      </svg>
-    );
-    ```
+**Zasada Walutowa (PLN):**
+Wszystkie ceny jednostkowe (lub wartości całościowe) podawane przez użytkownika w tym poleceniu są już **przeliczone na PLN**.
+*   AI **nie powinna** dokonywać przeliczania walut (np. USD na PLN), chyba że użytkownik wyraźnie o to poprosi w treści wiadomości.
+*   Przyjmujemy: `Cena wejściowa` = `Cena w PLN`.
 
-4.  **Raport:**
-    *   Poinformuj użytkownika krótko, które logotypy zostały przetworzone (np. "Przekształcono KLE.svg na KLELogo.tsx").
-    *   Przypomnij użytkownikowi o ręcznym usunięciu plików źródłowych SVG, aby zachować porządek w folderze.
+**Procedura:**
+1.  **Źródło Cen:**
+    *   Jeśli użytkownik podał dane: Sparsuj je do mapy `Symbol -> Cena Rynkowa (PLN)`.
+    *   Jeśli nie: Załaduj ceny z `constants/fallbackPrices.ts`.
+2.  **Iteracja `CSV/OMF.ts`:**
+    *   Przejdź przez każdy wiersz o statusie "Otwarta".
+    *   Znajdź cenę dla danego `Symbolu`.
+    *   **Obliczenia:**
+        *   *Akcje/Krypto/ETF:* `Nowa Obecna Wartość = Ilość * Cena Rynkowa (PLN)`.
+        *   *PPK:* Jeśli podano cenę dla "PPK", traktuj ją jako **całkowitą wartość portfela** (chyba że użytkownik i dane operują na jednostkach uczestnictwa, wtedy `Ilość * Cena`).
+    *   Zaktualizuj kolumnę `Obecna Wartość`.
+    *   Przelicz pochodne: `Zysk/Strata` (`Obecna Wartość - Wartość Zakupu`) oraz `ROI`.
+3.  **Zapis:** Zaktualizuj treść `OMF_DATA` w pliku `CSV/OMF.ts`.
+
+### Polecenie: `ZamknijMiesiac`
+
+**Wyzwalacz:** "Zamknij miesiąc [Nazwa] z datą [RRRR-MM-DD]".
+
+**Cel:** Utworzenie "Snapshotu" historycznego dla wykresów IKE, Krypto oraz PPK na podstawie aktualnego stanu OMF.
+
+**Procedura:**
+1.  **Agregacja z `CSV/OMF.ts`:**
+    *   Pobierz aktualne dane.
+    *   Podziel aktywa na grupy: **PPK**, **IKE** oraz **Krypto**.
+2.  **Obliczenia i Zapis (dla każdej grupy):**
+    *   **IKE i Krypto:**
+        *   `Suma Wkładu` = Suma `Wartość Zakupu` wszystkich otwartych pozycji.
+        *   `Suma Wartości` = Suma `Obecna Wartość` wszystkich otwartych pozycji (+ Gotówka).
+        *   `Zysk` = `Suma Wartości` - `Suma Wkładu`.
+        *   `ROI` = `(Zysk / Suma Wkładu) * 100`.
+        *   **Akcja:** Dopisz wiersz do `CSV/IKE.ts` lub `CSV/Krypto.ts`: `Data, Suma Wkładu, Zysk, ROI`.
+    *   **PPK:**
+        *   Pobierz wiersz PPK z OMF.
+        *   `Pracownik` = `OMF.Wartość Zakupu`.
+        *   `Wartość Portfela` = `OMF.Obecna Wartość`.
+        *   *Uwaga:* Składniki `Pracodawca` i `Państwo` nie są w OMF. Pobierz je z **ostatniego wiersza** w `CSV/PPK.ts` (zakładamy brak zmian, chyba że użytkownik poda inaczej w poleceniu).
+        *   `Zysk Funduszu` = `Wartość Portfela` - `Pracownik` - `Pracodawca` - `Państwo`.
+        *   `Całkowity Zysk` = `Wartość Portfela` - `Pracownik`.
+        *   `Podatek` = (jeśli `Zysk Funduszu` > 0) ? `Zysk Funduszu * 0.19` : 0. (Ze znakiem minus dla display).
+        *   Oblicz `ROI` i `Exit ROI` wg standardowych wzorów PPK.
+        *   **Akcja:** Dopisz wiersz do `CSV/PPK.ts` zachowując format CSV (Data, Pracownik, Pracodawca, Państwo, Zysk Funduszu, Całkowity Zysk, Podatek, ROI, Exit ROI).
+4.  **Raport:** Poinformuj o zaktualizowaniu plików historycznych.
 
 ---
 
-## Polecenie: `UpdateCSV`
+## Polecenia Pomocnicze
 
-**Wyzwalacz:** Użytkownik pisze "Wykonaj polecenie UpdateCSV" lub dostarcza pliki `.csv` z prośbą o aktualizację.
+### Polecenie: `ChangeLogos`
+*Automatyzacja konwersji SVG na komponenty React.*
+1. Skanuj folder `logos/` w poszukiwaniu `.svg`.
+2. Konwertuj każdy plik na komponent `.tsx` (np. `ETHLogo.tsx`).
+3. Zachuj `viewBox` i przenieś atrybuty do JSX (`fill-rule` -> `fillRule`).
 
-**Cel:** Synchronizacja surowych danych CSV z plikami TypeScript używanymi przez aplikację (tryb offline).
+### Polecenie: `UpdateDate`
+*Ręczna zmiana daty ostatniej aktualizacji.*
+1. Zaktualizuj plik `constants/appData.ts`.
+2. Ustaw zmienną `DATA_LAST_UPDATED` na podaną datę.
 
-**Procedura (Algorytm):**
-
-1.  **Skanowanie:**
-    *   Sprawdź czy użytkownik dostarczył treść plików `.csv` lub czy znajdują się one w folderze `CSV/`.
-
-2.  **Konwersja:**
-    *   Dla każdego pliku CSV (np. `Dane.csv`) utwórz lub zaktualizuj odpowiadający mu plik `.ts` (np. `Dane.ts`) w folderze `CSV/`.
-    *   Nazwa zmiennej z danymi: format `UPPER_SNAKE_CASE` z sufiksem `_DATA`.
-
-3.  **Szablon Pliku TS:**
-    *   Zawartość pliku `.ts` powinna wyglądać następująco. NIE generuj zmiennej `_LAST_UPDATED`.
-
-    ```typescript
-    export const NAZWA_PLIKU_DATA = `[TUTAJ WKLEJ CAŁĄ ZAWARTOŚĆ PLIKU CSV]`;
-    ```
-
-4.  **Weryfikacja:**
-    *   Upewnij się, że wklejona zawartość CSV jest kompletna i zawiera nagłówki.
-
----
-
-## Polecenie: `UpdateDate`
-
-**Wyzwalacz:** Użytkownik pisze "Wykonaj polecenie UpdateDate [RRRR-MM-DD]" (np. `UpdateDate 2025-05-01`).
-
-**Cel:** Ręczna aktualizacja globalnej daty ważności danych wyświetlanej w aplikacji.
-
-**Procedura (Algorytm):**
-
-1.  **Pobranie daty:**
-    *   Pobierz datę podaną przez użytkownika w poleceniu.
-
-2.  **Aktualizacja:**
-    *   Zaktualizuj plik `constants/appData.ts`.
-    *   Nadpisz zmienną `DATA_LAST_UPDATED`.
-
-3.  **Szablon Pliku `constants/appData.ts`:**
-    ```typescript
-    export const DATA_LAST_UPDATED = 'RRRR-MM-DD';
-    ```
+### Polecenie: `UpdateCSV`
+*Awaryjne nadpisanie całych plików danych (Stary tryb).*
+1. Jeśli użytkownik dostarczy pełne pliki CSV, nadpisz odpowiednie pliki w `CSV/*.ts`.
