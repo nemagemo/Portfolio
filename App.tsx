@@ -1383,8 +1383,8 @@ export const App: React.FC = () => {
               />
               <StatsCard 
                 title="Czas od Startu" 
-                value={`${investmentDuration.months} miesięcy`} 
-                subValue={`Start: ${investmentDuration.startDate}`} 
+                value={`${investmentDuration.months}`} 
+                subValue="msc" 
                 icon={Timer} 
                 colorClass={theme === 'neon' ? 'text-violet-400' : "text-violet-600 bg-violet-50"} 
                 className={styles.cardContainer}
@@ -1522,14 +1522,14 @@ export const App: React.FC = () => {
             <div className={`${styles.cardContainer} p-6`}>
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className={`text-lg font-bold ${styles.text}`}>Mapa Aktywów (Treemap)</h3>
-                  <p className={`text-sm ${styles.textSub}`}>Wizualizacja kafelkowa struktury portfela.</p>
+                  <h3 className={`text-lg font-bold ${styles.text}`}>Mapa Aktywów (Heatmap)</h3>
+                  <p className={`text-sm ${styles.textSub}`}>Wielkość kafelka = Wartość, Kolor = Wynik</p>
                 </div>
                 <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}>
                   <LayoutTemplate className={theme === 'neon' ? 'text-cyan-400' : 'text-cyan-600'} size={20} />
                 </div>
               </div>
-              <OMFStructureChart data={omfStructureData} themeMode={theme} />
+              <OMFTreemapChart data={omfStructureData} themeMode={theme} />
             </div>
 
             {/* Heatmap */}
