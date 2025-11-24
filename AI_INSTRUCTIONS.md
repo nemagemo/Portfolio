@@ -32,92 +32,79 @@ Aplikacja działa w trybie Offline, ale dane są aktualizowane w modelu hybrydow
 Użytkownik podaje **KWOTĘ CAŁKOWITĄ (KOSZT)** w PLN lub **ILOŚĆ JEDNOSTEK i CENĘ JEDNOSTKOWĄ**.
 
 **Procedura:**
-1.  **Analiza:** Zidentyfikuj: Typ (Kupno/Sprzedaż), Symbol (np. AMZN, PPK), Ilość, Koszt Całkowity (PLN), Datę, Portfel.
-2.  **Edycja `CSV/OMF.ts`:**
-    *   Znajdź odpowiedni wiersz dla danego aktywa (Symbol + Portfel). Jeśli nie istnieje, utwórz nowy.
+1.  **Analiza:** Zidentyfikuj: Typ (Kupno/Sprzedaż), Symbol (np. AMZN, PPK), Ilość, Koszt Całkowity (PLN), Datę, Portfel. Dla PPK zidentyfikuj Źródło: "Pracownik", "Pracodawca" lub "Państwo".
+2.  **Edycja `CSV/OMF.ts` (Stan Bieżący):**
+    *   **Znajdź wiersz:** Szukaj wiersza pasującego do Symbolu i Portfela, który ma `Status pozycji` równy **"Otwarta"** (lub "Gotówka" dla walut).
+        *   **WAŻNE:** Ignoruj wiersze ze statusem "Zamknięta". Jeśli istnieje tylko zamknięta pozycja dla tego symbolu, lub brak pozycji -> **Utwórz nowy wiersz** na końcu sekcji danego portfela ze statusem "Otwarta".
     *   **Kupno (Standardowe):**
         *   `Ilość`: Dodaj podaną ilość do obecnej.
         *   `Wartość Zakupu`: Dodaj podany koszt do obecnej wartości zakupu.
+        *   `Obecna Wartość`: **DODAJ** podany koszt do `Obecna Wartość` (utrzymanie wyceny w momencie zakupu).
         *   `Ostatni zakup`: Zaktualizuj datę.
-        *   `Obecna Wartość`: Tymczasowo dodaj koszt do `Obecna Wartość`.
+        *   `Zysk` i `ROI`: Przelicz na podstawie nowych wartości.
     *   **Kupno (PPK - Specjalne):**
-        *   Transakcje PPK mogą być rozbite na źródła: "Pracownik", "Pracodawca", "Państwo".
-        *   **Oblicz:** Nowe Jednostki = Podana Ilość. Koszt Transakcji = Ilość * Cena (lub podana kwota).
+        *   **Oblicz:** Koszt Transakcji = Ilość * Cena (lub podana kwota).
         *   **Aktualizuj `Ilość`:** Zawsze dodaj Nowe Jednostki do `OMF.Ilość`.
+        *   **Aktualizuj `Obecna Wartość`:** DODAJ Koszt Transakcji do `OMF.Obecna Wartość`.
         *   **Aktualizuj `Wartość Zakupu`:**
             *   Jeśli źródło to **Pracownik**: DODAJ Koszt Transakcji do `OMF.Wartość Zakupu`.
-            *   Jeśli źródło to **Pracodawca** lub **Państwo**: **NIE** zmieniaj `OMF.Wartość Zakupu` (traktujemy to jako bonus/zysk zewnętrzny).
-        *   **Aktualizuj `Obecna Wartość`:** Dodaj Koszt Transakcji do `OMF.Obecna Wartość` (niezależnie od źródła).
-    *   **Sprzedaż:**
-        *   `Ilość`: Odejmij sprzedaną ilość.
-        *   `Wartość Zakupu`: Zmniejsz proporcjonalnie do sprzedanej ilości.
-3.  **Raport:** Potwierdź wykonanie zmian w pliku, wymieniając zaktualizowane wartości.
+            *   Jeśli źródło to **Pracodawca** lub **Państwo**: **NIE** zmieniaj `OMF.Wartość Zakupu`.
+3.  **Natychmiastowa Synchronizacja Historii (`CSV/PPK.ts`, `CSV/Krypto.ts`, `CSV/IKE.ts`):**
+    *   Zidentyfikuj plik historii odpowiadający portfelowi.
+    *   **Agregacja:** Zsumuj `Wartość Zakupu` oraz `Obecna Wartość` dla wszystkich aktywów tego portfela w `OMF.ts` (Tylko status "Otwarta"/"Gotówka").
+    *   **Aktualizacja:** Znajdź **ostatni wiersz** w odpowiednim pliku historii.
+        *   **IKE/Krypto:**
+            *   Kolumna `Wkład` = Suma `Wartość Zakupu` z OMF.
+            *   Kolumna `Zysk` = Suma `Obecna Wartość` - Suma `Wartość Zakupu`.
+        *   **PPK:**
+            *   Kolumna `Pracownik` = Suma `Wartość Zakupu` z OMF.
+            *   **WAŻNE:** Jeśli transakcja dotyczyła **Pracodawcy** lub **Państwa**, zaktualizuj odpowiednią kolumnę (`Pracodawca` lub `Państwo`) w ostatnim wierszu historii, dodając do niej kwotę tej konkretnej transakcji. W przeciwnym razie zysk funduszu zostanie błędnie zawyżony.
+            *   Przelicz `Wartość Całkowita` (jako Suma Obecna Wartość z OMF) i `Zysk Funduszu` (Wartość - Składki).
+4.  **Logowanie Transakcji (`CSV/Transactions.ts`):**
+    *   Dopisz nowy wiersz na końcu pliku `CSV/Transactions.ts`.
+    *   **Format:** `Data,Portfel,Typ,Symbol,Ilość,Koszt,Waluta`.
+    *   *Przykład:* `2025-11-24,PPK,Kupno,Pracodawca,0.5,75 zł,PLN`.
+5.  **Raport:** Potwierdź zmiany w OMF i historii.
 
 ### Polecenie: `AktualizujCeny`
 
 **Wyzwalacz:** Użytkownik wkleja listę cen (np. z Google Sheets: "Symbol, Cena") lub pisze "Aktualizuj ceny używając fallback".
 
 **Zasada Walutowa (PLN):**
-Wszystkie ceny jednostkowe (lub wartości całościowe) podawane przez użytkownika w tym poleceniu są już **przeliczone na PLN**.
+Wszystkie ceny podawane przez użytkownika są już **w PLN**.
 
 **Procedura:**
 1.  **Źródło Cen:**
-    *   Jeśli użytkownik podał dane: Sparsuj je do mapy `Symbol -> Cena Rynkowa (PLN)`.
-    *   Jeśli nie: Załaduj ceny z `constants/fallbackPrices.ts`.
-2.  **Iteracja `CSV/OMF.ts`:**
-    *   Przejdź przez każdy wiersz o statusie "Otwarta".
-    *   Znajdź cenę dla danego `Symbolu`.
-    *   **Obliczenia:**
-        *   *Standard:* `Nowa Obecna Wartość = Ilość * Cena Rynkowa (PLN)`.
-        *   *PPK:* Jeśli podano cenę jednostkową dla PPK: `Nowa Wartość = Ilość (Suma jednostek) * Cena Jednostki`. Jeśli podano wartość całkowitą, użyj jej bezpośrednio.
-    *   Zaktualizuj kolumnę `Obecna Wartość`.
-    *   Przelicz pochodne: `Zysk/Strata` (`Obecna Wartość - Wartość Zakupu`) oraz `ROI`.
-3.  **Zapis:** Zaktualizuj treść `OMF_DATA` w pliku `CSV/OMF.ts`.
+    *   Jeśli podano dane: Sparsuj do `Symbol -> Cena` i zaktualizuj `constants/fallbackPrices.ts`.
+    *   Brak danych: Użyj `constants/fallbackPrices.ts`.
+2.  **Edycja `CSV/OMF.ts`:**
+    *   Iteruj przez wiersze (tylko `Status: Otwarta` / `Gotówka`).
+    *   **Oblicz:**
+        *   Cena jedn.: `Nowa Obecna Wartość = Ilość * Cena`.
+        *   Wartość całk.: `Nowa Obecna Wartość = Podana Wartość`.
+    *   **Zaktualizuj:** Nadpisz `Obecna wartość`. Przelicz `Zysk` i `ROI`.
+3.  **Synchronizacja Historii (Ostatni Miesiąc):**
+    *   Dla każdego portfela zsumuj `Obecna Wartość` i `Wartość Zakupu` z OMF (tylko Otwarte).
+    *   Zaktualizuj **ostatni wiersz** w plikach historii (`CSV/IKE.ts` itd.) nowymi sumami.
+4.  **Raport:** Podaj nową wartość portfela.
 
 ### Polecenie: `ZamknijMiesiac`
 
 **Wyzwalacz:** "Zamknij miesiąc [Nazwa] z datą [RRRR-MM-DD]".
 
-**Cel:** Utworzenie "Snapshotu" historycznego dla wykresów IKE, Krypto oraz PPK na podstawie aktualnego stanu OMF.
-
 **Procedura:**
 1.  **Agregacja z `CSV/OMF.ts`:**
-    *   Pobierz aktualne dane.
-    *   Podziel aktywa na grupy: **PPK**, **IKE** oraz **Krypto**.
-2.  **Obliczenia i Zapis (dla każdej grupy):**
-    *   **IKE i Krypto:**
-        *   `Suma Wkładu` = Suma `Wartość Zakupu` wszystkich otwartych pozycji.
-        *   `Suma Wartości` = Suma `Obecna Wartość` wszystkich otwartych pozycji (+ Gotówka).
-        *   `Zysk` = `Suma Wartości` - `Suma Wkładu`.
-        *   `ROI` = `(Zysk / Suma Wkładu) * 100`.
-        *   **Akcja:** Dopisz wiersz do `CSV/IKE.ts` lub `CSV/Krypto.ts`: `Data, Suma Wkładu, Zysk, ROI`.
+    *   Oblicz sumy `Wartość Zakupu` i `Obecna Wartość` dla każdego portfela (Tylko Otwarte/Gotówka).
+2.  **Edycja plików historii:**
+    *   Dopisz **nowy wiersz** na końcu każdego pliku z podaną datą.
+    *   **IKE/Krypto:** `Wkład`, `Zysk`, `ROI` z wyliczonych sum.
     *   **PPK:**
-        *   Pobierz wiersz PPK z OMF.
-        *   `Pracownik` = `OMF.Wartość Zakupu`.
-        *   `Wartość Portfela` = `OMF.Obecna Wartość`.
-        *   *Uwaga:* Składniki `Pracodawca` i `Państwo` nie są w OMF. Pobierz je z **ostatniego wiersza** w `CSV/PPK.ts` (zakładamy brak zmian, chyba że użytkownik poda inaczej w poleceniu).
-        *   `Zysk Funduszu` = `Wartość Portfela` - `Pracownik` - `Pracodawca` - `Państwo`.
-        *   `Całkowity Zysk` = `Wartość Portfela` - `Pracownik`.
-        *   `Podatek` = (jeśli `Zysk Funduszu` > 0) ? `Zysk Funduszu * 0.19` : 0. (Ze znakiem minus dla display).
-        *   Oblicz `ROI` i `Exit ROI` wg standardowych wzorów PPK.
-        *   **Akcja:** Dopisz wiersz do `CSV/PPK.ts` zachowując format CSV (Data, Pracownik, Pracodawca, Państwo, Zysk Funduszu, Całkowity Zysk, Podatek, ROI, Exit ROI).
-4.  **Raport:** Poinformuj o zaktualizowaniu plików historycznych.
-
----
-
-## Polecenia Pomocnicze
-
-### Polecenie: `ChangeLogos`
-*Automatyzacja konwersji SVG na komponenty React.*
-1. Skanuj folder `logos/` w poszukiwaniu `.svg`.
-2. Konwertuj każdy plik na komponent `.tsx` (np. `ETHLogo.tsx`).
-3. Zachuj `viewBox` i przenieś atrybuty do JSX (`fill-rule` -> `fillRule`).
+        *   `Pracownik`: Suma `Wartość Zakupu` z OMF.
+        *   `Pracodawca` i `Państwo`: Przepisz z poprzedniego miesiąca (chyba że masz info o zmianie).
+        *   `Całkowity Zysk`: Różnica wartości i wkładu pracownika.
+3.  **Raport:** Potwierdź utworzenie snapshotu.
 
 ### Polecenie: `UpdateDate`
-*Ręczna zmiana daty ostatniej aktualizacji.*
-1. Zaktualizuj plik `constants/appData.ts`.
-2. Ustaw zmienną `DATA_LAST_UPDATED` na podaną datę.
 
-### Polecenie: `UpdateCSV`
-*Awaryjne nadpisanie całych plików danych (Stary tryb).*
-1. Jeśli użytkownik dostarczy pełne pliki CSV, nadpisz odpowiednie pliki w `CSV/*.ts`.
+**Wyzwalacz:** "UpdateDate [RRRR-MM-DD]"
+**Procedura:** Zaktualizuj stałą `DATA_LAST_UPDATED` w pliku `constants/appData.ts`.
