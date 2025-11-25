@@ -1,6 +1,9 @@
 
 # Instrukcje i Niestandardowe Polecenia dla AI
 
+**ZASADA EDYCJI TEGO PLIKU:**
+W tym pliku (`AI_INSTRUCTIONS.md`) mogą być **tylko dodawane nowe rzeczy**. Usuwanie lub modyfikowanie istniejących treści jest dozwolone **wyłącznie** po wyraźnym potwierdzeniu przez użytkownika.
+
 Ten plik służy do zachowania ciągłości pracy nad projektem pomiędzy sesjami. Zawiera definicje poleceń specyficznych dla tego projektu, które AI powinna umieć wykonać na żądanie użytkownika.
 
 ---
@@ -94,6 +97,27 @@ Aplikacja stosuje hybrydowy model wyceny w czasie rzeczywistym:
 1.  Aktualizacja cen w `CSV/OMFopen.ts` (Obecna Wartość).
 2.  Aktualizacja ostatniego wiersza w plikach historii portfeli.
 3.  Jeśli podano dane, aktualizacja `constants/fallbackPrices.ts`.
+
+### Polecenie: `ZamknijMiesiac`
+**Wyzwalacz:** "Zamknij miesiąc [data]" lub po prostu "Zamknij miesiąc".
+**Założenie:** Użytkownik **już** zaktualizował ceny w `OMFopen.ts` (np. komendą `AktualizujCeny` lub podając dane). Traktujemy `OMFopen.ts` jako snapshot stanu na koniec miesiąca.
+**Procedura:**
+1.  **Ustal Datę:** Jeśli nie podano daty, przyjmij 1. dzień kolejnego miesiąca względem ostatniego wpisu w `CSV/PPK.ts`.
+2.  **Snapshot PPK:**
+    *   Pobierz `Obecna wartość` i `Wartość zakupu` (Wkład Pracownika) z wiersza PPK w `OMFopen.ts`.
+    *   Pobierz `Pracodawca` i `Państwo` z **ostatniego wiersza** `CSV/PPK.ts` (skumulowane wartości).
+    *   *Opcjonalnie:* Jeśli użytkownik poda w poleceniu nowe wpłaty pracodawcy/państwa, dodaj je do pobranych wartości skumulowanych.
+    *   Wylicz `Zysk Funduszu` = `Obecna wartość` - (`Pracownik` + `Pracodawca` + `Państwo`).
+    *   Wylicz `Całkowity Zysk` = `Obecna wartość` - `Pracownik`.
+    *   Wylicz `ROI` i `Exit ROI`.
+    *   Sformatuj i dopisz nowy wiersz do `CSV/PPK.ts`.
+3.  **Snapshot IKE i Krypto:**
+    *   Pobierz sumę `Obecna wartość` wszystkich aktywów danego portfela z `OMFopen.ts`.
+    *   Oblicz `Wkład` (Net Invested): Suma(`Wartość zakupu` otwartych z `OMFopen.ts`) - Suma(`Zysk` zamkniętych z `OMFclosed.ts`).
+    *   Wylicz `Zysk` = `Obecna wartość` - `Wkład`.
+    *   Wylicz `ROI`.
+    *   Sformatuj i dopisz nowe wiersze do `CSV/IKE.ts` i `CSV/Krypto.ts`.
+4.  **Aktualizacja Dat:** Zaktualizuj zmienne `*_LAST_UPDATED` we wszystkich plikach CSV na nową datę.
 
 ### Polecenie: `UpdateDate`
 **Procedura:** Aktualizacja `OMF_LAST_UPDATED` oraz `DATA_LAST_UPDATED`.
