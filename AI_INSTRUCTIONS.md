@@ -64,6 +64,7 @@ Aplikacja stosuje hybrydowy model wyceny w czasie rzeczywistym:
 1.  Przeanalizuj ostatnie zmiany w logice aplikacji (np. nowe wzory wyliczeń, nowe źródła danych, zmiany w UI).
 2.  Zaktualizuj niniejszy plik `AI_INSTRUCTIONS.md`, dodając nowe definicje lub korygując istniejące.
 3.  Dodaj lub zaktualizuj komentarze w kodzie (`.tsx`, `.ts`), szczególnie w miejscach skomplikowanej logiki (np. parsery, hooki `useMemo`, algorytmy grupujące), aby wyjaśniały "Dlaczego" coś jest zrobione w dany sposób (np. dlaczego usuwamy BOM, dlaczego taki wzór Exit ROI).
+4.  Jeśli nic nie wymagało aktualizacji to poinformuj o tym użytkownika.
 
 ### Polecenie: `RejestrujTransakcje`
 **Procedura:**

@@ -90,7 +90,7 @@ const HISTORY_PRICES_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1
  */
 
 // Custom Icon for "No PPK"
-const NoPPKIcon = ({ className }: { className?: string }) => (
+const NoPPKIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg viewBox="0 0 34 14" className={className} fill="currentColor" xmlns="http://www.w3.org/2000/svg">
     <text x="50%" y="11.5" textAnchor="middle" fontSize="12" fontWeight="900" fontFamily="sans-serif" letterSpacing="1px">PPK</text>
     <line x1="2" y1="7" x2="32" y2="7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -98,7 +98,7 @@ const NoPPKIcon = ({ className }: { className?: string }) => (
 );
 
 // Custom Icon for "Tax Toggle"
-const TaxToggleIcon = ({ className }: { className?: string }) => (
+const TaxToggleIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <rect x="5" y="3" width="14" height="18" rx="2" />
     <line x1="9" y1="10" x2="15" y2="16" />
@@ -357,7 +357,7 @@ export const App: React.FC = () => {
         fetch(`${HISTORY_PRICES_CSV_URL}&t=${timestamp}`)
       ]);
 
-      const parsePriceCsv = async (response: Response): Promise<Record<string, number>> => {
+      const parseOnlinePriceCsv = async (response: Response): Promise<Record<string, number>> => {
         if (!response.ok) return {};
         const text = await response.text();
         // Remove BOM if present at the very start (common in Excel/Google Sheets CSV exports)
@@ -381,8 +381,8 @@ export const App: React.FC = () => {
         return prices;
       };
 
-      const currentPrices = await parsePriceCsv(currentRes);
-      const prevPrices = await parsePriceCsv(historyRes);
+      const currentPrices = await parseOnlinePriceCsv(currentRes);
+      const prevPrices = await parseOnlinePriceCsv(historyRes);
 
       if (Object.keys(currentPrices).length > 0) {
          setOnlinePrices(currentPrices);
@@ -790,7 +790,7 @@ export const App: React.FC = () => {
     }
 
     const connectionPoint = {
-        ...lastData,
+        ...(lastData as any),
         projectedValue: lastData.totalValue
     };
 
@@ -858,7 +858,17 @@ export const App: React.FC = () => {
     }
 
     const connectionPoint = {
-        ...lastData,
+        date: lastData.date,
+        dateObj: lastData.dateObj,
+        employeeContribution: lastData.employeeContribution,
+        employerContribution: lastData.employerContribution,
+        stateContribution: lastData.stateContribution,
+        fundProfit: lastData.fundProfit,
+        profit: lastData.profit,
+        tax: lastData.tax,
+        roi: lastData.roi,
+        exitRoi: lastData.exitRoi,
+        totalValue: lastData.totalValue,
         projectedTotalValue: lastData.totalValue
     };
 
@@ -936,7 +946,9 @@ export const App: React.FC = () => {
       // For aggregating "Reszta Krypto", we need to reverse-engineer the previous value
       // based on current value and the change percentage.
       // Formula: Prev = Current / (1 + change/100)
-      const prevAssetVal = asset.currentValue / (1 + (change / 100));
+      // Guard against division by zero if change is -100%
+      const divisor = 1 + (change / 100);
+      const prevAssetVal = divisor !== 0 ? asset.currentValue / divisor : asset.currentValue; // Fallback to current if totally lost
       
       const pName = asset.portfolio || 'Inne';
       const isCrypto = pName === 'Krypto' || pName === 'CRYPTO';
