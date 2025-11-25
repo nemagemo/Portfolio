@@ -102,10 +102,14 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
         setData(combinedData);
 
       } else {
-        const result = parseCSV(csvSources[portfolioType], portfolioType, 'Offline');
-        setData(result.data);
-        setReport(result.report);
-        setOmfReport(null);
+        // PPK, CRYPTO, IKE, CASH
+        const sourceData = csvSources[portfolioType as keyof typeof csvSources];
+        if (sourceData) {
+            const result = parseCSV(sourceData, portfolioType, 'Offline');
+            setData(result.data);
+            setReport(result.report);
+            setOmfReport(null);
+        }
       }
     } catch (e) {
       console.error("Failed to parse CSV", e);

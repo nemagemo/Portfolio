@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
-import { LayoutDashboard, FileText, LayoutGrid, Briefcase, Coins, PiggyBank, Sun, Palette, Zap, Wifi, WifiOff, RefreshCw } from 'lucide-react';
-import { PortfolioType, GlobalHistoryRow } from './types';
+import { LayoutDashboard, LayoutGrid, Briefcase, Coins, PiggyBank, Sun, Palette, Zap, Wifi, WifiOff, RefreshCw } from 'lucide-react';
+import { PortfolioType, GlobalHistoryRow, OMFDataRow } from './types';
 import { themeStyles, Theme } from './theme/styles';
 import { useMarketData } from './hooks/useMarketData';
 import { usePortfolioData } from './hooks/usePortfolioData';
@@ -209,7 +209,7 @@ export const App: React.FC = () => {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {isOfflineValid ? (
-           <div className="flex flex-col items-center mb-6 space-y-1">
+           <div className="flex flex-col items-center mb-6 space-y-2">
               <div className="flex items-center space-x-2">
                 <button onClick={fetchPrices} disabled={isRefreshing} className={`text-xs font-bold px-3 py-1 rounded-full flex items-center shadow-sm transition-all ${isRefreshing ? 'opacity-75 cursor-wait' : 'hover:opacity-80 active:scale-95'} ${pricingMode === 'Online' ? (theme === 'neon' ? 'bg-blue-900/80 text-blue-300 border border-blue-600/50' : 'bg-blue-50 text-blue-600 border border-blue-200') : (theme === 'neon' ? 'bg-slate-800/80 text-slate-400 border border-slate-600/50' : 'bg-slate-100 text-slate-500 border border-slate-200')}`}>
                    {isRefreshing ? (<RefreshCw size={14} className="mr-1.5 animate-spin" />) : (pricingMode === 'Online' ? <Wifi size={14} className="mr-1.5" /> : <WifiOff size={14} className="mr-1.5" />)}

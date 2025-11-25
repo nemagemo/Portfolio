@@ -92,11 +92,16 @@ Aplikacja stosuje hybrydowy model wyceny w czasie rzeczywistym:
 4.  Logowanie w `CSV/Transactions.ts`.
 
 ### Polecenie: `AktualizujCeny`
-**Wyzwalacz:** Użytkownik podaje nowe ceny lub pisze "Aktualizuj ceny".
+**Wyzwalacz:** Użytkownik dostarcza plik (tekst/csv) z aktualnymi cenami aktywów.
 **Procedura:**
-1.  Aktualizacja cen w `CSV/OMFopen.ts` (Obecna Wartość).
-2.  Aktualizacja ostatniego wiersza w plikach historii portfeli.
-3.  Jeśli podano dane, aktualizacja `constants/fallbackPrices.ts`.
+1.  Parsuj dostarczony przez użytkownika tekst z cenami.
+2.  Iteruj przez wszystkie aktywne pozycje w `CSV/OMFopen.ts`.
+3.  Dla każdego aktywa, dla którego znaleziono nową cenę:
+    *   Przelicz `Obecna wartość` = `Ilość` * `Nowa Cena`.
+    *   Zaktualizuj `Zysk/Strata` = `Nowa Obecna wartość` - `Wartość zakupu`.
+    *   Zaktualizuj `ROI` = `(Zysk / Wartość zakupu) * 100`.
+4.  Zaktualizuj `constants/fallbackPrices.ts` wpisując nowe ceny jednostkowe dla odpowiednich symboli.
+5.  Zaktualizuj datę `OMF_LAST_UPDATED`.
 
 ### Polecenie: `ZamknijMiesiac`
 **Wyzwalacz:** "Zamknij miesiąc [data]" lub po prostu "Zamknij miesiąc".
@@ -117,7 +122,10 @@ Aplikacja stosuje hybrydowy model wyceny w czasie rzeczywistym:
     *   Wylicz `Zysk` = `Obecna wartość` - `Wkład`.
     *   Wylicz `ROI`.
     *   Sformatuj i dopisz nowe wiersze do `CSV/IKE.ts` i `CSV/Krypto.ts`.
-4.  **Aktualizacja Dat:** Zaktualizuj zmienne `*_LAST_UPDATED` we wszystkich plikach CSV na nową datę.
+4.  **Snapshot Gotówki:**
+    *   Pobierz wartość gotówki (PLN) z pliku `OMFopen.ts`.
+    *   Sformatuj i dopisz nowy wiersz do `CSV/Cash.ts`.
+5.  **Aktualizacja Dat:** Zaktualizuj zmienne `*_LAST_UPDATED` we wszystkich plikach CSV na nową datę.
 
 ### Polecenie: `UpdateDate`
 **Procedura:** Aktualizacja `OMF_LAST_UPDATED` oraz `DATA_LAST_UPDATED`.
