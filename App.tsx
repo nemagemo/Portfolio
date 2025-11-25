@@ -1586,7 +1586,7 @@ export const App: React.FC = () => {
                     <div className={`${styles.cardContainer} p-6 lg:col-span-2`}>
                       <div className="flex items-center justify-between mb-6">
                         <h3 className={`text-lg font-bold ${styles.text}`}>{portfolioType === 'IKE' && showTaxComparison ? 'Historyczna Wartość Portfela (IKE vs Opodatkowane)' : 'Historyczna Wartość Portfela'}</h3>
-                        {portfolioType === 'IKE' && (<button onClick={() => setShowTaxComparison(!showTaxComparison)} className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${showTaxComparison ? styles.toggleCPIActive : `bg-transparent ${theme === 'neon' ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`} title="Pokaż porównanie z kontem opodatkowanym"><TaxToggleIcon className="w-4 h-4 mr-2" />Belka</button>)}
+                        {portfolioType === 'IKE' && (<button onClick={() => setShowTaxComparison(!showTaxComparison)} className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${showTaxComparison ? styles.toggleCPIActive : `bg-transparent ${theme === 'neon' ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`}`} title="Pokaż porównanie z kontem opodatkowanym"><TaxToggleIcon className="w-4 h-4 mr-2" />Belka</button>)}
                       </div>
                       <CryptoValueChart data={data} showTaxComparison={showTaxComparison} themeMode={theme} />
                     </div>
