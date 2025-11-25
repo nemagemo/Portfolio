@@ -146,6 +146,9 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({ data, type, omfVaria
                 </th>
                 <th className="px-4 py-3 font-semibold text-right">Wynik</th>
                 <th className="px-4 py-3 font-semibold text-right">ROI</th>
+                {omfVariant !== 'closed' && (
+                  <th className="px-4 py-3 font-semibold text-right">24h</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -169,6 +172,11 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({ data, type, omfVaria
                         {r.roi}%
                       </span>
                     </td>
+                    {omfVariant !== 'closed' && (
+                      <td className={`px-4 py-3 text-right font-medium ${getProfitClass(r.change24h || 0)}`}>
+                        {r.change24h !== undefined && r.change24h !== 0 ? `${r.change24h > 0 ? '+' : ''}${r.change24h.toFixed(2)}%` : '-'}
+                      </td>
+                    )}
                   </tr>
                 );
               })}

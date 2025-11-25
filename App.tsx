@@ -358,14 +358,17 @@ export const App: React.FC = () => {
       const parsePriceCsv = async (response: Response): Promise<Record<string, number>> => {
         if (!response.ok) return {};
         const text = await response.text();
-        const lines = text.trim().split('\n');
+        // Remove BOM if present at the very start (common in Excel/Google Sheets CSV exports)
+        const cleanText = text.replace(/^\uFEFF/, '');
+        const lines = cleanText.trim().split('\n');
         const prices: Record<string, number> = {};
         
         lines.forEach((line, idx) => {
            if (idx === 0 && line.toLowerCase().includes('symbol')) return;
            const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
            if (parts.length >= 2) {
-              const symbol = parts[0].trim().replace(/^"|"$/g, '');
+              // Normalize key to UPPERCASE to ensure matching (e.g. SFD vs sfd)
+              const symbol = parts[0].trim().replace(/^"|"$/g, '').toUpperCase();
               const priceStr = parts[1].trim().replace(/^"|"$/g, '');
               const price = parseCurrency(priceStr);
               if (!isNaN(price) && price > 0) {
@@ -425,15 +428,16 @@ export const App: React.FC = () => {
             if (row.status !== 'Otwarta' && row.status !== 'Gotówka') return row;
 
             let newPrice: number | undefined = undefined;
+            const symbolKey = row.symbol.toUpperCase(); // Normalize local symbol
 
             // Priority 1: Online Price
-            if (onlinePrices && onlinePrices[row.symbol] > 0) {
-                newPrice = onlinePrices[row.symbol];
+            if (onlinePrices && onlinePrices[symbolKey] > 0) {
+                newPrice = onlinePrices[symbolKey];
             }
 
             // Priority 2: Fallback Price
-            if (newPrice === undefined && FALLBACK_PRICES[row.symbol] > 0) {
-                newPrice = FALLBACK_PRICES[row.symbol];
+            if (newPrice === undefined && FALLBACK_PRICES[symbolKey] > 0) {
+                newPrice = FALLBACK_PRICES[symbolKey];
             }
 
             if (newPrice !== undefined && newPrice > 0) {
@@ -450,6 +454,21 @@ export const App: React.FC = () => {
                 const newProfit = newCurrentValue - row.purchaseValue;
                 const newRoi = row.purchaseValue > 0 ? (newProfit / row.purchaseValue) * 100 : 0;
 
+                // Calculate 24h Change
+                // Priority 1: Google Sheet History (Online)
+                let prevPrice = historyPrices?.[symbolKey];
+                
+                // Priority 2: Data in code (OMFopen.ts Snapshot)
+                // If online history is missing, assume the value in OMFopen.ts (snapshot) was the "previous" state.
+                if (!prevPrice || prevPrice === 0) {
+                    prevPrice = row.quantity > 0 ? (row.currentValue / row.quantity) : row.currentValue;
+                }
+
+                let change24h = 0;
+                if (newPrice > 0 && prevPrice && prevPrice > 0) {
+                    change24h = ((newPrice - prevPrice) / prevPrice) * 100;
+                }
+
                 return {
                     // Explicitly assign properties instead of spread to avoid potential spread errors with discriminated unions or generic constraints
                     status: row.status,
@@ -461,7 +480,7 @@ export const App: React.FC = () => {
                     investmentPeriod: row.investmentPeriod,
                     quantity: row.quantity,
                     purchaseValue: row.purchaseValue,
-                    change24h: row.change24h,
+                    change24h: change24h,
                     currentValue: newCurrentValue,
                     profit: newProfit,
                     roi: parseFloat(newRoi.toFixed(2))
@@ -501,7 +520,7 @@ export const App: React.FC = () => {
         stats: { totalRows: 0, validRows: 0 }
       });
     }
-  }, [csvSources, portfolioType, onlinePrices]); // Re-run when onlinePrices load
+  }, [csvSources, portfolioType, onlinePrices, historyPrices]); // Re-run when onlinePrices load
 
   // --- GLOBAL HISTORY DATA (For OMF Chart) ---
   const globalHistoryData = useMemo<GlobalHistoryRow[]>(() => {
@@ -899,27 +918,25 @@ export const App: React.FC = () => {
     const groups: Record<string, any[]> = {};
     
     // Variables for aggregating small crypto assets
-    let cryptoRestValue = 0;
-    let cryptoRestWeightedChange = 0;
+    let cryptoRestValueNow = 0;
+    let cryptoRestValuePrev = 0;
 
     omfActiveAssets.forEach(asset => {
-      // Calculate change: (Current Price - History Price) / History Price
-      let change = 0;
+      // Use computed 24h change from the processed asset row to ensure consistency with table
+      const change = asset.change24h || 0;
       
-      const currentPrice = onlinePrices?.[asset.symbol] || FALLBACK_PRICES[asset.symbol] || (asset.quantity > 0 ? asset.currentValue / asset.quantity : 0);
-      const prevPrice = historyPrices?.[asset.symbol];
-
-      if (prevPrice && prevPrice > 0 && currentPrice > 0) {
-         change = ((currentPrice - prevPrice) / prevPrice) * 100;
-      }
+      // For aggregating "Reszta Krypto", we need to reverse-engineer the previous value
+      // based on current value and the change percentage.
+      // Formula: Prev = Current / (1 + change/100)
+      const prevAssetVal = asset.currentValue / (1 + (change / 100));
       
       const pName = asset.portfolio || 'Inne';
       const isCrypto = pName === 'Krypto' || pName === 'CRYPTO';
 
       // Check condition: Crypto portfolio AND value < 1000 PLN
       if (isCrypto && asset.currentValue < 1000) {
-         cryptoRestValue += asset.currentValue;
-         cryptoRestWeightedChange += (asset.currentValue * change);
+         cryptoRestValueNow += asset.currentValue;
+         cryptoRestValuePrev += prevAssetVal;
       } else {
          if (!groups[pName]) groups[pName] = [];
          groups[pName].push({
@@ -932,15 +949,19 @@ export const App: React.FC = () => {
     });
 
     // If we aggregated any crypto, add the "Reszta Krypto" item
-    if (cryptoRestValue > 0) {
-       const avgChange = cryptoRestWeightedChange / cryptoRestValue;
+    if (cryptoRestValueNow > 0) {
+       // Portfolio Change Formula: (Current - Prev) / Prev
+       const avgChange = cryptoRestValuePrev > 0 
+          ? ((cryptoRestValueNow - cryptoRestValuePrev) / cryptoRestValuePrev) * 100
+          : 0;
+
        // Ensure key exists
        const key = 'Krypto'; 
        if (!groups[key]) groups[key] = [];
        
        groups[key].push({
           name: 'Reszta Krypto',
-          size: cryptoRestValue,
+          size: cryptoRestValueNow,
           change24h: avgChange,
           portfolio: key
        });
@@ -958,7 +979,7 @@ export const App: React.FC = () => {
       children: groups[key].sort((a, b) => b.size - a.size)
     })).sort((a, b) => getSortIndex(a.name) - getSortIndex(b.name));
 
-  }, [omfActiveAssets, portfolioType, onlinePrices, historyPrices]);
+  }, [omfActiveAssets, portfolioType]);
 
 
   const stats: SummaryStats | null = useMemo(() => {
