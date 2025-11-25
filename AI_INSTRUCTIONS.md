@@ -28,7 +28,9 @@ W pliku `OMFopen.ts` oraz w wyliczeniach historycznych dla portfeli **IKE** oraz
 Aplikacja stosuje hybrydowy model wyceny w czasie rzeczywistym:
 
 1.  **Pobieranie Danych:** Równoległy fetch cen aktualnych i historycznych (z wczoraj) z Google Sheets CSV.
-2.  **Normalizacja:** Symbole są zamieniane na UPPERCASE. Z plików CSV usuwany jest znak BOM (`\uFEFF`) na początku, aby uniknąć błędów parowania pierwszego wiersza.
+2.  **Normalizacja Danych (KRYTYCZNE):**
+    *   **BOM Removal:** Pliki CSV z Google Sheets/Excel często zaczynają się od niewidocznego znaku BOM (`\uFEFF`). Należy go usunąć (`text.replace(/^\uFEFF/, '')`), inaczej nagłówek pierwszej kolumny zostanie uszkodzony.
+    *   **Case Insensitivity:** Symbole są zamieniane na `UPPERCASE` przed porównaniem.
 3.  **Priorytet Ceny Aktualnej:**
     *   1. Google Sheet (Online).
     *   2. `fallbackPrices.ts` (Hardcoded).
@@ -46,11 +48,24 @@ Aplikacja stosuje hybrydowy model wyceny w czasie rzeczywistym:
 3.  **Sortowanie:** Wewnątrz grup kafelki sortowane są malejąco wg Wartości (size).
 4.  **Agregacja "Reszta Krypto":**
     *   Kryptowaluty o wartości < 1000 PLN są zwijane w jeden kafelek o nazwie "Reszta Krypto".
-    *   ROI/Zmiana dla tej grupy liczona jest na podstawie sumy wartości i kosztów składowych (podejście portfelowe), a nie średniej ważonej.
+    *   **Logika Obliczeń:** Zmiana % dla grupy jest liczona metodą portfelową: `(SumaWartościObecnych - SumaWartościPoprzednich) / SumaWartościPoprzednich`.
+    *   Nie używamy średniej ważonej zmian procentowych, ponieważ generuje to błędy matematyczne przy dużych wahaniach małych aktywów.
 5.  **Kolory (24h):**
-    *   Wzrost > 0: Odcienie zieleni (im więcej tym ciemniejszy/intensywniejszy).
+    *   Wzrost > 0: Odcienie zieleni.
     *   Spadek < 0: Odcienie czerwieni.
-    *   Brak zmian (~0%): Szary.
+    *   Brak zmian (~0%): Szary (aby odróżnić stagnację od małego zysku).
+
+---
+
+## Standardy Kodowania i Stabilność (Best Practices)
+
+1.  **TypeScript - Spread Types:**
+    *   Unikaj używania operatora spread (`...row`) na obiektach będących unią typów (np. `AnyDataRow`). Powoduje to błąd `Spread types may only be created from object types`.
+    *   **Rozwiązanie:** Przypisuj właściwości jawnie (explicit assignment) lub rzutuj obiekt na `any`/`object` przed spreadem (tylko w ostateczności).
+2.  **JSX Template Literals:**
+    *   Uważaj na literówki w `className`. Konstrukcja `` `... ${style} ...` `` wymaga znaku `$` przed klamrą. Błąd typu `Expected "}" but found "$"` często oznacza brak dolara.
+3.  **Komponenty w JSX:**
+    *   Nie wywołuj komponentów funkcyjnych jak funkcji (np. `NoPPKIcon()`). Używaj składni JSX: `<NoPPKIcon />`. TypeScript zgłosi błąd `This expression is not callable`.
 
 ---
 

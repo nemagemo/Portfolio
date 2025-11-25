@@ -360,7 +360,9 @@ export const App: React.FC = () => {
       const parseOnlinePriceCsv = async (response: Response): Promise<Record<string, number>> => {
         if (!response.ok) return {};
         const text = await response.text();
-        // Remove BOM if present at the very start (common in Excel/Google Sheets CSV exports)
+        // CRITICAL: Google Sheets CSV exports often start with a BOM character (\uFEFF).
+        // If not removed, the first column header (e.g. "Symbol") gets corrupted,
+        // causing the first row's symbol lookup to fail.
         const cleanText = text.replace(/^\uFEFF/, '');
         const lines = cleanText.trim().split('\n');
         const prices: Record<string, number> = {};
@@ -789,8 +791,20 @@ export const App: React.FC = () => {
        });
     }
 
-    const connectionPoint = {
-        ...(lastData as any),
+    // Explicit assignment to avoid spread error
+    const connectionPoint: GlobalHistoryRow = {
+        date: lastData.date,
+        investment: lastData.investment,
+        profit: lastData.profit,
+        totalValue: lastData.totalValue,
+        roi: lastData.roi,
+        cumulativeTwr: lastData.cumulativeTwr,
+        ppkShare: lastData.ppkShare,
+        cryptoShare: lastData.cryptoShare,
+        ikeShare: lastData.ikeShare,
+        sp500Return: lastData.sp500Return,
+        wig20Return: lastData.wig20Return,
+        realTotalValue: lastData.realTotalValue,
         projectedValue: lastData.totalValue
     };
 
@@ -943,9 +957,12 @@ export const App: React.FC = () => {
       // Use computed 24h change from the processed asset row to ensure consistency with table
       const change = asset.change24h || 0;
       
-      // For aggregating "Reszta Krypto", we need to reverse-engineer the previous value
-      // based on current value and the change percentage.
-      // Formula: Prev = Current / (1 + change/100)
+      // AGGREGATION LOGIC FOR 'RESZTA KRYPTO':
+      // We cannot simply average the percentage changes because asset weights differ.
+      // Instead, we reconstruct the 'Previous Value' (Yesterday's Value) for the whole group.
+      // Formula: PrevValue = CurrentValue / (1 + Change%).
+      // Then we calculate the Group Change: (SumCurrent - SumPrev) / SumPrev.
+      
       // Guard against division by zero if change is -100%
       const divisor = 1 + (change / 100);
       const prevAssetVal = divisor !== 0 ? asset.currentValue / divisor : asset.currentValue; // Fallback to current if totally lost
@@ -1280,6 +1297,14 @@ export const App: React.FC = () => {
     }
   };
 
+  // Helper for StatsCard color
+  const getProfitColorClass = (val: number) => {
+    if (theme === 'neon') {
+        return val >= 0 ? "text-emerald-400" : "text-rose-400";
+    }
+    return val >= 0 ? "text-emerald-600" : "text-rose-600";
+  };
+
   const bestCrypto = useMemo(() => {
     if (portfolioType !== 'CRYPTO') return null;
     return omfActiveAssets
@@ -1477,7 +1502,16 @@ export const App: React.FC = () => {
                          </div>
                       </div>
                    </div>
-                ) : (<StatsCard title="Zysk/Strata" value={`${(stats.totalProfit || 0).toLocaleString('pl-PL')} zł`} trend={stats.currentRoi || 0} icon={TrendingUp} colorClass={theme === 'neon' ? ((stats.totalProfit || 0) >= 0 ? "text-emerald-400" : "text-rose-400") : ((stats.totalProfit || 0) >= 0 ? "text-emerald-600" : "text-rose-600")} className={styles.cardContainer} />)}
+                ) : (
+                   <StatsCard 
+                     title="Zysk/Strata" 
+                     value={`${(stats.totalProfit || 0).toLocaleString('pl-PL')} zł`} 
+                     trend={stats.currentRoi || 0} 
+                     icon={TrendingUp} 
+                     colorClass={getProfitColorClass(stats.totalProfit || 0)} 
+                     className={styles.cardContainer} 
+                   />
+                )}
 
                 {portfolioType === 'PPK' ? (
                    <div className={`${styles.cardContainer} p-6 hover:shadow-md transition-shadow duration-300`}>
