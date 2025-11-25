@@ -58,6 +58,7 @@ interface ChartProps {
   showProjection?: boolean;
   showCPI?: boolean;
   showTaxComparison?: boolean;
+  showExitRoi?: boolean;
   themeMode?: ThemeMode;
 }
 
@@ -616,8 +617,8 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjecti
   );
 };
 
-export const ROIChart: React.FC<ChartProps> = ({ data, themeMode = 'light' }) => {
-  const hasExitRoi = data.length > 0 && 'exitRoi' in data[0];
+export const ROIChart: React.FC<ChartProps> = ({ data, showExitRoi = true, themeMode = 'light' }) => {
+  const hasExitRoi = showExitRoi && data.length > 0 && 'exitRoi' in data[0];
   const t = CHART_THEMES[themeMode];
 
   return (
