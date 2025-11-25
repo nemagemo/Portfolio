@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useMemo } from 'react';
-import { AnyDataRow, ValidationReport, OMFValidationReport, OMFDataRow, PortfolioType, GlobalHistoryRow, SummaryStats, PPKDataRow, CryptoDataRow, IKEDataRow } from '../types';
+import { AnyDataRow, ValidationReport, OMFValidationReport, OMFDataRow, PortfolioType, GlobalHistoryRow, SummaryStats, PPKDataRow, CryptoDataRow, IKEDataRow, CashDataRow } from '../types';
 import { parseCSV, validateOMFIntegrity } from '../utils/parser';
 import { FALLBACK_PRICES } from '../constants/fallbackPrices';
 import { CPI_DATA } from '../constants/inflation';
@@ -12,6 +12,7 @@ import { KRYPTO_DATA } from '../CSV/Krypto';
 import { IKE_DATA } from '../CSV/IKE';
 import { OMF_OPEN_DATA } from '../CSV/OMFopen';
 import { OMF_CLOSED_DATA } from '../CSV/OMFclosed';
+import { CASH_DATA } from '../CSV/Cash';
 
 interface UsePortfolioDataProps {
   portfolioType: PortfolioType;
@@ -32,7 +33,8 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
     CRYPTO: KRYPTO_DATA,
     IKE: IKE_DATA,
     OMF_OPEN: OMF_OPEN_DATA,
-    OMF_CLOSED: OMF_CLOSED_DATA
+    OMF_CLOSED: OMF_CLOSED_DATA,
+    CASH: CASH_DATA
   };
 
   // 1. Parsing and Merging Prices
@@ -70,10 +72,9 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
                 const newRoi = row.purchaseValue > 0 ? (newProfit / row.purchaseValue) * 100 : 0;
 
                 // 24h Change Logic
-                let prevPrice = historyPrices?.[symbolKey];
-                if (!prevPrice || prevPrice === 0) {
-                    prevPrice = row.quantity > 0 ? (row.currentValue / row.quantity) : row.currentValue;
-                }
+                // We only use online historyPrices. We DO NOT fallback to CSV values because they might be old (e.g. last month),
+                // causing huge fake "24h" changes.
+                const prevPrice = historyPrices?.[symbolKey];
 
                 let change24h = 0;
                 if (newPrice > 0 && prevPrice && prevPrice > 0) {
@@ -118,6 +119,7 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
     const ppkData = parseCSV(csvSources.PPK, 'PPK', 'Offline').data as PPKDataRow[];
     const cryptoData = parseCSV(csvSources.CRYPTO, 'CRYPTO', 'Offline').data as CryptoDataRow[];
     const ikeData = parseCSV(csvSources.IKE, 'IKE', 'Offline').data as IKEDataRow[];
+    const cashData = parseCSV(csvSources.CASH, 'CASH', 'Offline').data as CashDataRow[];
 
     // Map Lookups
     const createMap = (arr: any[]) => new Map<string, { inv: number, profit: number }>(
@@ -126,6 +128,7 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
     const ppkMap = createMap(ppkData);
     const cryptoMap = createMap(cryptoData);
     const ikeMap = createMap(ikeData);
+    const cashMap = new Map(cashData.map(r => [r.date, r.value]));
 
     // Live Totals & Snowball Effect
     const closedProfits = { IKE: 0, CRYPTO: 0 };
@@ -150,11 +153,11 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
     const liveNetInvIKE = liveTotals.IKE.inv - closedProfits.IKE;
     const liveNetInvCrypto = liveTotals.CRYPTO.inv - closedProfits.CRYPTO;
 
-    // Dates Union
-    const allDates = new Set([...ppkMap.keys(), ...cryptoMap.keys(), ...ikeMap.keys()]);
+    // Dates Union (Including historical Cash dates)
+    const allDates = new Set([...ppkMap.keys(), ...cryptoMap.keys(), ...ikeMap.keys(), ...cashMap.keys()]);
     const sortedDates = Array.from(allDates).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
 
-    // Update Last Point with Live Data
+    // Update Last Point with Live Data (only for core assets, cash handled in loop)
     if (sortedDates.length > 0) {
         const lastDate = sortedDates[sortedDates.length - 1];
         
@@ -197,10 +200,20 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
         const currentPPKInv = excludePPK ? 0 : lastPPK.inv;
         const currentPPKProfit = excludePPK ? 0 : lastPPK.profit;
         
+        // Cash Handling: 
+        // If it's the very last month AND we have a live cash reading, use that (it's the freshest).
+        // Otherwise, try to find historical cash data for that month.
         const isCurrentMonth = index === sortedDates.length - 1;
-        const cashInv = isCurrentMonth ? liveTotals.CASH.inv : 0;
-        const cashVal = isCurrentMonth ? liveTotals.CASH.val : 0;
-        const cashProfit = cashVal - cashInv; 
+        let cashVal = 0;
+        
+        if (isCurrentMonth && liveTotals.CASH.val > 0) {
+             cashVal = liveTotals.CASH.val;
+        } else {
+             cashVal = cashMap.get(date) || 0;
+        }
+        
+        const cashInv = cashVal; // Cash is considered capital
+        const cashProfit = 0;    // Cash has 0 profit (unless currency plays, but here simplified)
 
         const totalInvestment = currentPPKInv + lastCrypto.inv + lastIKE.inv + cashInv;
         const totalProfit = currentPPKProfit + lastCrypto.profit + lastIKE.profit + cashProfit;
@@ -253,7 +266,12 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
         const ppkVal = excludePPK ? 0 : (lastPPK.inv + lastPPK.profit);
         const cryptoVal = lastCrypto.inv + lastCrypto.profit;
         const ikeVal = lastIKE.inv + lastIKE.profit;
-        const sumVal = ppkVal + cryptoVal + ikeVal;
+        const sumVal = ppkVal + cryptoVal + ikeVal; // Shares usually calculated without cash? Or with? Usually charts show assets.
+        // If we want shares of invested assets vs cash, we need to decide. 
+        // Currently existing charts (PortfolioAllocationHistoryChart) only show PPK/Crypto/IKE.
+        // Let's keep denominator as is to not break existing share logic, or add Cash share?
+        // The existing chart expects ppkShare + cryptoShare + ikeShare ~= 1 (or close).
+        // If we add Cash, those shares drop. Let's keep the denominator as Invested Assets sum for now to keep chart colors consistent.
 
         return {
             date,

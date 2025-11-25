@@ -9,7 +9,7 @@
  * 2. 'AnyDataRow' is a discriminated union used for generic components like HistoryTable.
  */
 
-export type PortfolioType = 'PPK' | 'CRYPTO' | 'IKE' | 'OMF';
+export type PortfolioType = 'PPK' | 'CRYPTO' | 'IKE' | 'OMF' | 'CASH';
 
 /**
  * Represents a single month of PPK data.
@@ -45,6 +45,15 @@ export interface CryptoDataRow {
 export interface IKEDataRow extends CryptoDataRow {
   // Value of the portfolio if it were a standard taxable account (Profit - 19% Tax)
   taxedTotalValue?: number;
+}
+
+/**
+ * Represents a single month of Cash history.
+ */
+export interface CashDataRow {
+  date: string;
+  dateObj: Date;
+  value: number;
 }
 
 /**
@@ -94,7 +103,7 @@ export interface GlobalHistoryRow {
 }
 
 // Union type for general usage in generic Tables/Charts
-export type AnyDataRow = PPKDataRow | CryptoDataRow | IKEDataRow | OMFDataRow | GlobalHistoryRow;
+export type AnyDataRow = PPKDataRow | CryptoDataRow | IKEDataRow | OMFDataRow | GlobalHistoryRow | CashDataRow;
 
 /**
  * Summary Statistics displayed in top cards.
