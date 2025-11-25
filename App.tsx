@@ -69,6 +69,7 @@ import { FALLBACK_PRICES } from './constants/fallbackPrices';
 
 // --- CONFIGURATION ---
 const PRICES_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS7p1b_z69_W5vbjwuA-FI_1J2FOPU-iPTXNwOyVkO_NCr7DJ6SPgyn1n2lnK8_fqPMU3mhZonDhR5U/pub?gid=194990672&single=true&output=csv';
+const HISTORY_PRICES_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS7p1b_z69_W5vbjwuA-FI_1J2FOPU-iPTXNwOyVkO_NCr7DJ6SPgyn1n2lnK8_fqPMU3mhZonDhR5U/pub?gid=1067187811&single=true&output=csv';
 
 /**
  * ============================================================================
@@ -186,7 +187,7 @@ const DataStatus: React.FC<{ report: ValidationReport, theme: Theme }> = ({ repo
     <div className={`${containerClass} p-4 mb-6 transition-all ${isCritical ? 'bg-rose-50 border-rose-200' : 'bg-amber-50 border-amber-200'}`}>
       <div className="flex items-center justify-between cursor-pointer" onClick={() => setExpanded(!expanded)}>
         <div className="flex items-center space-x-3">
-          <div className={`p-2 rounded-full ${isCritical ? 'bg-rose-100' : 'bg-amber-100'}`}>
+          <div className={`p-2 rounded-lg ${isCritical ? 'bg-rose-100' : 'bg-amber-100'}`}>
             {isCritical ? <XCircle className="text-rose-600 w-5 h-5" /> : <AlertTriangle className="text-amber-600 w-5 h-5" />}
           </div>
           <div>
@@ -250,7 +251,7 @@ const OMFIntegrityStatus: React.FC<{ report: OMFValidationReport, theme: Theme }
     <div className={`${containerClass} p-4 mb-6 transition-all shadow-sm ${isCritical ? 'bg-rose-50 border-rose-200' : 'bg-amber-50 border-amber-200'}`}>
        <div className="flex items-center justify-between cursor-pointer" onClick={() => setExpanded(!expanded)}>
          <div className="flex items-center space-x-3">
-            <div className={`p-2 rounded-full ${isCritical ? 'bg-rose-100' : 'bg-amber-100'}`}>
+            <div className={`p-2 rounded-lg ${isCritical ? 'bg-rose-100' : 'bg-amber-100'}`}>
               <Scale className={`${isCritical ? 'text-rose-600' : 'text-amber-600'} w-5 h-5`} />
             </div>
             <div>
@@ -316,6 +317,7 @@ export const App: React.FC = () => {
 
   // State for Online Pricing
   const [onlinePrices, setOnlinePrices] = useState<Record<string, number> | null>(null);
+  const [historyPrices, setHistoryPrices] = useState<Record<string, number> | null>(null);
   const [pricingMode, setPricingMode] = useState<'Offline' | 'Online'>('Offline');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -346,33 +348,42 @@ export const App: React.FC = () => {
   const fetchPrices = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      // Cache busting with timestamp
-      const response = await fetch(`${PRICES_CSV_URL}&t=${Date.now()}`);
-      if (!response.ok) throw new Error('Failed to fetch prices');
-      const text = await response.text();
-      
-      const lines = text.trim().split('\n');
-      const prices: Record<string, number> = {};
-      
-      // Skip header if present, assume Symbol,Price format
-      lines.forEach((line, idx) => {
-         if (idx === 0 && line.toLowerCase().includes('symbol')) return;
-         const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); // Split by comma, ignore quotes
-         if (parts.length >= 2) {
-            const symbol = parts[0].trim().replace(/^"|"$/g, '');
-            const priceStr = parts[1].trim().replace(/^"|"$/g, '');
-            const price = parseCurrency(priceStr);
-            if (!isNaN(price) && price > 0) {
-               prices[symbol] = price;
-            }
-         }
-      });
+      const timestamp = Date.now();
+      // Fetch Current and Historical Prices in parallel
+      const [currentRes, historyRes] = await Promise.all([
+        fetch(`${PRICES_CSV_URL}&t=${timestamp}`),
+        fetch(`${HISTORY_PRICES_CSV_URL}&t=${timestamp}`)
+      ]);
 
-      if (Object.keys(prices).length > 0) {
-         setOnlinePrices(prices);
+      const parsePriceCsv = async (response: Response): Promise<Record<string, number>> => {
+        if (!response.ok) return {};
+        const text = await response.text();
+        const lines = text.trim().split('\n');
+        const prices: Record<string, number> = {};
+        
+        lines.forEach((line, idx) => {
+           if (idx === 0 && line.toLowerCase().includes('symbol')) return;
+           const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+           if (parts.length >= 2) {
+              const symbol = parts[0].trim().replace(/^"|"$/g, '');
+              const priceStr = parts[1].trim().replace(/^"|"$/g, '');
+              const price = parseCurrency(priceStr);
+              if (!isNaN(price) && price > 0) {
+                 prices[symbol] = price;
+              }
+           }
+        });
+        return prices;
+      };
+
+      const currentPrices = await parsePriceCsv(currentRes);
+      const prevPrices = await parsePriceCsv(historyRes);
+
+      if (Object.keys(currentPrices).length > 0) {
+         setOnlinePrices(currentPrices);
+         setHistoryPrices(prevPrices);
          setPricingMode('Online');
       } else {
-         // If parsed but empty
          setPricingMode('Offline');
       }
     } catch (err) {
@@ -440,11 +451,21 @@ export const App: React.FC = () => {
                 const newRoi = row.purchaseValue > 0 ? (newProfit / row.purchaseValue) * 100 : 0;
 
                 return {
-                    ...row,
+                    // Explicitly assign properties instead of spread to avoid potential spread errors with discriminated unions or generic constraints
+                    status: row.status,
+                    portfolio: row.portfolio,
+                    type: row.type,
+                    symbol: row.symbol,
+                    sector: row.sector,
+                    lastPurchaseDate: row.lastPurchaseDate,
+                    investmentPeriod: row.investmentPeriod,
+                    quantity: row.quantity,
+                    purchaseValue: row.purchaseValue,
+                    change24h: row.change24h,
                     currentValue: newCurrentValue,
                     profit: newProfit,
                     roi: parseFloat(newRoi.toFixed(2))
-                };
+                } as OMFDataRow;
             }
             return row;
         });
@@ -788,6 +809,9 @@ export const App: React.FC = () => {
     const ppkData = data as PPKDataRow[];
     const lastData = ppkData[ppkData.length - 1];
 
+    // FIX: Ensure lastData exists to avoid spread type error
+    if (!lastData) return data;
+
     const annualCagr = 0.12; 
     const monthlyRate = Math.pow(1 + annualCagr, 1/12) - 1;
 
@@ -879,8 +903,15 @@ export const App: React.FC = () => {
     let cryptoRestWeightedChange = 0;
 
     omfActiveAssets.forEach(asset => {
-      // Generate placeholder change if missing
-      const change = asset.change24h !== undefined ? asset.change24h : (Math.random() * 6) - 3; 
+      // Calculate change: (Current Price - History Price) / History Price
+      let change = 0;
+      
+      const currentPrice = onlinePrices?.[asset.symbol] || FALLBACK_PRICES[asset.symbol] || (asset.quantity > 0 ? asset.currentValue / asset.quantity : 0);
+      const prevPrice = historyPrices?.[asset.symbol];
+
+      if (prevPrice && prevPrice > 0 && currentPrice > 0) {
+         change = ((currentPrice - prevPrice) / prevPrice) * 100;
+      }
       
       const pName = asset.portfolio || 'Inne';
       const isCrypto = pName === 'Krypto' || pName === 'CRYPTO';
@@ -920,7 +951,7 @@ export const App: React.FC = () => {
       children: groups[key]
     }));
 
-  }, [omfActiveAssets, portfolioType]);
+  }, [omfActiveAssets, portfolioType, onlinePrices, historyPrices]);
 
 
   const stats: SummaryStats | null = useMemo(() => {
@@ -1184,6 +1215,29 @@ export const App: React.FC = () => {
     }
   };
 
+  // Refactored from function call to useMemo to prevent "call signature" errors in JSX
+  // FIX: Changed back to function to avoid potential type issues with memoized elements
+  const renderBestCryptoCard = () => {
+    if (portfolioType !== 'CRYPTO') return null;
+    const bestCrypto = omfActiveAssets
+      .filter(a => a.portfolio === 'Krypto' || a.portfolio === 'CRYPTO')
+      .sort((a, b) => b.profit - a.profit)[0];
+    
+    if (!bestCrypto) return null;
+
+    return (
+      <StatsCard 
+        title="Najlepszy Aktyw" 
+        value={bestCrypto.symbol} 
+        subValue={`${bestCrypto.profit.toLocaleString('pl-PL')} zł`} 
+        trend={bestCrypto.roi} 
+        icon={Trophy} 
+        colorClass={theme === 'neon' ? 'text-yellow-400' : "text-yellow-600 bg-yellow-50"} 
+        className={styles.cardContainer} 
+      />
+    );
+  };
+
   const isOfflineValid = (portfolioType === 'OMF' && omfReport?.isConsistent) || (portfolioType !== 'OMF' && report?.isValid);
 
   return (
@@ -1279,7 +1333,7 @@ export const App: React.FC = () => {
 
             <div className={`${styles.cardContainer} p-6`}>
               <div className="flex items-center justify-between mb-6">
-                <div><h3 className={`text-lg font-bold ${styles.text}`}>Mapa Aktywów (Heatmap)</h3><p className={`text-sm ${styles.textSub}`}>Wielkość kafelka = Wartość, Kolor = Wynik</p></div>
+                <div><h3 className={`text-lg font-bold ${styles.text}`}>Heatmap ROI</h3></div>
                 <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><LayoutTemplate className={theme === 'neon' ? 'text-cyan-400' : 'text-cyan-600'} size={20} /></div>
               </div>
               <OMFTreemapChart data={omfStructureData} themeMode={theme} />
@@ -1288,7 +1342,7 @@ export const App: React.FC = () => {
             {/* NEW: Daily Change Heatmap */}
             <div className={`${styles.cardContainer} p-6`}>
               <div className="flex items-center justify-between mb-6">
-                <div><h3 className={`text-lg font-bold ${styles.text}`}>Zmiana 24h (Market Watch)</h3><p className={`text-sm ${styles.textSub}`}>Dzienny wynik (Placeholder dla danych Live)</p></div>
+                <div><h3 className={`text-lg font-bold ${styles.text}`}>Heatmap 24h</h3></div>
                 <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><Flame className={theme === 'neon' ? 'text-rose-400' : 'text-rose-600'} size={20} /></div>
               </div>
               <DailyChangeHeatmap data={dailyChangeData} themeMode={theme} />
@@ -1393,15 +1447,7 @@ export const App: React.FC = () => {
                    <StatsCard title="Tarcza Podatkowa" value={`${(stats.taxSaved).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`} subValue="Zaoszczędzony podatek (19%)" icon={ShieldCheck} colorClass={theme === 'neon' ? 'text-cyan-400' : "text-cyan-700 bg-cyan-50"} className={styles.cardContainer} />
                 )}
 
-                {portfolioType === 'CRYPTO' && (
-                  (() => {
-                    const bestCrypto = omfActiveAssets.filter(a => a.portfolio === 'Krypto' || a.portfolio === 'CRYPTO').sort((a, b) => b.profit - a.profit)[0];
-                    if (bestCrypto) {
-                      return (<StatsCard title="Najlepszy Aktyw" value={bestCrypto.symbol} subValue={`${bestCrypto.profit.toLocaleString('pl-PL')} zł`} trend={bestCrypto.roi} icon={Trophy} colorClass={theme === 'neon' ? 'text-yellow-400' : "text-yellow-600 bg-yellow-50"} className={styles.cardContainer} />);
-                    }
-                    return null;
-                  })()
-                )}
+                {portfolioType === 'CRYPTO' && renderBestCryptoCard()}
               </div>
             )}
 
@@ -1447,7 +1493,7 @@ export const App: React.FC = () => {
                     <div className={`${styles.cardContainer} p-6 lg:col-span-2`}>
                       <div className="flex items-center justify-between mb-6">
                         <h3 className={`text-lg font-bold ${styles.text}`}>{portfolioType === 'IKE' && showTaxComparison ? 'Historyczna Wartość Portfela (IKE vs Opodatkowane)' : 'Historyczna Wartość Portfela'}</h3>
-                        {portfolioType === 'IKE' && (<button onClick={() => setShowTaxComparison(!showTaxComparison)} className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${showTaxComparison ? styles.toggleCPIActive : `bg-transparent ${theme === 'neon' ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`}`} title="Pokaż porównanie z kontem opodatkowanym"><TaxToggleIcon className="w-4 h-4 mr-2" />Belka</button>)}
+                        {portfolioType === 'IKE' && (<button onClick={() => setShowTaxComparison(!showTaxComparison)} className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${showTaxComparison ? styles.toggleCPIActive : `bg-transparent ${theme === 'neon' ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`} title="Pokaż porównanie z kontem opodatkowanym"><TaxToggleIcon className="w-4 h-4 mr-2" />Belka</button>)}
                       </div>
                       <CryptoValueChart data={data} showTaxComparison={showTaxComparison} themeMode={theme} />
                     </div>

@@ -368,8 +368,13 @@ const TreemapContent = (props: any) => {
   if (x === undefined || y === undefined || width === undefined || height === undefined) return null;
 
   const dataItem = payload || {};
+
+  // IMPORTANT: Do not render content for Group nodes (which have children).
+  // This ensures we only see the leaf nodes (actual assets).
+  if (dataItem.children) return null;
+
   const name = nameProp || dataItem.name || '';
-  const roi = props.roi !== undefined ? props.roi : dataItem.roi;
+  const roi = props.roi !== undefined ? props.roi : (dataItem.roi !== undefined ? dataItem.roi : 0);
 
   const fontSizeName = Math.max(9, Math.min(width / 7, 12));
   const fontSizeRoi = Math.max(9, fontSizeName * 0.8);
@@ -427,7 +432,7 @@ const TreemapContent = (props: any) => {
 };
 
 interface OMFTreemapChartProps {
-  data: { name: string; value: number; roi: number }[];
+  data: any[]; // Expects nested structure
   themeMode?: ThemeMode;
 }
 
@@ -480,9 +485,14 @@ const DailyChangeContent = (props: any) => {
   if (x === undefined || y === undefined || width === undefined || height === undefined) return null;
 
   const dataItem = payload || {};
+
+  // IMPORTANT: Do not render content for Group nodes.
+  if (dataItem.children) return null;
+
   const name = nameProp || dataItem.name || '';
-  // Note: 'change24h' is passed down in payload from data structure
-  const change = dataItem.change24h !== undefined ? dataItem.change24h : 0;
+  
+  // Robust extraction of change24h from props OR payload
+  const change = props.change24h !== undefined ? props.change24h : (dataItem.change24h !== undefined ? dataItem.change24h : 0);
 
   const t = CHART_THEMES[themeMode as ThemeMode];
   
