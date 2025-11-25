@@ -92,16 +92,21 @@ Aplikacja stosuje hybrydowy model wyceny w czasie rzeczywistym:
 4.  Logowanie w `CSV/Transactions.ts`.
 
 ### Polecenie: `AktualizujCeny`
-**Wyzwalacz:** Użytkownik dostarcza plik (tekst/csv) z aktualnymi cenami aktywów.
-**Procedura:**
-1.  Parsuj dostarczony przez użytkownika tekst z cenami.
-2.  Iteruj przez wszystkie aktywne pozycje w `CSV/OMFopen.ts`.
-3.  Dla każdego aktywa, dla którego znaleziono nową cenę:
-    *   Przelicz `Obecna wartość` = `Ilość` * `Nowa Cena`.
-    *   Zaktualizuj `Zysk/Strata` = `Nowa Obecna wartość` - `Wartość zakupu`.
-    *   Zaktualizuj `ROI` = `(Zysk / Wartość zakupu) * 100`.
-4.  Zaktualizuj `constants/fallbackPrices.ts` wpisując nowe ceny jednostkowe dla odpowiednich symboli.
-5.  Zaktualizuj datę `OMF_LAST_UPDATED`.
+**Wyzwalacz:** Komenda "AktualizujCeny" ORAZ **obowiązkowo** dołączony plik/tekst z aktualnymi cenami.
+**Zasada Odmowy:** Jeśli użytkownik wyda polecenie bez dołączenia danych: **NIE INGERUJ W KOD**. Odpisz, że musisz otrzymać plik z cenami, aby wykonać aktualizację.
+**Procedura (gdy podano dane):**
+1.  **Parsowanie:** Odczytaj dostarczony tekst z cenami (Symbol -> Cena).
+2.  **Aktualizacja Fallback:** Zaktualizuj plik `constants/fallbackPrices.ts`, wpisując nowe ceny jednostkowe dla wszystkich znalezionych symboli.
+3.  **Przeliczenie OMF (na podstawie fallbackPrices):**
+    *   Edytuj `CSV/OMFopen.ts`.
+    *   Dla każdej pozycji: Pobierz cenę z właśnie zaktualizowanego `fallbackPrices.ts`.
+    *   Wylicz: `Obecna wartość` = `Ilość` * `Cena`.
+    *   Wylicz: `Zysk/Strata` = `Obecna wartość` - `Wartość zakupu`.
+    *   Wylicz: `ROI`.
+    *   Zaktualizuj datę `OMF_LAST_UPDATED`.
+4.  **Synchronizacja Historii:**
+    *   Na podstawie nowych wartości w `OMFopen.ts`, zsumuj wartość każdego portfela (PPK, IKE, Krypto).
+    *   Zaktualizuj wartości w **ostatnim wierszu** plików `CSV/PPK.ts`, `CSV/IKE.ts` oraz `CSV/Krypto.ts`, aby wykresy historyczne kończyły się aktualnym stanem ("Teraz").
 
 ### Polecenie: `ZamknijMiesiac`
 **Wyzwalacz:** "Zamknij miesiąc [data]" lub po prostu "Zamknij miesiąc".

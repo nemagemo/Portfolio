@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { parseCurrency } from '../utils/parser';
 
@@ -27,13 +28,17 @@ export const useMarketData = (): MarketDataState => {
         fetch(`${HISTORY_PRICES_CSV_URL}&t=${timestamp}`)
       ]);
 
-      const parseOnlinePriceCsv = async (response: Response): Promise<Record<string, number>> => {
-        if (!response.ok) return {};
+      const parseOnlinePriceCsv = async (response: Response): Promise<{ prices: Record<string, number>, totalRows: number }> => {
+        if (!response.ok) return { prices: {}, totalRows: 0 };
         const text = await response.text();
         const cleanText = text.replace(/^\uFEFF/, ''); // Remove BOM
         const lines = cleanText.trim().split('\n');
         const prices: Record<string, number> = {};
         
+        // Calculate potential rows (excluding header) based on non-empty lines
+        const dataLines = lines.filter((l, idx) => idx > 0 && l.trim().length > 0);
+        const totalRows = dataLines.length;
+
         lines.forEach((line, idx) => {
            if (idx === 0 && line.toLowerCase().includes('symbol')) return;
            const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
@@ -46,17 +51,26 @@ export const useMarketData = (): MarketDataState => {
               }
            }
         });
-        return prices;
+        return { prices, totalRows };
       };
 
-      const currentPrices = await parseOnlinePriceCsv(currentRes);
-      const prevPrices = await parseOnlinePriceCsv(historyRes);
+      const currentData = await parseOnlinePriceCsv(currentRes);
+      const historyData = await parseOnlinePriceCsv(historyRes);
 
-      if (Object.keys(currentPrices).length > 0) {
-         setOnlinePrices(currentPrices);
-         setHistoryPrices(prevPrices);
+      const validCount = Object.keys(currentData.prices).length;
+      const totalRows = currentData.totalRows;
+
+      // Threshold Logic:
+      // We enable Online mode ONLY if we successfully fetched prices for MORE THAN HALF of the assets in the sheet.
+      // If totalRows is 0, we treat it as offline.
+      const isQualityData = totalRows > 0 && validCount > (totalRows / 2);
+
+      if (isQualityData) {
+         setOnlinePrices(currentData.prices);
+         setHistoryPrices(historyData.prices);
          setPricingMode('Online');
       } else {
+         console.warn(`Insufficient data for Online mode. Fetched ${validCount}/${totalRows} prices. Switching to Offline.`);
          setPricingMode('Offline');
       }
     } catch (err) {
