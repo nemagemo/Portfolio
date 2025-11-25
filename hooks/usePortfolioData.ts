@@ -215,24 +215,25 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
         const currentPPKInv = excludePPK ? 0 : lastPPK.inv;
         const currentPPKProfit = excludePPK ? 0 : lastPPK.profit;
         
-        // Cash Handling: 
-        // If it's the very last month AND we have a live cash reading, use that (it's the freshest).
-        // Otherwise, try to find historical cash data for that month.
+        // Cash Handling
         const isCurrentMonth = index === sortedDates.length - 1;
         let cashVal = 0;
-        
         if (isCurrentMonth && liveTotals.CASH.val > 0) {
              cashVal = liveTotals.CASH.val;
         } else {
              cashVal = cashMap.get(date) || 0;
         }
-        
-        const cashInv = cashVal; // Cash is considered capital
-        const cashProfit = 0;    // Cash has 0 profit (unless currency plays, but here simplified)
+        const cashInv = cashVal;
+        const cashProfit = 0;
 
         const totalInvestment = currentPPKInv + lastCrypto.inv + lastIKE.inv + cashInv;
         const totalProfit = currentPPKProfit + lastCrypto.profit + lastIKE.profit + cashProfit;
         const totalValue = totalInvestment + totalProfit;
+
+        // NoPPK specific calculation for heatmap (Strictly Active Management: Crypto + IKE + Cash)
+        const invNoPPK = lastCrypto.inv + lastIKE.inv + cashInv;
+        const profitNoPPK = lastCrypto.profit + lastIKE.profit + cashProfit;
+        const valNoPPK = invNoPPK + profitNoPPK;
 
         // TWR Calculation
         const currCrypto = cryptoMap.get(date) || lastCrypto;
@@ -261,10 +262,7 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
         if (index === 0) {
             currentRealValue = totalValue;
         } else {
-            // 1. Calculate Nominal Change (Flow + Profit) since last month
             const nominalChange = totalValue - lastTotalValueForReal;
-            // 2. Add Nominal Change to Previous Real Value (Assuming new money enters at current purchasing power)
-            // 3. Discount the SUM by this month's inflation
             currentRealValue = (currentRealValue + nominalChange) / (1 + inflationRate);
         }
         lastTotalValueForReal = totalValue;
@@ -295,7 +293,12 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
             cryptoShare: sumVal > 0 ? cryptoVal / sumVal : 0,
             ikeShare: sumVal > 0 ? ikeVal / sumVal : 0,
             sp500Return: sp500Ret,
-            wig20Return: wig20Ret
+            wig20Return: wig20Ret,
+            
+            // Specific NoPPK data for heatmap
+            investmentNoPPK: invNoPPK,
+            profitNoPPK: profitNoPPK,
+            totalValueNoPPK: valNoPPK
         };
     });
   }, [portfolioType, omfActiveAssets, omfClosedAssets, excludePPK]);

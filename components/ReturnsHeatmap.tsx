@@ -20,9 +20,13 @@ const formatPercent = (val: number | null) => {
 
 const calculateMonthlyReturn = (startVal: number, endVal: number, netFlow: number) => {
   const gain = endVal - startVal - netFlow;
+  // Modified Dietz approximation: assuming flows happen mid-month is standard, 
+  // but here we use Simple Dietz (start + flow) as denominator. 
+  // To be safe against massive ROI spikes on new accounts, ensure denom > 0.
+  
   const denominator = startVal + netFlow; 
   
-  if (denominator === 0) return 0;
+  if (denominator <= 0) return 0;
   return (gain / denominator) * 100;
 };
 
@@ -117,7 +121,10 @@ export const ReturnsHeatmap: React.FC<HeatmapProps> = ({ data, themeMode = 'ligh
 
             monthlyReturns[month] = calculateMonthlyReturn(startVal, endVal, netFlow);
           } else {
-            if (endState.investment !== 0) {
+            // Initial month handling:
+            // If it's the very first month, Return is typically 0% unless we have partial month data.
+            // Here we assume flow happened at start, so return is derived from profit/inv.
+            if (endState.investment > 0) {
                monthlyReturns[month] = (endState.profit / endState.investment) * 100;
             } else {
                monthlyReturns[month] = 0;

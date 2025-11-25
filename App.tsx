@@ -206,9 +206,10 @@ export const App: React.FC = () => {
      if (portfolioType !== 'OMF') return [];
      return globalHistoryData.map(r => ({
         date: r.date,
-        investment: r.investment,
-        profit: r.profit,
-        totalValue: r.totalValue
+        // ALWAYS use the calculated NoPPK values for the heatmap to show Active Management performance
+        investment: r.investmentNoPPK || 0,
+        profit: r.profitNoPPK || 0,
+        totalValue: r.totalValueNoPPK || 0
      }));
   }, [globalHistoryData, portfolioType]);
 

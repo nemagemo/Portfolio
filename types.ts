@@ -92,6 +92,11 @@ export interface GlobalHistoryRow {
   cryptoShare: number;  // 0.0 - 1.0 ratio of Crypto in total portfolio
   ikeShare: number;     // 0.0 - 1.0 ratio of IKE in total portfolio
   
+  // Specific fields for Heatmap/Analysis excluding PPK (Active Management)
+  investmentNoPPK?: number;
+  profitNoPPK?: number;
+  totalValueNoPPK?: number;
+
   // Benchmarks (Normalized Percentage Return)
   sp500Return?: number;
   wig20Return?: number;
