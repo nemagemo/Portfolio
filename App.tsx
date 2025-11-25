@@ -629,7 +629,12 @@ export const App: React.FC = () => {
     let twrProduct = 1;
     let prevTwrVal = 0;
     let prevTwrInv = 0;
-    let cumulativeInflation = 1.0;
+    
+    // --- REAL VALUE (CPI) CALCULATION VARIABLES ---
+    // New Logic: Chain-linked Real Value
+    // RV_t = (RV_{t-1} + NominalFlow_t) / (1 + Inflation_t)
+    let currentRealValue = 0;
+    let lastTotalValueForReal = 0; 
 
     let startSP500 = 0;
     let startWIG20 = 0;
@@ -683,12 +688,22 @@ export const App: React.FC = () => {
       prevTwrVal = currTwrVal;
       prevTwrInv = currTwrInv;
 
-      if (index > 0) {
-         const inflationRate = CPI_DATA[date] || 0;
-         cumulativeInflation *= (1 + inflationRate);
+      // --- RECURSIVE REAL VALUE CALCULATION ---
+      const inflationRate = CPI_DATA[date] || 0;
+      
+      if (index === 0) {
+          // Initial month: Real Value = Nominal Value
+          currentRealValue = totalValue;
+      } else {
+          // 1. Calculate Nominal Change (Flow + Profit) since last month
+          const nominalChange = totalValue - lastTotalValueForReal;
+          
+          // 2. Add Nominal Change to Previous Real Value (Assuming new money enters at current purchasing power)
+          // 3. Discount the SUM by this month's inflation
+          currentRealValue = (currentRealValue + nominalChange) / (1 + inflationRate);
       }
       
-      const realTotalValue = totalValue / cumulativeInflation;
+      lastTotalValueForReal = totalValue;
 
       const ppkVal = excludePPK ? 0 : (lastPPK.inv + lastPPK.profit);
       const cryptoVal = lastCrypto.inv + lastCrypto.profit;
@@ -716,7 +731,7 @@ export const App: React.FC = () => {
         investment: totalInvestment,
         profit: totalProfit,
         totalValue: totalValue, 
-        realTotalValue,
+        realTotalValue: currentRealValue,
         roi: totalInvestment > 0 ? (totalProfit / totalInvestment) * 100 : 0,
         cumulativeTwr: (twrProduct - 1) * 100,
         ppkShare: sumVal > 0 ? ppkVal / sumVal : 0,

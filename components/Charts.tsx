@@ -974,7 +974,7 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection,
                     totalValue: 'Wycena Portfela',
                     investment: 'Zainwestowany Kapitał',
                     projectedValue: 'Prognoza (Droga do Miliona)',
-                    realTotalValue: 'Wartość&CPI'
+                    realTotalValue: 'Wartość Realna (CPI)'
                 };
                 return [`${value.toLocaleString('pl-PL')} zł`, labels[name] || name];
             }}
@@ -1010,7 +1010,7 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection,
             <Line 
               type="monotone" 
               dataKey="realTotalValue" 
-              name="Wartość&CPI" 
+              name="Wartość Realna (CPI)" 
               stroke={t.tax} 
               strokeWidth={t.strokeWidth} 
               strokeDasharray="3 3"
