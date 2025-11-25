@@ -1370,7 +1370,7 @@ export const App: React.FC = () => {
                     
                     <div className={`${styles.cardContainer} p-6 lg:col-span-2`}>
                       <h3 className={`text-lg font-bold ${styles.text} mb-6`}>ROI w czasie</h3>
-                      <ROIChart data={data} themeMode={theme} showExitRoi={false} />
+                      <ROIChart data={data} themeMode={theme} showExitRoi={true} />
                     </div>
 
                     <div className={`${styles.cardContainer} p-6 lg:col-span-2`}>

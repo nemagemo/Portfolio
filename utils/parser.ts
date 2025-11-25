@@ -215,7 +215,8 @@ export const parseCSV = (csvText: string, type: PortfolioType, source: 'Online' 
       const totalUserProfit = columnMap.totalUserProfit !== -1 ? parseCurrency(row[columnMap.totalUserProfit]) : 0;
       const tax = columnMap.tax !== -1 ? -Math.abs(parseCurrency(row[columnMap.tax])) : 0;
       const roi = columnMap.roi !== -1 ? parsePercent(row[columnMap.roi]) : 0;
-      const exitRoi = columnMap.exitRoi !== -1 ? parsePercent(row[columnMap.exitRoi]) : 0;
+      // We will recalculate exitRoi to ensure formula consistency
+      // const exitRoi = columnMap.exitRoi !== -1 ? parsePercent(row[columnMap.exitRoi]) : 0;
 
       if (isNaN(employee) || isNaN(employer)) {
         report.errors.push(`Wiersz ${i + 1}: Błąd parsowania wartości liczbowych.`);
@@ -234,12 +235,19 @@ export const parseCSV = (csvText: string, type: PortfolioType, source: 'Online' 
       // UPDATE: Profit (My Profit) = Value from "Całkowity Zysk" column
       const userProfit = totalUserProfit;
 
+      // CUSTOM EXIT ROI CALCULATION
+      // Formula: (Zysk Funduszu * 0.81 + Pracodawca * 0.7) / Pracownik
+      // This represents the Net Return if the funds are withdrawn early (Zwrot)
+      const exitGain = (fundProfit * 0.81) + (employer * 0.70);
+      const calculatedExitRoi = employee > 0 ? (exitGain / employee) * 100 : 0;
+
       data.push({
         date: dateStr, dateObj,
         employeeContribution: employee, employerContribution: employer, stateContribution: state,
         fundProfit: fundProfit,
         profit: userProfit, // This maps "Całkowity Zysk" to the generic "profit" field
-        tax, roi, exitRoi,
+        tax, roi, 
+        exitRoi: calculatedExitRoi,
         totalValue: totalValue
       } as PPKDataRow);
     }
