@@ -438,7 +438,7 @@ interface OMFTreemapChartProps {
 
 export const OMFTreemapChart: React.FC<OMFTreemapChartProps> = ({ data, themeMode = 'light' }) => {
   return (
-    <div className="h-[500px] w-full">
+    <div className="h-[400px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <Treemap
           data={data}
@@ -496,19 +496,19 @@ const DailyChangeContent = (props: any) => {
 
   const t = CHART_THEMES[themeMode as ThemeMode];
   
-  let color = t.dailyNeu;
-  let textColor = '#fff';
-
-  if (themeMode === 'neon') {
-     // Neon logic: Green text on Dark Green, Red text on Dark Red
-     if (change > 0) { color = t.dailyPos; textColor = '#39ff14'; }
-     else if (change < 0) { color = t.dailyNeg; textColor = '#ff0055'; }
-     else { color = t.dailyNeu; textColor = '#94a3b8'; }
-  } else {
-     // Standard logic
-     if (change > 0) color = t.dailyPos;
-     else if (change < 0) color = t.dailyNeg;
-  }
+  // Using the same color palette logic as Heatmap ROI but mapped to 24h thresholds
+  let color = '#475569'; // Default Gray
+  
+  // Define thresholds appropriate for Daily moves (approx 10x smaller than ROI thresholds)
+  // ROI Logic: >=50 (DarkGreen), >=20 (MedGreen), >=0 (LightGreen)
+  // Daily Logic: >=5 (DarkGreen), >=2 (MedGreen), >=0 (LightGreen)
+  
+  if (change >= 5) color = '#064e3b'; 
+  else if (change >= 2) color = '#047857'; 
+  else if (change >= 0) color = '#059669'; 
+  else if (change <= -5) color = '#881337'; 
+  else if (change <= -2) color = '#be123c'; 
+  else color = '#e11d48'; 
 
   const fontSizeName = Math.max(9, Math.min(width / 7, 12));
   const fontSizeChange = Math.max(9, fontSizeName * 0.9);
@@ -553,7 +553,7 @@ const DailyChangeContent = (props: any) => {
           x={x + width - padding}
           y={y + height - padding} 
           textAnchor="end"
-          fill={textColor} 
+          fill="#fff" 
           fontSize={fontSizeChange}
           fontWeight="600"
           style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9)', pointerEvents: 'none' }}
@@ -582,31 +582,7 @@ export const DailyChangeHeatmap: React.FC<DailyChangeHeatmapProps> = ({ data, th
           stroke={themeMode === 'neon' ? '#000' : "#fff"}
           fill="#8884d8"
           content={(props) => <DailyChangeContent {...props} themeMode={themeMode as ThemeMode} />}
-        >
-          <Tooltip 
-            content={({ active, payload }) => {
-              if (active && payload && payload.length) {
-                const data = payload[0].payload;
-                const style = getTooltipStyle(themeMode as ThemeMode);
-                const change = data.change24h || 0;
-                
-                return (
-                  <div className="p-3 shadow-lg" style={style}>
-                    <p className="font-bold mb-1">{data.name}</p>
-                    <p className="text-xs opacity-70 mb-1">{data.portfolio}</p>
-                    <p className="text-sm opacity-80">
-                      Wartość: <span className="font-semibold">{formatCurrency(data.size)}</span>
-                    </p>
-                    <p className={`text-sm font-semibold mt-1 ${change >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                      Zmiana 24h: {change > 0 ? '+' : ''}{Number(change).toFixed(2)}%
-                    </p>
-                  </div>
-                );
-              }
-              return null;
-            }}
-          />
-        </Treemap>
+        />
       </ResponsiveContainer>
     </div>
   );

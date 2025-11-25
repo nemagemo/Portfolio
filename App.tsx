@@ -1125,44 +1125,58 @@ export const App: React.FC = () => {
   const omfStructureData = useMemo(() => {
     if (portfolioType !== 'OMF' || omfActiveAssets.length === 0) return [];
     
+    const groups: Record<string, any[]> = {};
+    
+    // Variables for aggregating small crypto assets
     let cryptoRestValue = 0;
     let cryptoRestPurchaseValue = 0;
-    const result: { name: string; value: number; roi: number; }[] = [];
 
     omfActiveAssets.forEach(asset => {
-      if (asset.portfolio === 'Krypto' || asset.portfolio === 'CRYPTO') {
-         if (asset.currentValue > 1000) {
-           result.push({ 
-             name: asset.symbol, 
-             value: asset.currentValue,
-             roi: asset.roi 
-            });
-         } else {
-           cryptoRestValue += asset.currentValue;
-           cryptoRestPurchaseValue += asset.purchaseValue;
-         }
+      const pName = asset.portfolio || 'Inne';
+      const isCrypto = pName === 'Krypto' || pName === 'CRYPTO';
+
+      // Check condition: Crypto portfolio AND value < 1000 PLN
+      if (isCrypto && asset.currentValue < 1000) {
+         cryptoRestValue += asset.currentValue;
+         cryptoRestPurchaseValue += asset.purchaseValue;
       } else {
-         result.push({ 
-           name: asset.symbol, 
-           value: asset.currentValue,
-           roi: asset.roi
-          });
+         if (!groups[pName]) groups[pName] = [];
+         groups[pName].push({
+            name: asset.symbol,
+            value: asset.currentValue,
+            roi: asset.roi,
+            portfolio: pName
+         });
       }
     });
 
+    // If we aggregated any crypto, add the "Reszta Krypto" item
     if (cryptoRestValue > 0) {
-      const aggRoi = cryptoRestPurchaseValue > 0 
-        ? ((cryptoRestValue - cryptoRestPurchaseValue) / cryptoRestPurchaseValue) * 100 
-        : 0;
-
-      result.push({ 
-        name: 'Reszta Krypto', 
-        value: cryptoRestValue,
-        roi: aggRoi 
-      });
+       const aggRoi = cryptoRestPurchaseValue > 0 
+         ? ((cryptoRestValue - cryptoRestPurchaseValue) / cryptoRestPurchaseValue) * 100 
+         : 0;
+       
+       const key = 'Krypto'; 
+       if (!groups[key]) groups[key] = [];
+       
+       groups[key].push({
+          name: 'Reszta Krypto',
+          value: cryptoRestValue,
+          roi: aggRoi,
+          portfolio: key
+       });
     }
 
-    return result.sort((a, b) => b.value - a.value);
+    return Object.keys(groups).map(key => ({
+      name: key,
+      children: groups[key].sort((a, b) => b.value - a.value) // Sort children by value desc
+    })).sort((a, b) => {
+       // Sort groups by total value desc
+       const sumA = a.children.reduce((acc, c) => acc + c.value, 0);
+       const sumB = b.children.reduce((acc, c) => acc + c.value, 0);
+       return sumB - sumA;
+    });
+
   }, [omfActiveAssets, portfolioType]);
 
 
@@ -1215,9 +1229,9 @@ export const App: React.FC = () => {
     }
   };
 
-  // Refactored from function call to useMemo to prevent "call signature" errors in JSX
-  // FIX: Changed back to function to avoid potential type issues with memoized elements
-  const renderBestCryptoCard = () => {
+  // FIX: Changed from function call to useMemo value to avoid "not callable" errors.
+  // This memoized value returns the React Element directly (or null).
+  const bestCryptoCard = useMemo(() => {
     if (portfolioType !== 'CRYPTO') return null;
     const bestCrypto = omfActiveAssets
       .filter(a => a.portfolio === 'Krypto' || a.portfolio === 'CRYPTO')
@@ -1236,7 +1250,7 @@ export const App: React.FC = () => {
         className={styles.cardContainer} 
       />
     );
-  };
+  }, [portfolioType, omfActiveAssets, theme, styles.cardContainer]);
 
   const isOfflineValid = (portfolioType === 'OMF' && omfReport?.isConsistent) || (portfolioType !== 'OMF' && report?.isValid);
 
@@ -1447,7 +1461,7 @@ export const App: React.FC = () => {
                    <StatsCard title="Tarcza Podatkowa" value={`${(stats.taxSaved).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`} subValue="Zaoszczędzony podatek (19%)" icon={ShieldCheck} colorClass={theme === 'neon' ? 'text-cyan-400' : "text-cyan-700 bg-cyan-50"} className={styles.cardContainer} />
                 )}
 
-                {portfolioType === 'CRYPTO' && renderBestCryptoCard()}
+                {portfolioType === 'CRYPTO' && bestCryptoCard}
               </div>
             )}
 
