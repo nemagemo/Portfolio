@@ -345,6 +345,8 @@ export const App: React.FC = () => {
   const [showTaxComparison, setShowTaxComparison] = useState(false);
 
   // --- FUNCTION: Fetch Online Prices ---
+  // Handles parallel fetching of Current and Historical prices.
+  // CRITICAL: Removes BOM (\uFEFF) from CSV start to prevent parsing errors on first row.
   const fetchPrices = useCallback(async () => {
     setIsRefreshing(true);
     try {
@@ -454,12 +456,13 @@ export const App: React.FC = () => {
                 const newProfit = newCurrentValue - row.purchaseValue;
                 const newRoi = row.purchaseValue > 0 ? (newProfit / row.purchaseValue) * 100 : 0;
 
-                // Calculate 24h Change
-                // Priority 1: Google Sheet History (Online)
+                // Calculate 24h Change logic:
+                // 1. Try Google Sheet History (Best for Online Mode)
                 let prevPrice = historyPrices?.[symbolKey];
                 
-                // Priority 2: Data in code (OMFopen.ts Snapshot)
-                // If online history is missing, assume the value in OMFopen.ts (snapshot) was the "previous" state.
+                // 2. Fallback to OMFopen.ts Snapshot
+                // If we don't have yesterday's price from the web, we assume the value stored 
+                // in OMFopen.ts (the snapshot) IS the "previous state" (e.g. yesterday's close).
                 if (!prevPrice || prevPrice === 0) {
                     prevPrice = row.quantity > 0 ? (row.currentValue / row.quantity) : row.currentValue;
                 }
@@ -912,6 +915,11 @@ export const App: React.FC = () => {
   }, [csvSources, portfolioType]);
 
   // --- DAILY CHANGE DATA (GROUPED FOR TREEMAP) ---
+  // Generates grouped data for the "Heatmap 24h" visualization.
+  // RULES:
+  // 1. Groups by Portfolio (PPK, IKE, Krypto, Cash).
+  // 2. Aggregates small Crypto (<1000 PLN) into "Reszta Krypto".
+  // 3. Sorts items by Size descending within groups.
   const dailyChangeData = useMemo(() => {
     if (portfolioType !== 'OMF' || omfActiveAssets.length === 0) return [];
 
@@ -951,6 +959,7 @@ export const App: React.FC = () => {
     // If we aggregated any crypto, add the "Reszta Krypto" item
     if (cryptoRestValueNow > 0) {
        // Portfolio Change Formula: (Current - Prev) / Prev
+       // We sum up the current values and the derived previous values to get the aggregate 24h change.
        const avgChange = cryptoRestValuePrev > 0 
           ? ((cryptoRestValueNow - cryptoRestValuePrev) / cryptoRestValuePrev) * 100
           : 0;
@@ -1328,7 +1337,7 @@ export const App: React.FC = () => {
               <div className="flex flex-col md:flex-row items-center justify-between mb-6 space-y-4 md:space-y-0">
                 <div>
                   <h3 className={`text-lg font-bold ${styles.text}`}>Historia Old Man Fund</h3>
-                  <p className={`text-sm ${styles.textSub}`}>Wkład Łączny vs Zysk Łączny (PPK + Krypto + IKE)</p>
+                  <p className={`text-sm ${styles.textSub}`}>PPK + Krypto + IKE</p>
                 </div>
                 <div className={`flex items-center space-x-3 p-2 rounded-lg border ${theme === 'neon' ? 'bg-black/50 border-cyan-900/50' : 'bg-slate-50 border-slate-100'}`}>
                    <button onClick={() => setExcludePPK(!excludePPK)} disabled={showCPI || showProjection} className={`flex items-center justify-center w-20 px-2 py-1.5 rounded-md transition-all ${excludePPK ? styles.toggleNoPPKActive : `bg-transparent ${theme === 'neon' ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`} ${showCPI || showProjection ? 'opacity-50 cursor-not-allowed' : ''}`} title={excludePPK ? "Pokaż PPK" : "Ukryj PPK"}>
@@ -1353,7 +1362,7 @@ export const App: React.FC = () => {
 
             <div className={`${styles.cardContainer} p-6`}>
               <div className="flex items-center justify-between mb-6">
-                <div><h3 className={`text-lg font-bold ${styles.text}`}>Efektywność Old Man Fund</h3><p className={`text-sm ${styles.textSub}`}>Analiza stopy zwrotu (ROI) oraz TWR w czasie</p></div>
+                <div><h3 className={`text-lg font-bold ${styles.text}`}>Efektywność Old Man Fund</h3><p className={`text-sm ${styles.textSub}`}>ROI oraz TWR w czasie</p></div>
                 <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><TrendingUp className={theme === 'neon' ? 'text-purple-400' : 'text-purple-600'} size={20} /></div>
               </div>
               <GlobalPerformanceChart data={globalHistoryData} themeMode={theme} />
@@ -1378,7 +1387,7 @@ export const App: React.FC = () => {
 
             <div className={`${styles.cardContainer} p-6 overflow-x-auto`}>
               <div className="flex items-center justify-between mb-6 min-w-[600px]">
-                <div><h3 className={`text-lg font-bold ${styles.text}`}>Miesięczne Stopy Zwrotu</h3><p className={`text-sm ${styles.textSub}`}>Analiza efektywności portfela (Crypto + IKE) bez uwzględnienia PPK</p></div>
+                <div><h3 className={`text-lg font-bold ${styles.text}`}>Miesięczne Stopy Zwrotu</h3><p className={`text-sm ${styles.textSub}`}>Bez PPK</p></div>
                 <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><CalendarDays className={theme === 'neon' ? 'text-emerald-400' : 'text-emerald-600'} size={20} /></div>
               </div>
               <ReturnsHeatmap data={heatmapHistoryData} themeMode={theme} />
