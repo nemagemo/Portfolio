@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { LayoutGrid, TrendingUp, Wallet, Timer, Percent, Activity, Calendar, Milestone, LayoutTemplate, Flame, CalendarDays, Snowflake, PieChart, ChevronDown, ChevronUp } from 'lucide-react';
 import { SummaryStats, OMFDataRow, GlobalHistoryRow } from '../../types';
@@ -58,7 +59,17 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <StatsCard title="Wartość Całkowita" value={`${(stats.totalValue || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`} subValue="Aktywa Otwarte + Gotówka" icon={LayoutGrid} colorClass={theme === 'neon' ? 'text-cyan-400' : "text-slate-800 bg-slate-100"} className={styles.cardContainer} />
-        <StatsCard title="Zysk" value={`${(stats.totalProfit || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`} trend={stats.profitTrend} trendLabel="m/m" icon={TrendingUp} colorClass={theme === 'neon' ? 'text-emerald-400' : "text-emerald-600 bg-emerald-50"} className={styles.cardContainer} />
+        <StatsCard 
+          title="Zysk" 
+          value={`${(stats.totalProfit || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`} 
+          trend={stats.profitTrend} 
+          trendLabel="m/m"
+          leftTrend={stats.dailyTrend}
+          leftTrendLabel="24h"
+          icon={TrendingUp} 
+          colorClass={theme === 'neon' ? 'text-emerald-400' : "text-emerald-600 bg-emerald-50"} 
+          className={styles.cardContainer} 
+        />
         <StatsCard title="Zainwestowano" value={`${(stats.totalInvestment || 0).toLocaleString('pl-PL')} zł`} subValue="Aktywa + Gotówka" icon={Wallet} colorClass={theme === 'neon' ? 'text-blue-400' : "text-blue-600 bg-blue-50"} className={styles.cardContainer} />
         <StatsCard title="Czas od Startu" value={`${investmentDuration.months}`} subValue="msc" icon={Timer} colorClass={theme === 'neon' ? 'text-violet-400' : "text-violet-600 bg-violet-50"} className={styles.cardContainer} />
       </div>

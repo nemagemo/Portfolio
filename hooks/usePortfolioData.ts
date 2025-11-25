@@ -304,7 +304,7 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
         const aggregatedProfit = totalValue - totalInvestedSnapshot;
         const totalRoi = totalInvestedSnapshot > 0 ? (aggregatedProfit / totalInvestedSnapshot) * 100 : 0;
 
-        let profitTrend = 0, cagr = 0, ltm = 0, ytd = 0;
+        let profitTrend = 0, cagr = 0, ltm = 0, ytd = 0, dailyTrend = 0;
 
         if (globalHistoryData.length > 1) {
              const prevPeriod = globalHistoryData[globalHistoryData.length - 2];
@@ -313,6 +313,19 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
              } else if (aggregatedProfit !== 0) {
                  profitTrend = 100;
              }
+        }
+
+        // Calculate Daily Trend (Weighted 24h Change)
+        let totalPreviousValue24h = 0;
+        assetsToSum.forEach(r => {
+           const change = r.change24h || 0;
+           // Backward calculation: Prev = Curr / (1 + change%)
+           const prevVal = r.currentValue / (1 + change / 100);
+           totalPreviousValue24h += prevVal;
+        });
+        
+        if (totalPreviousValue24h > 0) {
+           dailyTrend = ((totalValue - totalPreviousValue24h) / totalPreviousValue24h) * 100;
         }
 
         // Performance Metrics
@@ -362,6 +375,7 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
             totalInvestment: totalInvestedSnapshot,
             currentRoi: totalRoi,
             profitTrend,
+            dailyTrend,
             cagr, ltm, ytd
         };
     } 

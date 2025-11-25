@@ -104,6 +104,7 @@ export interface SummaryStats {
   totalProfit: number;
   currentRoi: number;
   profitTrend?: number; // Month-over-Month profit trend percentage
+  dailyTrend?: number;  // 24h Portfolio Value trend percentage
   
   // Performance Metrics (Time-Weighted)
   cagr?: number; // Compound Annual Growth Rate
