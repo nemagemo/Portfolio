@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { AnyDataRow, PPKDataRow, CryptoDataRow, IKEDataRow, OMFDataRow, PortfolioType } from '../types';
-import { Filter } from 'lucide-react';
+import { Filter, AlertCircle } from 'lucide-react';
 
 interface HistoryTableProps {
   data: AnyDataRow[];
@@ -153,6 +153,12 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({ data, type, omfVaria
             </thead>
             <tbody>
               {displayData.map((r, index) => {
+                // Fallback indicator logic
+                const isFallback = r.isLivePrice === false && omfVariant !== 'closed' && r.portfolio !== 'Gotówka';
+                const valueClass = isFallback 
+                    ? (isNeon ? 'text-slate-500' : 'text-slate-400') 
+                    : (isNeon ? 'text-cyan-100 font-bold' : 'font-semibold text-slate-800');
+
                 return (
                   <tr key={`${r.symbol}-${index}`} className={getRowClass(index)}>
                     <td className={`px-4 py-3 ${getTextClass(true)}`}>{r.symbol}</td>
@@ -163,7 +169,17 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({ data, type, omfVaria
                       <td className={`px-4 py-3 text-right ${isNeon ? 'text-cyan-200 font-mono' : 'font-mono'}`}>{(r.quantity || 0) > 0 ? (r.quantity || 0).toFixed(4) : '-'}</td>
                     )}
                     <td className={`px-4 py-3 text-right ${isNeon ? 'text-cyan-600' : ''}`}>{(r.purchaseValue || 0).toLocaleString('pl-PL')} zł</td>
-                    <td className={`px-4 py-3 text-right ${isNeon ? 'text-cyan-100 font-bold' : 'font-semibold text-slate-800'}`}>{(r.currentValue || 0).toLocaleString('pl-PL')} zł</td>
+                    
+                    {/* Current Value with Fallback Indicator */}
+                    <td className={`px-4 py-3 text-right ${valueClass} flex items-center justify-end`}>
+                      {isFallback && (
+                        <span title="Cena offline (nieaktualna)" className="mr-1.5 flex items-center">
+                          <AlertCircle size={12} className="text-amber-500" />
+                        </span>
+                      )}
+                      {(r.currentValue || 0).toLocaleString('pl-PL')} zł
+                    </td>
+                    
                     <td className={`px-4 py-3 text-right font-medium ${getProfitClass(r.profit || 0)}`}>
                       {(r.profit || 0).toLocaleString('pl-PL')} zł
                     </td>
@@ -172,9 +188,11 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({ data, type, omfVaria
                         {r.roi}%
                       </span>
                     </td>
+                    
+                    {/* 24h Change: Only show if valid/live, else show '-' */}
                     {omfVariant !== 'closed' && (
-                      <td className={`px-4 py-3 text-right font-medium ${getProfitClass(r.change24h || 0)}`}>
-                        {r.change24h !== undefined && r.change24h !== 0 ? `${r.change24h > 0 ? '+' : ''}${r.change24h.toFixed(2)}%` : '-'}
+                      <td className={`px-4 py-3 text-right font-medium ${r.change24h !== undefined ? getProfitClass(r.change24h) : (isNeon ? 'text-slate-700' : 'text-slate-300')}`}>
+                        {r.change24h !== undefined ? `${r.change24h > 0 ? '+' : ''}${r.change24h.toFixed(2)}%` : '-'}
                       </td>
                     )}
                   </tr>

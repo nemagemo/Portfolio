@@ -2,9 +2,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { AnyDataRow, ValidationReport, OMFValidationReport, OMFDataRow, PortfolioType, GlobalHistoryRow, SummaryStats, PPKDataRow, CryptoDataRow, IKEDataRow, CashDataRow } from '../types';
 import { parseCSV, validateOMFIntegrity } from '../utils/parser';
-import { FALLBACK_PRICES } from '../constants/fallbackPrices';
 import { CPI_DATA } from '../constants/inflation';
 import { SP500_DATA, WIG20_DATA } from '../constants/benchmarks';
+import { FALLBACK_PRICES } from '../constants/fallbackPrices';
 
 // Import Local CSV Data
 import { PPK_DATA } from '../CSV/PPK';
@@ -50,46 +50,57 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
         omfOpenRows = omfOpenRows.map(row => {
             if (row.status !== 'Otwarta' && row.status !== 'Gotówka') return row;
 
-            let newPrice: number | undefined = undefined;
             const symbolKey = row.symbol.toUpperCase();
+            let finalPrice: number | undefined = undefined;
+            let isLivePrice = false;
 
-            // Priority 1: Online, 2: Fallback
+            // Priority 1: Online Price
             if (onlinePrices && onlinePrices[symbolKey] > 0) {
-                newPrice = onlinePrices[symbolKey];
-            } else if (FALLBACK_PRICES[symbolKey] > 0) {
-                newPrice = FALLBACK_PRICES[symbolKey];
+                finalPrice = onlinePrices[symbolKey];
+                isLivePrice = true;
+            } 
+            // Priority 2: Fallback Price (Offline)
+            else if (FALLBACK_PRICES[symbolKey] > 0) {
+                finalPrice = FALLBACK_PRICES[symbolKey];
+                isLivePrice = false;
             }
-
-            if (newPrice !== undefined && newPrice > 0) {
+            
+            // If we found a valid price (Online or Fallback), recalculate.
+            if (finalPrice !== undefined && finalPrice > 0) {
                 let newCurrentValue = 0;
                 if (row.quantity > 0) {
-                    newCurrentValue = row.quantity * newPrice;
+                    newCurrentValue = row.quantity * finalPrice;
                 } else {
-                    newCurrentValue = newPrice;
+                    newCurrentValue = finalPrice;
                 }
                 
                 const newProfit = newCurrentValue - row.purchaseValue;
                 const newRoi = row.purchaseValue > 0 ? (newProfit / row.purchaseValue) * 100 : 0;
 
-                // 24h Change Logic
-                // We only use online historyPrices. We DO NOT fallback to CSV values because they might be old (e.g. last month),
-                // causing huge fake "24h" changes.
-                const prevPrice = historyPrices?.[symbolKey];
-
-                let change24h = 0;
-                if (newPrice > 0 && prevPrice && prevPrice > 0) {
-                    change24h = ((newPrice - prevPrice) / prevPrice) * 100;
+                // 24h Change Logic - CRITICAL PROTECTION
+                // We ONLY calculate 24h change if we have a LIVE price.
+                let change24h = undefined;
+                
+                if (isLivePrice) {
+                    const prevPrice = historyPrices?.[symbolKey];
+                    if (prevPrice && prevPrice > 0) {
+                        change24h = ((finalPrice - prevPrice) / prevPrice) * 100;
+                    }
                 }
 
                 return {
                     ...row,
-                    change24h,
+                    change24h, // Will be undefined if not isLivePrice, preventing fake spikes
                     currentValue: newCurrentValue,
                     profit: newProfit,
-                    roi: parseFloat(newRoi.toFixed(2))
+                    roi: parseFloat(newRoi.toFixed(2)),
+                    isLivePrice
                 } as OMFDataRow;
             }
-            return row;
+            
+            // Priority 3: No price found anywhere? Keep original CSV row data.
+            // This prevents showing 0.00 zł if both Online and Fallback fail.
+            return { ...row, isLivePrice: false, change24h: undefined };
         });
 
         const combinedData = [...omfOpenRows, ...omfClosedRows];
@@ -270,12 +281,7 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
         const ppkVal = excludePPK ? 0 : (lastPPK.inv + lastPPK.profit);
         const cryptoVal = lastCrypto.inv + lastCrypto.profit;
         const ikeVal = lastIKE.inv + lastIKE.profit;
-        const sumVal = ppkVal + cryptoVal + ikeVal; // Shares usually calculated without cash? Or with? Usually charts show assets.
-        // If we want shares of invested assets vs cash, we need to decide. 
-        // Currently existing charts (PortfolioAllocationHistoryChart) only show PPK/Crypto/IKE.
-        // Let's keep denominator as is to not break existing share logic, or add Cash share?
-        // The existing chart expects ppkShare + cryptoShare + ikeShare ~= 1 (or close).
-        // If we add Cash, those shares drop. Let's keep the denominator as Invested Assets sum for now to keep chart colors consistent.
+        const sumVal = ppkVal + cryptoVal + ikeVal; 
 
         return {
             date,
@@ -338,16 +344,23 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
         }
 
         // Calculate Daily Trend (Weighted 24h Change)
+        // We ONLY include assets that have a valid 24h change (Live Prices).
         let totalPreviousValue24h = 0;
+        let totalCurrentValue24h = 0;
+
         assetsToSum.forEach(r => {
-           const change = r.change24h || 0;
-           // Backward calculation: Prev = Curr / (1 + change%)
-           const prevVal = r.currentValue / (1 + change / 100);
-           totalPreviousValue24h += prevVal;
+           // only consider assets with valid 24h change (meaning live data)
+           if (r.change24h !== undefined && r.isLivePrice) {
+               const change = r.change24h;
+               // Backward calculation: Prev = Curr / (1 + change%)
+               const prevVal = r.currentValue / (1 + change / 100);
+               totalPreviousValue24h += prevVal;
+               totalCurrentValue24h += r.currentValue;
+           }
         });
         
         if (totalPreviousValue24h > 0) {
-           dailyTrend = ((totalValue - totalPreviousValue24h) / totalPreviousValue24h) * 100;
+           dailyTrend = ((totalCurrentValue24h - totalPreviousValue24h) / totalPreviousValue24h) * 100;
         }
 
         // Performance Metrics
@@ -428,17 +441,13 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
 
         let taxSaved = 0;
         if (portfolioType === 'IKE') {
-            // CUSTOM LOGIC: Calculate tax shield based on REALIZED (Closed) positions only.
-            // We need to parse OMF_CLOSED_DATA here because the standard IKE_DATA is time-series of the whole account.
             const closedRaw = parseCSV(csvSources.OMF_CLOSED, 'OMF', 'Offline').data as OMFDataRow[];
             const closedIkeProfit = closedRaw
                 .filter(r => r.portfolio === 'IKE')
                 .reduce((acc, curr) => acc + curr.profit, 0);
             
-            // Tax shield is 19% of realized gains from closed positions
             taxSaved = closedIkeProfit > 0 ? closedIkeProfit * 0.19 : 0;
         } else if (portfolioType === 'CRYPTO') {
-             // Keep existing logic for Crypto if needed (or 0)
              taxSaved = 0; 
         }
 
@@ -463,11 +472,17 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
         const isCrypto = p.toUpperCase().includes('KRYPTO');
         if (isCrypto && a.currentValue < 1000) {
             cryptoRestNow += a.currentValue;
-            const divisor = 1 + (a.change24h || 0) / 100;
-            cryptoRestPrev += divisor !== 0 ? a.currentValue / divisor : a.currentValue;
+            // Only include change in aggregated calculation if it's valid
+            if (a.change24h !== undefined) {
+                const divisor = 1 + (a.change24h || 0) / 100;
+                cryptoRestPrev += divisor !== 0 ? a.currentValue / divisor : a.currentValue;
+            } else {
+                cryptoRestPrev += a.currentValue; // Assume no change for fallback assets
+            }
         } else {
             if (!groups[p]) groups[p] = [];
-            groups[p].push({ name: a.symbol, size: a.currentValue, change24h: a.change24h || 0, portfolio: p });
+            // Pass change24h (can be undefined)
+            groups[p].push({ name: a.symbol, size: a.currentValue, change24h: a.change24h, portfolio: p });
         }
     });
 

@@ -74,6 +74,7 @@ export interface OMFDataRow {
   profit: number;       // Absolute PnL
   roi: number;          // Percentage Return
   change24h?: number;   // Percentage change in last 24h (Online mode)
+  isLivePrice?: boolean; // True if price comes from Online source, False if fallback
 }
 
 /**
