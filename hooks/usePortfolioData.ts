@@ -404,12 +404,28 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
         const row = last as CryptoDataRow;
         if (typeof row.investment === 'undefined') return null;
 
+        let taxSaved = 0;
+        if (portfolioType === 'IKE') {
+            // CUSTOM LOGIC: Calculate tax shield based on REALIZED (Closed) positions only.
+            // We need to parse OMF_CLOSED_DATA here because the standard IKE_DATA is time-series of the whole account.
+            const closedRaw = parseCSV(csvSources.OMF_CLOSED, 'OMF', 'Offline').data as OMFDataRow[];
+            const closedIkeProfit = closedRaw
+                .filter(r => r.portfolio === 'IKE')
+                .reduce((acc, curr) => acc + curr.profit, 0);
+            
+            // Tax shield is 19% of realized gains from closed positions
+            taxSaved = closedIkeProfit > 0 ? closedIkeProfit * 0.19 : 0;
+        } else if (portfolioType === 'CRYPTO') {
+             // Keep existing logic for Crypto if needed (or 0)
+             taxSaved = 0; 
+        }
+
         return {
             totalValue: row.totalValue,
             totalProfit: row.profit,
             totalInvestment: row.investment,
             currentRoi: row.roi,
-            taxSaved: portfolioType === 'IKE' ? (row.profit > 0 ? row.profit * 0.19 : 0) : 0
+            taxSaved: taxSaved
         };
     }
   }, [data, portfolioType, globalHistoryData, omfActiveAssets, omfClosedAssets, excludePPK]);

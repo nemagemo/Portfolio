@@ -57,6 +57,9 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
 
   if (!stats) return null;
 
+  // Determine title for Value Card
+  const valueCardTitle = portfolioType === 'PPK' ? "Wartość Całkowita" : "Wartość";
+
   return (
     <>
       <div className={`grid grid-cols-1 gap-6 mb-4 ${portfolioType === 'PPK' ? 'lg:grid-cols-3 xl:grid-cols-4' : 'lg:grid-cols-4'}`}>
@@ -75,7 +78,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
                  </div>
               </div>
            </div>
-        ) : (<StatsCard title="Wartość Całkowita" value={`${(stats.totalValue || 0).toLocaleString('pl-PL')} zł`} icon={Wallet} colorClass={getTextColorClass(portfolioType)} className={styles.cardContainer} />)}
+        ) : (<StatsCard title={valueCardTitle} value={`${(stats.totalValue || 0).toLocaleString('pl-PL')} zł`} icon={Wallet} colorClass={getTextColorClass(portfolioType)} className={styles.cardContainer} />)}
 
         <StatsCard title={portfolioType === 'PPK' ? "Wkład Własny" : "Zainwestowano"} value={`${(stats.totalInvestment ?? stats.totalEmployee ?? 0).toLocaleString('pl-PL')} zł`} icon={Building2} colorClass={getTextColorClass(portfolioType)} className={styles.cardContainer} />
         
@@ -89,7 +92,6 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
                  <span className={`text-2xl font-bold ${styles.text}`}>{`${(stats.totalProfit || 0).toLocaleString('pl-PL')} zł`}</span>
                  <div className="flex items-center mt-1 text-sm space-x-2">
                     <span className={`flex items-center font-bold text-base ${theme === 'neon' ? 'text-emerald-400' : 'text-emerald-600'}`}><ArrowUpRight size={18} className="mr-0.5" />{stats.totalEmployee ? ((stats.totalProfit / stats.totalEmployee) * 100).toFixed(2) : '0.00'}%</span>
-                    <span className={`flex items-center font-normal text-xs ${theme === 'neon' ? 'text-cyan-700' : 'text-slate-400'}`}>{stats.currentRoi ? stats.currentRoi.toFixed(2) : '0.00'}% netto</span>
                  </div>
               </div>
            </div>
@@ -105,17 +107,17 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
               </div>
               <div className="flex flex-col">
                  <span className={`text-2xl font-bold ${styles.text}`}>{monthsToPayout}</span>
-                 <span className={`text-sm mt-1 ${theme === 'neon' ? 'text-cyan-700' : 'text-slate-400'}`}>miesięcy (maj 2049)</span>
+                 <span className={`text-sm mt-1 ${theme === 'neon' ? 'text-cyan-700' : 'text-slate-400'}`}>msc</span>
               </div>
            </div>
         )}
 
         {portfolioType === 'IKE' && stats.taxSaved !== undefined && (
-           <StatsCard title="Tarcza Podatkowa" value={`${(stats.taxSaved).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`} subValue="Zaoszczędzony podatek (19%)" icon={ShieldCheck} colorClass={theme === 'neon' ? 'text-cyan-400' : "text-cyan-700 bg-cyan-50"} className={styles.cardContainer} />
+           <StatsCard title="Tarcza Podatkowa" value={`${(stats.taxSaved).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`} subValue="Zaoszczędzony podatek" icon={ShieldCheck} colorClass={theme === 'neon' ? 'text-cyan-400' : "text-cyan-700 bg-cyan-50"} className={styles.cardContainer} />
         )}
 
         {portfolioType === 'CRYPTO' && bestCrypto && (
-          <StatsCard title="Najlepszy Aktyw" value={bestCrypto.symbol} subValue={`${bestCrypto.profit.toLocaleString('pl-PL')} zł`} trend={bestCrypto.roi} icon={Trophy} colorClass={theme === 'neon' ? 'text-yellow-400' : "text-yellow-600 bg-yellow-50"} className={styles.cardContainer} />
+          <StatsCard title="Najlepsze Aktywo" value={bestCrypto.symbol} subValue={`${bestCrypto.profit.toLocaleString('pl-PL')} zł`} trend={bestCrypto.roi} icon={Trophy} colorClass={theme === 'neon' ? 'text-yellow-400' : "text-yellow-600 bg-yellow-50"} className={styles.cardContainer} />
         )}
       </div>
 
