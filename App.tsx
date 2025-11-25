@@ -41,12 +41,13 @@ import {
   Trophy,
   Wifi,
   WifiOff,
-  RefreshCw
+  RefreshCw,
+  Flame
 } from 'lucide-react';
 import { parseCSV, validateOMFIntegrity, parseCurrency } from './utils/parser';
 import { AnyDataRow, SummaryStats, ValidationReport, PortfolioType, PPKDataRow, CryptoDataRow, IKEDataRow, OMFValidationReport, OMFDataRow, GlobalHistoryRow } from './types';
 import { StatsCard } from './components/StatsCard';
-import { ValueCompositionChart, ROIChart, ContributionComparisonChart, CryptoValueChart, OMFAllocationChart, GlobalSummaryChart, GlobalPerformanceChart, OMFStructureChart, OMFTreemapChart, PortfolioAllocationHistoryChart, CapitalStructureHistoryChart, SeasonalityChart } from './components/Charts';
+import { ValueCompositionChart, ROIChart, ContributionComparisonChart, CryptoValueChart, OMFAllocationChart, GlobalSummaryChart, GlobalPerformanceChart, OMFStructureChart, OMFTreemapChart, PortfolioAllocationHistoryChart, CapitalStructureHistoryChart, SeasonalityChart, DailyChangeHeatmap } from './components/Charts';
 import { HistoryTable } from './components/HistoryTable';
 import { ReturnsHeatmap } from './components/ReturnsHeatmap';
 
@@ -867,6 +868,60 @@ export const App: React.FC = () => {
     return history;
   }, [csvSources, portfolioType]);
 
+  // --- DAILY CHANGE DATA (GROUPED FOR TREEMAP) ---
+  const dailyChangeData = useMemo(() => {
+    if (portfolioType !== 'OMF' || omfActiveAssets.length === 0) return [];
+
+    const groups: Record<string, any[]> = {};
+    
+    // Variables for aggregating small crypto assets
+    let cryptoRestValue = 0;
+    let cryptoRestWeightedChange = 0;
+
+    omfActiveAssets.forEach(asset => {
+      // Generate placeholder change if missing
+      const change = asset.change24h !== undefined ? asset.change24h : (Math.random() * 6) - 3; 
+      
+      const pName = asset.portfolio || 'Inne';
+      const isCrypto = pName === 'Krypto' || pName === 'CRYPTO';
+
+      // Check condition: Crypto portfolio AND value < 1000 PLN
+      if (isCrypto && asset.currentValue < 1000) {
+         cryptoRestValue += asset.currentValue;
+         cryptoRestWeightedChange += (asset.currentValue * change);
+      } else {
+         if (!groups[pName]) groups[pName] = [];
+         groups[pName].push({
+            name: asset.symbol,
+            size: asset.currentValue,
+            change24h: change,
+            portfolio: pName
+         });
+      }
+    });
+
+    // If we aggregated any crypto, add the "Reszta Krypto" item
+    if (cryptoRestValue > 0) {
+       const avgChange = cryptoRestWeightedChange / cryptoRestValue;
+       // Ensure key exists
+       const key = 'Krypto'; 
+       if (!groups[key]) groups[key] = [];
+       
+       groups[key].push({
+          name: 'Reszta Krypto',
+          size: cryptoRestValue,
+          change24h: avgChange,
+          portfolio: key
+       });
+    }
+
+    return Object.keys(groups).map(key => ({
+      name: key,
+      children: groups[key]
+    }));
+
+  }, [omfActiveAssets, portfolioType]);
+
 
   const stats: SummaryStats | null = useMemo(() => {
     if (portfolioType === 'OMF') {
@@ -1228,6 +1283,15 @@ export const App: React.FC = () => {
                 <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><LayoutTemplate className={theme === 'neon' ? 'text-cyan-400' : 'text-cyan-600'} size={20} /></div>
               </div>
               <OMFTreemapChart data={omfStructureData} themeMode={theme} />
+            </div>
+
+            {/* NEW: Daily Change Heatmap */}
+            <div className={`${styles.cardContainer} p-6`}>
+              <div className="flex items-center justify-between mb-6">
+                <div><h3 className={`text-lg font-bold ${styles.text}`}>Zmiana 24h (Market Watch)</h3><p className={`text-sm ${styles.textSub}`}>Dzienny wynik (Placeholder dla danych Live)</p></div>
+                <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><Flame className={theme === 'neon' ? 'text-rose-400' : 'text-rose-600'} size={20} /></div>
+              </div>
+              <DailyChangeHeatmap data={dailyChangeData} themeMode={theme} />
             </div>
 
             <div className={`${styles.cardContainer} p-6 overflow-x-auto`}>

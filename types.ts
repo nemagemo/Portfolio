@@ -64,6 +64,7 @@ export interface OMFDataRow {
   purchaseValue: number;// Cost Basis in PLN
   profit: number;       // Absolute PnL
   roi: number;          // Percentage Return
+  change24h?: number;   // Percentage change in last 24h (Online mode)
 }
 
 /**

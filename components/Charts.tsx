@@ -82,6 +82,9 @@ const CHART_THEMES: Record<ThemeMode, {
   pieColors: string[];
   barProfitPos: string;
   barProfitNeg: string;
+  dailyPos: string;   // 24h Green
+  dailyNeg: string;   // 24h Red
+  dailyNeu: string;   // 24h Gray
 }> = {
   light: {
     investment: '#475569', // Slate-600 (Professional Blue-Grey)
@@ -101,7 +104,10 @@ const CHART_THEMES: Record<ThemeMode, {
     strokeWidth: 2,      
     pieColors: ['#475569', '#7c3aed', '#059669', '#d97706', '#be123c', '#1e293b'],
     barProfitPos: '#059669',
-    barProfitNeg: '#b91c1c'
+    barProfitNeg: '#b91c1c',
+    dailyPos: '#16a34a', // Green-600
+    dailyNeg: '#dc2626', // Red-600
+    dailyNeu: '#94a3b8'  // Slate-400
   },
   comic: {
     investment: '#0ea5e9', // Cyan (Process Cyan)
@@ -121,7 +127,10 @@ const CHART_THEMES: Record<ThemeMode, {
     strokeWidth: 3,        // Bold Lines
     pieColors: ['#0ea5e9', '#a855f7', '#22c55e', '#f59e0b', '#f43f5e', '#64748b'],
     barProfitPos: '#22c55e',
-    barProfitNeg: '#ef4444'
+    barProfitNeg: '#ef4444',
+    dailyPos: '#22c55e', // Bright Green
+    dailyNeg: '#ef4444', // Bright Red
+    dailyNeu: '#cbd5e1'
   },
   neon: {
     investment: '#22d3ee', // Cyan-400 (Electric Blue)
@@ -141,7 +150,10 @@ const CHART_THEMES: Record<ThemeMode, {
     strokeWidth: 2,
     pieColors: ['#06b6d4', '#8b5cf6', '#10b981', '#f59e0b', '#f43f5e', '#64748b'],
     barProfitPos: '#39ff14',
-    barProfitNeg: '#ef4444'
+    barProfitNeg: '#ef4444',
+    dailyPos: '#059669', // Darker Green for background block
+    dailyNeg: '#991b1b', // Darker Red for background block
+    dailyNeu: '#1e293b'
   }
 };
 
@@ -420,8 +432,6 @@ interface OMFTreemapChartProps {
 }
 
 export const OMFTreemapChart: React.FC<OMFTreemapChartProps> = ({ data, themeMode = 'light' }) => {
-  const t = CHART_THEMES[themeMode];
-  
   return (
     <div className="h-[500px] w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -450,6 +460,136 @@ export const OMFTreemapChart: React.FC<OMFTreemapChartProps> = ({ data, themeMod
                         ROI: {data.roi > 0 ? '+' : ''}{Number(data.roi).toFixed(2)}%
                       </p>
                     )}
+                  </div>
+                );
+              }
+              return null;
+            }}
+          />
+        </Treemap>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+// --- DAILY CHANGE HEATMAP (TREEMAP VARIANT) ---
+
+const DailyChangeContent = (props: any) => {
+  const { x, y, width, height, index, payload, name: nameProp, themeMode } = props;
+  
+  if (x === undefined || y === undefined || width === undefined || height === undefined) return null;
+
+  const dataItem = payload || {};
+  const name = nameProp || dataItem.name || '';
+  // Note: 'change24h' is passed down in payload from data structure
+  const change = dataItem.change24h !== undefined ? dataItem.change24h : 0;
+
+  const t = CHART_THEMES[themeMode as ThemeMode];
+  
+  let color = t.dailyNeu;
+  let textColor = '#fff';
+
+  if (themeMode === 'neon') {
+     // Neon logic: Green text on Dark Green, Red text on Dark Red
+     if (change > 0) { color = t.dailyPos; textColor = '#39ff14'; }
+     else if (change < 0) { color = t.dailyNeg; textColor = '#ff0055'; }
+     else { color = t.dailyNeu; textColor = '#94a3b8'; }
+  } else {
+     // Standard logic
+     if (change > 0) color = t.dailyPos;
+     else if (change < 0) color = t.dailyNeg;
+  }
+
+  const fontSizeName = Math.max(9, Math.min(width / 7, 12));
+  const fontSizeChange = Math.max(9, fontSizeName * 0.9);
+  
+  const showText = width > 40 && height > 30;
+  const padding = 5;
+
+  const strokeColor = themeMode === 'neon' ? '#000' : '#fff';
+  const strokeWidth = themeMode === 'comic' ? 2 : 2;
+
+  return (
+    <g>
+      <rect
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        fill={color}
+        stroke={strokeColor}
+        strokeWidth={strokeWidth}
+        opacity={themeMode === 'neon' ? 0.8 : 1}
+      />
+      {/* Logo overlay for visual flair */}
+      {name && <AssetLogo name={name} x={x} y={y} width={width} height={height} />}
+
+      {showText && name && (
+        <text
+          x={x + padding}
+          y={y + padding + fontSizeName * 0.8} 
+          textAnchor="start"
+          fill="#fff"
+          fontSize={fontSizeName}
+          fontWeight="700"
+          style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9)', pointerEvents: 'none' }}
+        >
+          {name}
+        </text>
+      )}
+      
+      {showText && (
+        <text
+          x={x + width - padding}
+          y={y + height - padding} 
+          textAnchor="end"
+          fill={textColor} 
+          fontSize={fontSizeChange}
+          fontWeight="600"
+          style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9)', pointerEvents: 'none' }}
+        >
+          {change > 0 ? '+' : ''}{Number(change).toFixed(2)}%
+        </text>
+      )}
+    </g>
+  );
+};
+
+interface DailyChangeHeatmapProps {
+  data: any[]; // Expects nested structure for Treemap
+  themeMode?: ThemeMode;
+}
+
+export const DailyChangeHeatmap: React.FC<DailyChangeHeatmapProps> = ({ data, themeMode = 'light' }) => {
+  return (
+    <div className="h-[400px] w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <Treemap
+          data={data}
+          dataKey="size" // We map 'value' to 'size' in the parent data preparation
+          nameKey="name"
+          aspectRatio={4 / 3}
+          stroke={themeMode === 'neon' ? '#000' : "#fff"}
+          fill="#8884d8"
+          content={(props) => <DailyChangeContent {...props} themeMode={themeMode as ThemeMode} />}
+        >
+          <Tooltip 
+            content={({ active, payload }) => {
+              if (active && payload && payload.length) {
+                const data = payload[0].payload;
+                const style = getTooltipStyle(themeMode as ThemeMode);
+                const change = data.change24h || 0;
+                
+                return (
+                  <div className="p-3 shadow-lg" style={style}>
+                    <p className="font-bold mb-1">{data.name}</p>
+                    <p className="text-xs opacity-70 mb-1">{data.portfolio}</p>
+                    <p className="text-sm opacity-80">
+                      Wartość: <span className="font-semibold">{formatCurrency(data.size)}</span>
+                    </p>
+                    <p className={`text-sm font-semibold mt-1 ${change >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                      Zmiana 24h: {change > 0 ? '+' : ''}{Number(change).toFixed(2)}%
+                    </p>
                   </div>
                 );
               }
