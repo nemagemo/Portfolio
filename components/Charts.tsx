@@ -497,15 +497,14 @@ const DailyChangeContent = (props: any) => {
   const t = CHART_THEMES[themeMode as ThemeMode];
   
   // Using the same color palette logic as Heatmap ROI but mapped to 24h thresholds
-  let color = '#475569'; // Default Gray
+  // Default to gray if change is exactly 0 (or very close)
+  let color = '#64748b'; 
   
-  // Define thresholds appropriate for Daily moves (approx 10x smaller than ROI thresholds)
-  // ROI Logic: >=50 (DarkGreen), >=20 (MedGreen), >=0 (LightGreen)
-  // Daily Logic: >=5 (DarkGreen), >=2 (MedGreen), >=0 (LightGreen)
-  
-  if (change >= 5) color = '#064e3b'; 
+  // Daily Logic: >=5 (DarkGreen), >=2 (MedGreen), >0 (LightGreen), 0 (Gray)
+  if (Math.abs(change) < 0.01) color = '#64748b'; // Explicit Gray for ~0%
+  else if (change >= 5) color = '#064e3b'; 
   else if (change >= 2) color = '#047857'; 
-  else if (change >= 0) color = '#059669'; 
+  else if (change > 0) color = '#059669'; 
   else if (change <= -5) color = '#881337'; 
   else if (change <= -2) color = '#be123c'; 
   else color = '#e11d48'; 

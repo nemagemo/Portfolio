@@ -946,10 +946,17 @@ export const App: React.FC = () => {
        });
     }
 
+    // Sorting Order for Treemap Groups
+    const PORTFOLIO_ORDER = ['PPK', 'IKE', 'Krypto', 'Gotówka'];
+    const getSortIndex = (name: string) => {
+        const idx = PORTFOLIO_ORDER.indexOf(name);
+        return idx === -1 ? 999 : idx;
+    };
+
     return Object.keys(groups).map(key => ({
       name: key,
-      children: groups[key]
-    }));
+      children: groups[key].sort((a, b) => b.size - a.size)
+    })).sort((a, b) => getSortIndex(a.name) - getSortIndex(b.name));
 
   }, [omfActiveAssets, portfolioType, onlinePrices, historyPrices]);
 
@@ -1167,15 +1174,17 @@ export const App: React.FC = () => {
        });
     }
 
+    // Sorting Order for Treemap Groups
+    const PORTFOLIO_ORDER = ['PPK', 'IKE', 'Krypto', 'Gotówka'];
+    const getSortIndex = (name: string) => {
+        const idx = PORTFOLIO_ORDER.indexOf(name);
+        return idx === -1 ? 999 : idx;
+    };
+
     return Object.keys(groups).map(key => ({
       name: key,
       children: groups[key].sort((a, b) => b.value - a.value) // Sort children by value desc
-    })).sort((a, b) => {
-       // Sort groups by total value desc
-       const sumA = a.children.reduce((acc, c) => acc + c.value, 0);
-       const sumB = b.children.reduce((acc, c) => acc + c.value, 0);
-       return sumB - sumA;
-    });
+    })).sort((a, b) => getSortIndex(a.name) - getSortIndex(b.name));
 
   }, [omfActiveAssets, portfolioType]);
 
@@ -1229,28 +1238,12 @@ export const App: React.FC = () => {
     }
   };
 
-  // FIX: Changed from function call to useMemo value to avoid "not callable" errors.
-  // This memoized value returns the React Element directly (or null).
-  const bestCryptoCard = useMemo(() => {
+  const bestCrypto = useMemo(() => {
     if (portfolioType !== 'CRYPTO') return null;
-    const bestCrypto = omfActiveAssets
+    return omfActiveAssets
       .filter(a => a.portfolio === 'Krypto' || a.portfolio === 'CRYPTO')
-      .sort((a, b) => b.profit - a.profit)[0];
-    
-    if (!bestCrypto) return null;
-
-    return (
-      <StatsCard 
-        title="Najlepszy Aktyw" 
-        value={bestCrypto.symbol} 
-        subValue={`${bestCrypto.profit.toLocaleString('pl-PL')} zł`} 
-        trend={bestCrypto.roi} 
-        icon={Trophy} 
-        colorClass={theme === 'neon' ? 'text-yellow-400' : "text-yellow-600 bg-yellow-50"} 
-        className={styles.cardContainer} 
-      />
-    );
-  }, [portfolioType, omfActiveAssets, theme, styles.cardContainer]);
+      .sort((a, b) => b.profit - a.profit)[0] || null;
+  }, [portfolioType, omfActiveAssets]);
 
   const isOfflineValid = (portfolioType === 'OMF' && omfReport?.isConsistent) || (portfolioType !== 'OMF' && report?.isValid);
 
@@ -1461,7 +1454,17 @@ export const App: React.FC = () => {
                    <StatsCard title="Tarcza Podatkowa" value={`${(stats.taxSaved).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`} subValue="Zaoszczędzony podatek (19%)" icon={ShieldCheck} colorClass={theme === 'neon' ? 'text-cyan-400' : "text-cyan-700 bg-cyan-50"} className={styles.cardContainer} />
                 )}
 
-                {portfolioType === 'CRYPTO' && bestCryptoCard}
+                {portfolioType === 'CRYPTO' && bestCrypto && (
+                  <StatsCard 
+                    title="Najlepszy Aktyw" 
+                    value={bestCrypto.symbol} 
+                    subValue={`${bestCrypto.profit.toLocaleString('pl-PL')} zł`} 
+                    trend={bestCrypto.roi} 
+                    icon={Trophy} 
+                    colorClass={theme === 'neon' ? 'text-yellow-400' : "text-yellow-600 bg-yellow-50"} 
+                    className={styles.cardContainer} 
+                  />
+                )}
               </div>
             )}
 
