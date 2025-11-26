@@ -134,48 +134,48 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
              {/* Metric Block: CAGR */}
              <div className={`p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
                 <div className="flex justify-between items-start mb-0.5">
-                  <div className={`text-[9px] uppercase font-bold ${isNeon ? 'text-purple-400' : 'text-slate-400'}`}>CAGR</div>
-                  <IconCAGR className={`w-3.5 h-3.5 ${isNeon ? 'text-purple-500/80' : 'text-purple-400/60'}`} />
+                  <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-purple-400' : 'text-slate-400'}`}>CAGR</div>
+                  <IconCAGR className={`w-4 h-4 ${isNeon ? 'text-purple-500/80' : 'text-purple-400/60'}`} />
                 </div>
-                <div className={`text-base font-bold ${isNeon ? 'text-purple-300' : 'text-slate-700'}`}>{stats.cagr?.toFixed(2)}%</div>
-                <div className={`text-[8px] ${isNeon ? 'text-purple-500/60' : 'text-slate-400'}`}>Średniorocznie</div>
+                <div className={`text-lg sm:text-xl font-bold ${isNeon ? 'text-purple-300' : 'text-slate-700'}`}>{stats.cagr?.toFixed(2)}%</div>
+                <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-purple-500/60' : 'text-slate-400'}`}>Średniorocznie</div>
              </div>
 
              {/* Metric Block: LTM */}
              <div className={`p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
                 <div className="flex justify-between items-start mb-0.5">
-                  <div className={`text-[9px] uppercase font-bold ${isNeon ? 'text-amber-400' : 'text-slate-400'}`}>LTM</div>
-                  <IconLTM className={`w-3.5 h-3.5 ${isNeon ? 'text-amber-500/80' : 'text-amber-400/60'}`} />
+                  <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-amber-400' : 'text-slate-400'}`}>LTM</div>
+                  <IconLTM className={`w-4 h-4 ${isNeon ? 'text-amber-500/80' : 'text-amber-400/60'}`} />
                 </div>
-                <div className={`text-base font-bold ${isNeon ? 'text-amber-300' : 'text-slate-700'}`}>{stats.ltm?.toFixed(2)}%</div>
-                <div className={`text-[8px] ${isNeon ? 'text-amber-500/60' : 'text-slate-400'}`}>Ost. 12 msc (TWR)</div>
+                <div className={`text-lg sm:text-xl font-bold ${isNeon ? 'text-amber-300' : 'text-slate-700'}`}>{stats.ltm?.toFixed(2)}%</div>
+                <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-amber-500/60' : 'text-slate-400'}`}>Ost. 12 msc (TWR)</div>
              </div>
 
              {/* Metric Block: Time */}
              <div className={`p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
                 <div className="flex justify-between items-start mb-0.5">
-                  <div className={`text-[9px] uppercase font-bold ${isNeon ? 'text-blue-400' : 'text-slate-400'}`}>Czas</div>
-                  <IconHourglass className={`w-3.5 h-3.5 ${isNeon ? 'text-blue-500/80' : 'text-blue-400/60'}`} />
+                  <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-blue-400' : 'text-slate-400'}`}>Czas</div>
+                  <IconHourglass className={`w-4 h-4 ${isNeon ? 'text-blue-500/80' : 'text-blue-400/60'}`} />
                 </div>
-                <div className={`text-base font-bold ${isNeon ? 'text-blue-300' : 'text-slate-700'}`}>{investmentDuration.months} <span className="text-[10px] font-normal">msc</span></div>
-                <div className={`text-[8px] ${isNeon ? 'text-blue-500/60' : 'text-slate-400'}`}>od startu</div>
+                <div className={`text-lg sm:text-xl font-bold ${isNeon ? 'text-blue-300' : 'text-slate-700'}`}>{investmentDuration.months} <span className="text-[10px] font-normal">msc</span></div>
+                <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-blue-500/60' : 'text-slate-400'}`}>od startu</div>
              </div>
 
              {/* Metric Block: Daily Change */}
              <div className={`p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
                 <div className="flex justify-between items-start mb-0.5">
-                  <div className={`text-[9px] uppercase font-bold ${isNeon ? 'text-cyan-400' : 'text-slate-400'}`}>24h</div>
-                  <IconPulse className={`w-3.5 h-3.5 ${isNeon ? 'text-cyan-500/80' : 'text-cyan-400/60'}`} />
+                  <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-cyan-400' : 'text-slate-400'}`}>24h</div>
+                  <IconPulse className={`w-4 h-4 ${isNeon ? 'text-cyan-500/80' : 'text-cyan-400/60'}`} />
                 </div>
-                <div className={`text-base font-bold flex items-center ${
+                <div className={`text-lg sm:text-xl font-bold flex items-center ${
                   (stats.dailyTrend || 0) >= 0 
                     ? (isNeon ? 'text-[#39ff14]' : 'text-emerald-600') 
                     : 'text-rose-500'
                 }`}>
-                   {(stats.dailyTrend || 0) >= 0 ? <ArrowUpRight size={14} className="mr-1"/> : <ArrowDownRight size={14} className="mr-1"/>}
+                   {(stats.dailyTrend || 0) >= 0 ? <ArrowUpRight size={16} className="mr-1"/> : <ArrowDownRight size={16} className="mr-1"/>}
                    {Math.abs(stats.dailyTrend || 0).toFixed(2)}%
                 </div>
-                <div className={`text-[8px] ${isNeon ? 'text-cyan-500/60' : 'text-slate-400'}`}>Zmiana wartości</div>
+                <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-cyan-500/60' : 'text-slate-400'}`}>Zmiana wartości</div>
              </div>
           </div>
 
