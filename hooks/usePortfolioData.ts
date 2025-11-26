@@ -87,6 +87,8 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
 
                 // 24h Change Logic - CRITICAL PROTECTION
                 // We ONLY calculate 24h change if we have a LIVE price.
+                // If we use a fallback price (stored in a file), comparing it to "yesterday's" price (also stored)
+                // is meaningless or misleading (could show 0% or huge jump if file is old).
                 let change24h = undefined;
                 
                 if (isLivePrice) {
@@ -115,13 +117,16 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
         const integrity = validateOMFIntegrity(combinedData, 'Offline');
         
         // --- CROSS-CHECK: Validate History vs Snapshot Integrity ---
-        // This protects against manual errors in IKE.ts / Krypto.ts where "Invested" is typed wrong.
+        // This logic automatically verifies if the "Investment" column in IKE.ts/Krypto.ts 
+        // matches the mathematical reality derived from current open positions, closed profits, and dividends.
+        // It protects against manual data entry errors where someone updates the history file but forgets a dividend or profit subtraction.
         
         // 1. Parse History Files
         const ikeHistoryRaw = parseCSV(csvSources.IKE, 'IKE', 'Offline').data as IKEDataRow[];
         const cryptoHistoryRaw = parseCSV(csvSources.CRYPTO, 'CRYPTO', 'Offline').data as CryptoDataRow[];
         
         // 2. Calculate Theoretical IKE Investment (Snowball Formula)
+        // Formula: Invested = Sum(Purchase Value) - Sum(Closed Profits) - Sum(Active Dividends)
         const openIKE = omfOpenRows.filter(r => r.portfolio === 'IKE').reduce((sum, r) => sum + r.purchaseValue, 0);
         const closedIKE = omfClosedRows.filter(r => r.portfolio === 'IKE').reduce((sum, r) => sum + r.profit, 0);
         const divsIKE = parsedDividends.filter(d => d.portfolio === 'IKE' && d.isCounted).reduce((sum, r) => sum + r.value, 0);

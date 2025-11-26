@@ -337,6 +337,8 @@ export const parseCSV = (csvText: string, type: PortfolioType, source: 'Online' 
       }
 
       // check for status "Historyczna" to disable counting in snowball math
+      // If status is "Historyczna", we set isCounted to false.
+      // These dividends are for charts only and do not reduce the 'Invested Capital' calculation.
       const status = columnMap.status !== -1 ? row[columnMap.status] : '';
       const isCounted = !status.toLowerCase().includes('historyczna');
 

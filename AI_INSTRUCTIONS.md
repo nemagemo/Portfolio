@@ -26,6 +26,13 @@ W pliku `OMFopen.ts` oraz w wyliczeniach historycznych dla portfeli **IKE** oraz
 *   **Formuła:** `Wkład = Suma(Wartość Zakupu z OMFopen.ts) - Suma(Zysk z OMFclosed.ts) - Suma(Aktywnych Dywidend z Dividends.ts)`.
 *   **Cel:** Zysk z zamkniętych pozycji oraz otrzymane i reinwestowane dywidendy nie są "nowym kapitałem" z zewnątrz.
 
+### Logika Statusów Dywidend (Dividends.ts)
+Plik `Dividends.ts` obsługuje dwa statusy dywidend, które wpływają na obliczenia:
+1.  **Status "Aktywna" (Domyślny):** Dywidenda otrzymana w trakcie aktywnego śledzenia portfela.
+    *   **Działanie:** Jej wartość jest odejmowana od `Wkładu Własnego` w formule Kuli Śnieżnej. Dzięki temu reinwestycja (wzrost `Wartości Zakupu`) bilansuje się z dywidendą, a `Zainwestowany Kapitał` nie rośnie sztucznie.
+2.  **Status "Historyczna":** Dywidenda dodana wstecznie tylko w celach wizualnych (wykres słupkowy).
+    *   **Działanie:** Jest ignorowana w obliczeniach `Wkładu Własnego` (flaga `isCounted = false`), aby nie zaburzyć historii kapitału, która została już ustalona w przeszłości.
+
 ---
 
 ## Logika Wyceny i Zmiany 24h (Market Watch)
@@ -40,11 +47,10 @@ Aplikacja stosuje hybrydowy model wyceny w czasie rzeczywistym:
     *   1. Google Sheet (Online).
     *   2. `fallbackPrices.ts` (Hardcoded).
     *   3. `OMFopen.ts` (Snapshot z ostatniego zapisu).
-4.  **Obliczanie Zmiany 24h:**
+4.  **Obliczanie Zmiany 24h (Zabezpieczenie):**
     *   Wzór: `((Cena Aktualna - Cena Historyczna) / Cena Historyczna) * 100`.
-    *   **Ustalanie Ceny Historycznej:**
-        *   Priorytet 1: Google Sheet Historyczny.
-        *   Priorytet 2: Wyliczenie z `OMFopen.ts` (`Obecna Wartość / Ilość`). Traktujemy stan zapisany w pliku jako punkt odniesienia ("wczoraj"), jeśli brak danych online.
+    *   **Warunek Konieczny (`isLivePrice`):** Zmiana 24h jest liczona **TYLKO** wtedy, gdy cena aktualna pochodzi ze źródła Online (Google Sheet).
+    *   Jeśli cena pochodzi z Fallback lub CSV, flaga `isLivePrice` jest `false`, a zmiana 24h jest ustawiana na `undefined` (wyświetla się myślnik). Zapobiega to pokazywaniu absurdalnych procentów wynikających z porównywania ceny sprzed miesiąca (CSV) z ceną wczorajszą.
 
 ## Zasady Wizualizacji (Heatmapy)
 
@@ -59,6 +65,7 @@ Aplikacja stosuje hybrydowy model wyceny w czasie rzeczywistym:
     *   Wzrost > 0: Odcienie zieleni.
     *   Spadek < 0: Odcienie czerwieni.
     *   Brak zmian (~0%): Szary (aby odróżnić stagnację od małego zysku).
+    *   Brak danych (Offline): Żółty (ostrzegawczy).
 
 ---
 
@@ -107,7 +114,7 @@ Aplikacja stosuje hybrydowy model wyceny w czasie rzeczywistym:
     *   Wylicz: `Zysk/Strata` = `Obecna wartość` - `Wartość zakupu`.
     *   Wylicz: `ROI`.
     *   Zaktualizuj datę `OMF_LAST_UPDATED`.
-4.  **Synchronizacja Historii:**
+4.  **Synchronizacja Historii (Weryfikacja TRIPLE CHECK wymagana):**
     *   Na podstawie nowych wartości w `OMFopen.ts`, zsumuj wartość każdego portfela (PPK, IKE, Krypto).
     *   Zaktualizuj wartości w **ostatnim wierszu** plików `CSV/PPK.ts`, `CSV/IKE.ts` oraz `CSV/Krypto.ts`, aby wykresy historyczne kończyły się aktualnym stanem ("Teraz").
 
@@ -126,7 +133,7 @@ Aplikacja stosuje hybrydowy model wyceny w czasie rzeczywistym:
     *   Sformatuj i dopisz nowy wiersz do `CSV/PPK.ts`.
 3.  **Snapshot IKE i Krypto:**
     *   Pobierz sumę `Obecna wartość` wszystkich aktywów danego portfela z `OMFopen.ts`.
-    *   Oblicz `Wkład` (Net Invested): Suma(`Wartość zakupu` otwartych z `OMFopen.ts`) - Suma(`Zysk` zamkniętych z `OMFclosed.ts`).
+    *   Oblicz `Wkład` (Net Invested) używając formuły TRIPLE CHECK (z uwzględnieniem dywidend).
     *   Wylicz `Zysk` = `Obecna wartość` - `Wkład`.
     *   Wylicz `ROI`.
     *   Sformatuj i dopisz nowe wiersze do `CSV/IKE.ts` i `CSV/Krypto.ts`.
