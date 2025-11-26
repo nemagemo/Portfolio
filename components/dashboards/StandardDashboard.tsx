@@ -1,11 +1,14 @@
 
-import React, { useMemo } from 'react';
-import { Wallet, Building2, TrendingUp, ArrowUpRight, Timer, ShieldCheck, Trophy } from 'lucide-react';
-import { SummaryStats, PortfolioType, AnyDataRow } from '../../types';
+
+import React, { useMemo, useState } from 'react';
+import { Wallet, Building2, TrendingUp, ArrowUpRight, Timer, ShieldCheck, Trophy, DollarSign } from 'lucide-react';
+import { SummaryStats, PortfolioType, AnyDataRow, DividendDataRow } from '../../types';
 import { StatsCard } from '../StatsCard';
 import { Theme, themeStyles } from '../../theme/styles';
-import { ValueCompositionChart, ROIChart, CapitalStructureHistoryChart, CryptoValueChart } from '../Charts';
+import { ValueCompositionChart, ROIChart, CapitalStructureHistoryChart, CryptoValueChart, DividendChart } from '../Charts';
 import { TaxToggleIcon } from '../Icons';
+import { parseCSV } from '../../utils/parser';
+import { DIVIDENDS_DATA } from '../../CSV/Dividends';
 
 interface StandardDashboardProps {
   portfolioType: PortfolioType;
@@ -29,6 +32,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
   bestCrypto
 }) => {
   const styles = themeStyles[theme];
+  const [dividendViewMode, setDividendViewMode] = useState<'Yearly' | 'Quarterly'>('Yearly');
 
   const monthsToPayout = useMemo(() => {
     if (portfolioType !== 'PPK') return 0;
@@ -54,6 +58,49 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
     if (theme === 'neon') return val >= 0 ? "text-emerald-400" : "text-rose-400";
     return val >= 0 ? "text-emerald-600" : "text-rose-600";
   };
+
+  // Calculate Dividend Data if IKE
+  const dividendChartData = useMemo(() => {
+    if (portfolioType !== 'IKE') return [];
+    
+    // Parse dividends here to avoid adding heavy logic to usePortfolioData just for this view
+    // In a real app, this would come from props
+    const divRes = parseCSV(DIVIDENDS_DATA, 'DIVIDENDS', 'Offline');
+    const dividends = divRes.data as DividendDataRow[];
+    
+    const ikeDividends = dividends.filter(d => d.portfolio === 'IKE');
+    const grouped: Record<string, number> = {};
+
+    ikeDividends.forEach(d => {
+       let key = '';
+       if (dividendViewMode === 'Yearly') {
+          key = d.dateObj.getFullYear().toString();
+       } else {
+          const q = Math.floor(d.dateObj.getMonth() / 3) + 1;
+          const y = d.dateObj.getFullYear().toString().slice(-2);
+          key = `Q${q} '${y}`;
+       }
+       grouped[key] = (grouped[key] || 0) + d.value;
+    });
+
+    return Object.entries(grouped)
+        .map(([label, value]) => ({ label, value }))
+        .sort((a, b) => {
+            // Basic sort logic: Year or Year+Quarter
+            if (dividendViewMode === 'Yearly') return a.label.localeCompare(b.label);
+            // For quarters "Q2 '24" vs "Q1 '25", manual sort might be needed if dates span widely
+            // But string compare works for "Q1 '24" vs "Q2 '24"
+            // A better way is to store sort key separately, but this suffices for simple display
+            const yearA = parseInt(a.label.split("'")[1]);
+            const yearB = parseInt(b.label.split("'")[1]);
+            if (yearA !== yearB) return yearA - yearB;
+            return a.label.localeCompare(b.label);
+        });
+  }, [portfolioType, dividendViewMode]);
+
+  const totalDividends = useMemo(() => {
+      return dividendChartData.reduce((acc, curr) => acc + curr.value, 0);
+  }, [dividendChartData]);
 
   if (!stats) return null;
 
@@ -157,6 +204,33 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
               </div>
               <CryptoValueChart data={data} showTaxComparison={showTaxComparison} themeMode={theme} />
             </div>
+            
+            {portfolioType === 'IKE' && (
+              <div className={`${styles.cardContainer} p-6 lg:col-span-2`}>
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className={`text-lg font-bold ${styles.text}`}>Otrzymane Dywidendy</h3>
+                    <p className={`text-sm ${styles.textSub}`}>Suma: {totalDividends.toLocaleString('pl-PL')} zł</p>
+                  </div>
+                  <div className={`flex items-center space-x-2 p-1 rounded-lg border ${theme === 'neon' ? 'bg-black/50 border-cyan-900/50' : 'bg-slate-50 border-slate-100'}`}>
+                    <button 
+                      onClick={() => setDividendViewMode('Yearly')} 
+                      className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${dividendViewMode === 'Yearly' ? (theme === 'neon' ? 'bg-cyan-900 text-cyan-300' : 'bg-white text-slate-800 shadow-sm') : (theme === 'neon' ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')}`}
+                    >
+                      Rocznie
+                    </button>
+                    <button 
+                      onClick={() => setDividendViewMode('Quarterly')} 
+                      className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${dividendViewMode === 'Quarterly' ? (theme === 'neon' ? 'bg-cyan-900 text-cyan-300' : 'bg-white text-slate-800 shadow-sm') : (theme === 'neon' ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')}`}
+                    >
+                      Kwartalnie
+                    </button>
+                  </div>
+                </div>
+                <DividendChart data={dividendChartData} themeMode={theme} />
+              </div>
+            )}
+
             <div className={`${styles.cardContainer} p-6 lg:col-span-2`}>
               <h3 className={`text-lg font-bold ${styles.text} mb-6`}>ROI w czasie</h3>
               <ROIChart data={data} themeMode={theme} />

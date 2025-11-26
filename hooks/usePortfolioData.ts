@@ -1,4 +1,5 @@
 
+
 import { useState, useEffect, useMemo } from 'react';
 import { AnyDataRow, ValidationReport, OMFValidationReport, OMFDataRow, PortfolioType, GlobalHistoryRow, SummaryStats, PPKDataRow, CryptoDataRow, IKEDataRow, CashDataRow, DividendDataRow } from '../types';
 import { parseCSV, validateOMFIntegrity } from '../utils/parser';
@@ -24,6 +25,7 @@ interface UsePortfolioDataProps {
 
 export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, excludePPK = false }: UsePortfolioDataProps) => {
   const [data, setData] = useState<AnyDataRow[]>([]);
+  const [dividends, setDividends] = useState<DividendDataRow[]>([]);
   const [report, setReport] = useState<ValidationReport | null>(null);
   const [omfReport, setOmfReport] = useState<OMFValidationReport | null>(null);
   const [omfActiveAssets, setOmfActiveAssets] = useState<OMFDataRow[]>([]);
@@ -42,6 +44,10 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
   // 1. Parsing and Merging Prices
   useEffect(() => {
     try {
+      // Always parse dividends globally as they are needed for stats and IKE dashboard
+      const divRes = parseCSV(csvSources.DIVIDENDS, 'DIVIDENDS', 'Offline');
+      setDividends(divRes.data as DividendDataRow[]);
+
       if (portfolioType === 'OMF') {
         const openRes = parseCSV(csvSources.OMF_OPEN, 'OMF', 'Offline');
         let omfOpenRows = openRes.data as OMFDataRow[];
@@ -137,7 +143,8 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
     const cryptoData = parseCSV(csvSources.CRYPTO, 'CRYPTO', 'Offline').data as CryptoDataRow[];
     const ikeData = parseCSV(csvSources.IKE, 'IKE', 'Offline').data as IKEDataRow[];
     const cashData = parseCSV(csvSources.CASH, 'CASH', 'Offline').data as CashDataRow[];
-    const dividendsData = parseCSV(csvSources.DIVIDENDS, 'DIVIDENDS', 'Offline').data as DividendDataRow[];
+    // Use dividends from state or parse if empty (fallback)
+    const dividendsData = dividends.length > 0 ? dividends : parseCSV(csvSources.DIVIDENDS, 'DIVIDENDS', 'Offline').data as DividendDataRow[];
 
     // Map Lookups
     const createMap = (arr: any[]) => new Map<string, { inv: number, profit: number }>(
@@ -314,7 +321,7 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
             totalValueNoPPK: valNoPPK
         };
     });
-  }, [portfolioType, omfActiveAssets, omfClosedAssets, excludePPK]);
+  }, [portfolioType, omfActiveAssets, omfClosedAssets, excludePPK, dividends]);
 
   // 3. Derived Stats
   const stats: SummaryStats | null = useMemo(() => {
@@ -323,8 +330,7 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
         if (!last) return null;
 
         // Dividends for Stats Calculation
-        const dividendsData = parseCSV(csvSources.DIVIDENDS, 'DIVIDENDS', 'Offline').data as DividendDataRow[];
-        const totalDividendsIKE = dividendsData
+        const totalDividendsIKE = dividends
             .filter(d => d.portfolio === 'IKE')
             .reduce((acc, row) => acc + row.value, 0);
 
@@ -484,7 +490,7 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
             taxSaved: taxSaved
         };
     }
-  }, [data, portfolioType, globalHistoryData, omfActiveAssets, omfClosedAssets, excludePPK]);
+  }, [data, portfolioType, globalHistoryData, omfActiveAssets, omfClosedAssets, excludePPK, dividends]);
 
   // 4. Daily Heatmap Data
   const dailyChangeData = useMemo(() => {
@@ -526,6 +532,7 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
 
   return {
     data,
+    dividends,
     report,
     omfReport,
     omfActiveAssets,

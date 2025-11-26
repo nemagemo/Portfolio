@@ -1437,3 +1437,48 @@ export const PPKStructureBar: React.FC<PPKStructureBarProps> = ({ data, themeMod
     </div>
   );
 };
+
+interface DividendChartProps {
+  data: { label: string; value: number }[];
+  themeMode?: ThemeMode;
+}
+
+export const DividendChart: React.FC<DividendChartProps> = ({ data, themeMode = 'light' }) => {
+  const t = CHART_THEMES[themeMode];
+
+  return (
+    <div className="h-80 w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} />
+          <XAxis 
+            dataKey="label" 
+            stroke={t.axis} 
+            fontSize={12} 
+            tickMargin={10}
+          />
+          <YAxis 
+            stroke={t.axis} 
+            fontSize={12} 
+            tickFormatter={(val) => `${val} zł`}
+          />
+          <Bar 
+            dataKey="value" 
+            name="Dywidendy" 
+            fill={t.barProfitPos} 
+            stroke={themeMode === 'comic' ? '#000' : undefined} 
+            strokeWidth={themeMode === 'comic' ? 2 : 0}
+            radius={[4, 4, 0, 0]}
+          >
+            <LabelList 
+                dataKey="value" 
+                position="top" 
+                formatter={(val: number) => `${val.toLocaleString('pl-PL')} zł`}
+                style={{ fill: t.axis, fontSize: '12px', fontWeight: 'bold' }}
+            />
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
