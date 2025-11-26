@@ -90,36 +90,36 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
 
   return (
     <>
-      {/* PORTFOLIO HEADER (New Unified Style) */}
-      <div className={`w-full p-6 lg:p-8 ${styles.cardContainer} relative overflow-hidden mb-8`}>
+      {/* PORTFOLIO HEADER (Compact Style) */}
+      <div className={`w-full p-4 ${styles.cardContainer} relative overflow-hidden mb-6`}>
         {/* Decorative Background Elements for Neon */}
         {isNeon && (
           <div className={`absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none ${portfolioType === 'CRYPTO' ? 'bg-violet-500/10' : 'bg-indigo-500/10'}`}></div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 relative z-10">
           
           {/* LEFT: Main Capital Stats (5 cols) */}
           <div className="lg:col-span-5 flex flex-col justify-center">
-            <h2 className={`text-xs uppercase tracking-widest font-bold mb-2 flex items-center ${isNeon ? 'text-cyan-600' : 'text-slate-400'}`}>
-              <Wallet size={14} className="mr-2" /> {portfolioType === 'PPK' ? "Wartość Całkowita" : "Wartość Portfela"}
+            <h2 className={`text-[10px] uppercase tracking-widest font-bold mb-1 flex items-center ${isNeon ? 'text-cyan-600' : 'text-slate-400'}`}>
+              <Wallet size={12} className="mr-1.5" /> {portfolioType === 'PPK' ? "Wartość Całkowita" : "Wartość Portfela"}
             </h2>
             <div className="flex items-baseline">
-              <span className={`text-4xl sm:text-5xl font-black tracking-tight ${isNeon ? 'text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-500' : 'text-slate-900'}`}>
+              <span className={`text-3xl sm:text-4xl font-black tracking-tight ${isNeon ? 'text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-500' : 'text-slate-900'}`}>
                 {totalValue.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
-              <span className={`text-xl ml-2 font-medium ${isNeon ? 'text-cyan-700' : 'text-slate-400'}`}>zł</span>
+              <span className={`text-lg ml-1.5 font-medium ${isNeon ? 'text-cyan-700' : 'text-slate-400'}`}>zł</span>
             </div>
             
-            <div className="mt-4 flex items-center">
-              <div className={`h-1.5 w-full overflow-hidden ${isNeon ? 'bg-slate-800 rounded-full' : 'bg-slate-100 rounded-full'}`}>
+            <div className="mt-2 flex items-center">
+              <div className={`h-1 w-full overflow-hidden ${isNeon ? 'bg-slate-800 rounded-full' : 'bg-slate-100 rounded-full'}`}>
                 <div 
                   className={`h-full ${isNeon ? 'bg-blue-500 rounded-full' : 'bg-slate-400 rounded-full'}`} 
                   style={{ width: `${(investedValue && totalValue) ? Math.min(100, (investedValue / totalValue) * 100) : 0}%` }}
                 ></div>
               </div>
             </div>
-            <div className="flex justify-between mt-2 text-xs font-medium font-mono">
+            <div className="flex justify-between mt-1 text-[10px] sm:text-xs font-medium font-mono">
               <span className={isNeon ? 'text-blue-400' : 'text-slate-500'}>
                 {portfolioType === 'PPK' ? "Wkład Własny" : "Zainwestowano"}: {investedValue.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł
               </span>
@@ -130,62 +130,62 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
           </div>
 
           {/* MIDDLE: Performance Stats (3 cols) */}
-          <div className={`lg:col-span-3 flex flex-col justify-center lg:border-l lg:border-r ${isNeon ? 'lg:border-cyan-900/30' : 'lg:border-slate-100'} lg:px-8`}>
-             <h2 className={`text-xs uppercase tracking-widest font-bold mb-3 ${isNeon ? 'text-cyan-600' : 'text-slate-400'}`}>
+          <div className={`lg:col-span-3 flex flex-col justify-center lg:border-l lg:border-r ${isNeon ? 'lg:border-cyan-900/30' : 'lg:border-slate-100'} lg:px-4`}>
+             <h2 className={`text-[10px] uppercase tracking-widest font-bold mb-1 ${isNeon ? 'text-cyan-600' : 'text-slate-400'}`}>
                Wynik
              </h2>
-             <div className={`text-2xl sm:text-3xl font-bold mb-1 ${profitValue >= 0 ? (isNeon ? 'text-[#39ff14] drop-shadow-[0_0_5px_rgba(57,255,20,0.5)]' : 'text-emerald-600') : 'text-rose-500'}`}>
+             <div className={`text-xl sm:text-2xl font-bold mb-0.5 ${profitValue >= 0 ? (isNeon ? 'text-[#39ff14] drop-shadow-[0_0_5px_rgba(57,255,20,0.5)]' : 'text-emerald-600') : 'text-rose-500'}`}>
                 {profitValue > 0 ? '+' : ''}{profitValue.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł
              </div>
              
-             <div className="flex items-center mt-2">
-                <span className={`px-2.5 py-1 text-sm font-bold flex items-center ${
+             <div className="flex items-center mt-1">
+                <span className={`px-2 py-0.5 text-xs font-bold flex items-center ${
                   currentRoi >= 0 
                     ? (isNeon ? 'bg-green-900/30 text-green-400 border border-green-500/30 rounded' : 'bg-emerald-100 text-emerald-700 rounded') 
                     : 'bg-rose-100 text-rose-700 rounded'
                 }`}>
-                  {currentRoi >= 0 ? <TrendingUp size={14} className="mr-1.5"/> : <TrendingUp size={14} className="mr-1.5 rotate-180"/>}
+                  {currentRoi >= 0 ? <TrendingUp size={12} className="mr-1"/> : <TrendingUp size={12} className="mr-1 rotate-180"/>}
                   {currentRoi.toFixed(2)}% ROI
                 </span>
              </div>
           </div>
 
           {/* RIGHT: Specific Metrics Grid (4 cols) */}
-          <div className="lg:col-span-4 grid grid-cols-2 gap-3">
+          <div className="lg:col-span-4 grid grid-cols-2 gap-2">
              {/* PPK SPECIFIC METRICS */}
              {portfolioType === 'PPK' && (
                <>
-                 <div className={`p-3 border relative ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-                    <div className="flex justify-between items-start mb-1">
-                      <div className={`text-[10px] uppercase font-bold ${isNeon ? 'text-purple-400' : 'text-slate-400'}`}>Pracodawca</div>
-                      <IconEmployer className={`w-4 h-4 ${isNeon ? 'text-purple-500/80' : 'text-purple-400/60'}`} />
+                 <div className={`p-2.5 border relative ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
+                    <div className="flex justify-between items-start mb-0.5">
+                      <div className={`text-[9px] uppercase font-bold ${isNeon ? 'text-purple-400' : 'text-slate-400'}`}>Pracodawca</div>
+                      <IconEmployer className={`w-3.5 h-3.5 ${isNeon ? 'text-purple-500/80' : 'text-purple-400/60'}`} />
                     </div>
-                    <div className={`text-lg font-bold ${isNeon ? 'text-purple-300' : 'text-slate-700'}`}>{stats.totalEmployer?.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</div>
-                    <div className={`text-[9px] ${isNeon ? 'text-purple-500/60' : 'text-slate-400'}`}>Dopłaty</div>
+                    <div className={`text-base font-bold ${isNeon ? 'text-purple-300' : 'text-slate-700'}`}>{stats.totalEmployer?.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</div>
+                    <div className={`text-[8px] ${isNeon ? 'text-purple-500/60' : 'text-slate-400'}`}>Dopłaty</div>
                  </div>
-                 <div className={`p-3 border relative ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-                    <div className="flex justify-between items-start mb-1">
-                      <div className={`text-[10px] uppercase font-bold ${isNeon ? 'text-pink-400' : 'text-slate-400'}`}>Państwo</div>
-                      <IconState className={`w-4 h-4 ${isNeon ? 'text-pink-500/80' : 'text-pink-400/60'}`} />
+                 <div className={`p-2.5 border relative ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
+                    <div className="flex justify-between items-start mb-0.5">
+                      <div className={`text-[9px] uppercase font-bold ${isNeon ? 'text-pink-400' : 'text-slate-400'}`}>Państwo</div>
+                      <IconState className={`w-3.5 h-3.5 ${isNeon ? 'text-pink-500/80' : 'text-pink-400/60'}`} />
                     </div>
-                    <div className={`text-lg font-bold ${isNeon ? 'text-pink-300' : 'text-slate-700'}`}>{stats.totalState?.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</div>
-                    <div className={`text-[9px] ${isNeon ? 'text-pink-500/60' : 'text-slate-400'}`}>Bonusy</div>
+                    <div className={`text-base font-bold ${isNeon ? 'text-pink-300' : 'text-slate-700'}`}>{stats.totalState?.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</div>
+                    <div className={`text-[8px] ${isNeon ? 'text-pink-500/60' : 'text-slate-400'}`}>Bonusy</div>
                  </div>
-                 <div className={`p-3 border relative ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-                    <div className="flex justify-between items-start mb-1">
-                      <div className={`text-[10px] uppercase font-bold ${isNeon ? 'text-amber-400' : 'text-slate-400'}`}>Exit Value</div>
-                      <IconExit className={`w-4 h-4 ${isNeon ? 'text-amber-500/80' : 'text-amber-400/60'}`} />
+                 <div className={`p-2.5 border relative ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
+                    <div className="flex justify-between items-start mb-0.5">
+                      <div className={`text-[9px] uppercase font-bold ${isNeon ? 'text-amber-400' : 'text-slate-400'}`}>Exit Value</div>
+                      <IconExit className={`w-3.5 h-3.5 ${isNeon ? 'text-amber-500/80' : 'text-amber-400/60'}`} />
                     </div>
-                    <div className={`text-lg font-bold ${isNeon ? 'text-amber-300' : 'text-slate-700'}`}>{((stats as any).customExitValue || 0).toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</div>
-                    <div className={`text-[9px] ${isNeon ? 'text-amber-500/60' : 'text-slate-400'}`}>Wypłata teraz</div>
+                    <div className={`text-base font-bold ${isNeon ? 'text-amber-300' : 'text-slate-700'}`}>{((stats as any).customExitValue || 0).toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</div>
+                    <div className={`text-[8px] ${isNeon ? 'text-amber-500/60' : 'text-slate-400'}`}>Wypłata teraz</div>
                  </div>
-                 <div className={`p-3 border relative ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-                    <div className="flex justify-between items-start mb-1">
-                      <div className={`text-[10px] uppercase font-bold ${isNeon ? 'text-blue-400' : 'text-slate-400'}`}>Czas</div>
-                      <IconHourglass className={`w-4 h-4 ${isNeon ? 'text-blue-500/80' : 'text-blue-400/60'}`} />
+                 <div className={`p-2.5 border relative ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
+                    <div className="flex justify-between items-start mb-0.5">
+                      <div className={`text-[9px] uppercase font-bold ${isNeon ? 'text-blue-400' : 'text-slate-400'}`}>Czas</div>
+                      <IconHourglass className={`w-3.5 h-3.5 ${isNeon ? 'text-blue-500/80' : 'text-blue-400/60'}`} />
                     </div>
-                    <div className={`text-lg font-bold ${isNeon ? 'text-blue-300' : 'text-slate-700'}`}>{monthsToPayout} msc</div>
-                    <div className={`text-[9px] ${isNeon ? 'text-blue-500/60' : 'text-slate-400'}`}>Do 60 r.ż.</div>
+                    <div className={`text-base font-bold ${isNeon ? 'text-blue-300' : 'text-slate-700'}`}>{monthsToPayout} msc</div>
+                    <div className={`text-[8px] ${isNeon ? 'text-blue-500/60' : 'text-slate-400'}`}>Do 60 r.ż.</div>
                  </div>
                </>
              )}
@@ -193,21 +193,21 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
              {/* IKE SPECIFIC METRICS */}
              {portfolioType === 'IKE' && (
                <>
-                 <div className={`p-3 border relative ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-                    <div className="flex justify-between items-start mb-1">
-                      <div className={`text-[10px] uppercase font-bold ${isNeon ? 'text-cyan-400' : 'text-slate-400'}`}>Tarcza</div>
-                      <IconTaxShield className={`w-4 h-4 ${isNeon ? 'text-cyan-500/80' : 'text-cyan-400/60'}`} />
+                 <div className={`p-2.5 border relative ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
+                    <div className="flex justify-between items-start mb-0.5">
+                      <div className={`text-[9px] uppercase font-bold ${isNeon ? 'text-cyan-400' : 'text-slate-400'}`}>Tarcza</div>
+                      <IconTaxShield className={`w-3.5 h-3.5 ${isNeon ? 'text-cyan-500/80' : 'text-cyan-400/60'}`} />
                     </div>
-                    <div className={`text-lg font-bold ${isNeon ? 'text-cyan-300' : 'text-slate-700'}`}>{stats.taxSaved?.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</div>
-                    <div className={`text-[9px] ${isNeon ? 'text-cyan-500/60' : 'text-slate-400'}`}>Oszczędność</div>
+                    <div className={`text-base font-bold ${isNeon ? 'text-cyan-300' : 'text-slate-700'}`}>{stats.taxSaved?.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</div>
+                    <div className={`text-[8px] ${isNeon ? 'text-cyan-500/60' : 'text-slate-400'}`}>Oszczędność</div>
                  </div>
-                 <div className={`p-3 border relative ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-                    <div className="flex justify-between items-start mb-1">
-                      <div className={`text-[10px] uppercase font-bold ${isNeon ? 'text-emerald-400' : 'text-slate-400'}`}>Dywidendy</div>
-                      <IconDividends className={`w-4 h-4 ${isNeon ? 'text-emerald-500/80' : 'text-emerald-400/60'}`} />
+                 <div className={`p-2.5 border relative ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
+                    <div className="flex justify-between items-start mb-0.5">
+                      <div className={`text-[9px] uppercase font-bold ${isNeon ? 'text-emerald-400' : 'text-slate-400'}`}>Dywidendy</div>
+                      <IconDividends className={`w-3.5 h-3.5 ${isNeon ? 'text-emerald-500/80' : 'text-emerald-400/60'}`} />
                     </div>
-                    <div className={`text-lg font-bold ${isNeon ? 'text-emerald-300' : 'text-slate-700'}`}>{totalDividends.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</div>
-                    <div className={`text-[9px] ${isNeon ? 'text-emerald-500/60' : 'text-slate-400'}`}>Suma (Brutto)</div>
+                    <div className={`text-base font-bold ${isNeon ? 'text-emerald-300' : 'text-slate-700'}`}>{totalDividends.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</div>
+                    <div className={`text-[8px] ${isNeon ? 'text-emerald-500/60' : 'text-slate-400'}`}>Suma (Brutto)</div>
                  </div>
                </>
              )}
@@ -215,16 +215,16 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
              {/* CRYPTO SPECIFIC METRICS */}
              {portfolioType === 'CRYPTO' && bestCrypto && (
                <>
-                 <div className={`col-span-2 p-3 border relative ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-                    <div className="flex justify-between items-start mb-1">
-                      <div className={`text-[10px] uppercase font-bold ${isNeon ? 'text-yellow-400' : 'text-slate-400'}`}>Najlepsze Aktywo</div>
-                      <IconTrophy className={`w-4 h-4 ${isNeon ? 'text-yellow-500/80' : 'text-yellow-400/60'}`} />
+                 <div className={`col-span-2 p-2.5 border relative ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
+                    <div className="flex justify-between items-start mb-0.5">
+                      <div className={`text-[9px] uppercase font-bold ${isNeon ? 'text-yellow-400' : 'text-slate-400'}`}>Najlepsze Aktywo</div>
+                      <IconTrophy className={`w-3.5 h-3.5 ${isNeon ? 'text-yellow-500/80' : 'text-yellow-400/60'}`} />
                     </div>
                     <div className="flex items-center justify-between">
-                        <div className={`text-lg font-bold ${isNeon ? 'text-yellow-300' : 'text-slate-700'}`}>{bestCrypto.symbol}</div>
-                        <div className={`text-sm font-bold ${isNeon ? 'text-yellow-300' : 'text-yellow-600'}`}>+{bestCrypto.roi}%</div>
+                        <div className={`text-base font-bold ${isNeon ? 'text-yellow-300' : 'text-slate-700'}`}>{bestCrypto.symbol}</div>
+                        <div className={`text-xs font-bold ${isNeon ? 'text-yellow-300' : 'text-yellow-600'}`}>+{bestCrypto.roi}%</div>
                     </div>
-                    <div className={`text-[9px] ${isNeon ? 'text-yellow-500/60' : 'text-slate-400'}`}>Zysk: {bestCrypto.profit.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</div>
+                    <div className={`text-[8px] ${isNeon ? 'text-yellow-500/60' : 'text-slate-400'}`}>Zysk: {bestCrypto.profit.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</div>
                  </div>
                </>
              )}
