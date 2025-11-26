@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useMemo } from 'react';
-import { AnyDataRow, ValidationReport, OMFValidationReport, OMFDataRow, PortfolioType, GlobalHistoryRow, SummaryStats, PPKDataRow, CryptoDataRow, IKEDataRow, CashDataRow } from '../types';
+import { AnyDataRow, ValidationReport, OMFValidationReport, OMFDataRow, PortfolioType, GlobalHistoryRow, SummaryStats, PPKDataRow, CryptoDataRow, IKEDataRow, CashDataRow, DividendDataRow } from '../types';
 import { parseCSV, validateOMFIntegrity } from '../utils/parser';
 import { CPI_DATA } from '../constants/inflation';
 import { SP500_DATA, WIG20_DATA } from '../constants/benchmarks';
@@ -13,6 +13,7 @@ import { IKE_DATA } from '../CSV/IKE';
 import { OMF_OPEN_DATA } from '../CSV/OMFopen';
 import { OMF_CLOSED_DATA } from '../CSV/OMFclosed';
 import { CASH_DATA } from '../CSV/Cash';
+import { DIVIDENDS_DATA } from '../CSV/Dividends';
 
 interface UsePortfolioDataProps {
   portfolioType: PortfolioType;
@@ -34,7 +35,8 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
     IKE: IKE_DATA,
     OMF_OPEN: OMF_OPEN_DATA,
     OMF_CLOSED: OMF_CLOSED_DATA,
-    CASH: CASH_DATA
+    CASH: CASH_DATA,
+    DIVIDENDS: DIVIDENDS_DATA
   };
 
   // 1. Parsing and Merging Prices
@@ -113,7 +115,7 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
         setData(combinedData);
 
       } else {
-        // PPK, CRYPTO, IKE, CASH
+        // PPK, CRYPTO, IKE, CASH, DIVIDENDS
         const sourceData = csvSources[portfolioType as keyof typeof csvSources];
         if (sourceData) {
             const result = parseCSV(sourceData, portfolioType, 'Offline');
@@ -135,6 +137,7 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
     const cryptoData = parseCSV(csvSources.CRYPTO, 'CRYPTO', 'Offline').data as CryptoDataRow[];
     const ikeData = parseCSV(csvSources.IKE, 'IKE', 'Offline').data as IKEDataRow[];
     const cashData = parseCSV(csvSources.CASH, 'CASH', 'Offline').data as CashDataRow[];
+    const dividendsData = parseCSV(csvSources.DIVIDENDS, 'DIVIDENDS', 'Offline').data as DividendDataRow[];
 
     // Map Lookups
     const createMap = (arr: any[]) => new Map<string, { inv: number, profit: number }>(
@@ -164,8 +167,14 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
         target.val += a.currentValue;
     });
 
-    // Snowball Adjustments
-    const liveNetInvIKE = liveTotals.IKE.inv - closedProfits.IKE;
+    // Snowball Adjustments (IKE dividends logic)
+    const totalDividendsIKE = dividendsData
+        .filter(d => d.portfolio === 'IKE')
+        .reduce((acc, row) => acc + row.value, 0);
+
+    // If we bought assets using dividends, 'liveTotals.IKE.inv' (Purchase Value) includes that amount.
+    // We must subtract it to keep "Net Invested" correct (only external cash).
+    const liveNetInvIKE = liveTotals.IKE.inv - closedProfits.IKE - totalDividendsIKE;
     const liveNetInvCrypto = liveTotals.CRYPTO.inv - closedProfits.CRYPTO;
 
     // Dates Union (Including historical Cash dates)
@@ -219,6 +228,10 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
         const isCurrentMonth = index === sortedDates.length - 1;
         let cashVal = 0;
         if (isCurrentMonth && liveTotals.CASH.val > 0) {
+             // liveTotals.CASH currently holds both General Cash and PLN-IKE if they are marked as Gotówka/Gotówka
+             // Logic: General Cash (marked 'Gotówka') is what we want here for the "Cash" component.
+             // But wait: 'PLN-IKE' is marked as Portfolio: 'IKE' in `liveTotals` logic above.
+             // So liveTotals.CASH only contains non-IKE/non-Crypto cash. Correct.
              cashVal = liveTotals.CASH.val;
         } else {
              cashVal = cashMap.get(date) || 0;
@@ -309,6 +322,12 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
         const last = globalHistoryData[globalHistoryData.length - 1];
         if (!last) return null;
 
+        // Dividends for Stats Calculation
+        const dividendsData = parseCSV(csvSources.DIVIDENDS, 'DIVIDENDS', 'Offline').data as DividendDataRow[];
+        const totalDividendsIKE = dividendsData
+            .filter(d => d.portfolio === 'IKE')
+            .reduce((acc, row) => acc + row.value, 0);
+
         // Recalculate Investment from active assets for precision (snapshot approach)
         const assetsToSum = excludePPK ? omfActiveAssets.filter(a => a.portfolio !== 'PPK') : omfActiveAssets;
         const totalValue = assetsToSum.reduce((acc, r) => acc + r.currentValue, 0);
@@ -328,7 +347,10 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
             closedProfitOffset = closedRelevant.reduce((acc, r) => acc + r.profit, 0);
         }
 
-        const otherNetInvested = otherOpenPurchase - closedProfitOffset;
+        // Logic: We subtract dividends from "Invested Capital" for IKE assets because that capital
+        // was generated internally, not contributed from outside.
+        const otherNetInvested = otherOpenPurchase - closedProfitOffset - totalDividendsIKE;
+        
         const totalInvestedSnapshot = ppkInvested + cashInvested + otherNetInvested;
         
         // Profit

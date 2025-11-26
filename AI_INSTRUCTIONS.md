@@ -21,8 +21,8 @@ W pliku `OMFopen.ts`, kolumna `Wartość Zakupu` dla wiersza PPK reprezentuje **
 
 ### OMF - Zainwestowany Kapitał w IKE i Krypto (Efekt Kuli Śnieżnej)
 W pliku `OMFopen.ts` oraz w wyliczeniach historycznych dla portfeli **IKE** oraz **Krypto**, obowiązuje specjalna zasada obliczania **Wkładu (Zainwestowano)**, aby uwzględnić efekt reinwestycji zysków (Kula Śnieżna):
-*   **Formuła:** `Wkład = Suma(Wartość Zakupu z OMFopen.ts) - Suma(Zysk z OMFclosed.ts)`.
-*   **Cel:** Zysk z zamkniętych pozycji reinwestowany w nowe pozycje nie jest "nowym kapitałem" z zewnątrz.
+*   **Formuła:** `Wkład = Suma(Wartość Zakupu z OMFopen.ts) - Suma(Zysk z OMFclosed.ts) - Suma(Dywidend z Dividends.ts)`.
+*   **Cel:** Zysk z zamkniętych pozycji oraz otrzymane dywidendy reinwestowane w nowe pozycje nie są "nowym kapitałem" z zewnątrz.
 
 ---
 
@@ -100,6 +100,7 @@ Aplikacja stosuje hybrydowy model wyceny w czasie rzeczywistym:
 3.  **Przeliczenie OMF (na podstawie fallbackPrices):**
     *   Edytuj `CSV/OMFopen.ts`.
     *   Dla każdej pozycji: Pobierz cenę z właśnie zaktualizowanego `fallbackPrices.ts`.
+    *   **Uwaga:** Pozycje ze statusem 'Nieaktywna' (np. FOREX) są pomijane przy sumowaniu wartości portfela, ale ich jednostkowa wycena może być zaktualizowana.
     *   Wylicz: `Obecna wartość` = `Ilość` * `Cena`.
     *   Wylicz: `Zysk/Strata` = `Obecna wartość` - `Wartość zakupu`.
     *   Wylicz: `ROI`.
@@ -131,6 +132,19 @@ Aplikacja stosuje hybrydowy model wyceny w czasie rzeczywistym:
     *   Pobierz wartość gotówki (PLN) z pliku `OMFopen.ts`.
     *   Sformatuj i dopisz nowy wiersz do `CSV/Cash.ts`.
 5.  **Aktualizacja Dat:** Zaktualizuj zmienne `*_LAST_UPDATED` we wszystkich plikach CSV na nową datę.
+
+### Polecenie: `DodajDywidende`
+**Wyzwalacz:** "Dostałem dywidendę X zł z spółki Y, data Z"
+**Procedura:**
+1.  Dopisz wiersz do `CSV/Dividends.ts` (Data, Portfel, Symbol, Kwota).
+2.  Zwiększ wartość (Ilość i Wartość) pozycji `PLN-IKE` w `CSV/OMFopen.ts` o kwotę dywidendy. (Gotówka z dywidend trafia na konto).
+
+### Polecenie: `KupnoZaDywidendy` (Reinwestycja)
+**Wyzwalacz:** "Kupiłem X za kwotę Y używając gotówki IKE"
+**Procedura:**
+1.  Dodaj/Zaktualizuj pozycję aktywa w `CSV/OMFopen.ts` (zwiększ `Wartość zakupu` i `Ilość`).
+2.  Zmniejsz pozycję `PLN-IKE` w `CSV/OMFopen.ts` o kwotę zakupu.
+3.  **Ważne:** Nie zmienia to sumarycznego `Zainwestowanego Kapitału` w IKE, ponieważ formuła w `usePortfolioData` automatycznie odejmuje dywidendy.
 
 ### Polecenie: `UpdateDate`
 **Procedura:** Aktualizacja `OMF_LAST_UPDATED` oraz `DATA_LAST_UPDATED`.

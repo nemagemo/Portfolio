@@ -1,5 +1,5 @@
 
-import { PPKDataRow, CryptoDataRow, IKEDataRow, OMFDataRow, AnyDataRow, ValidationReport, PortfolioType, OMFValidationReport, CashDataRow } from '../types';
+import { PPKDataRow, CryptoDataRow, IKEDataRow, OMFDataRow, AnyDataRow, ValidationReport, PortfolioType, OMFValidationReport, CashDataRow, DividendDataRow } from '../types';
 
 /**
  * ARCHITECTURAL NOTE FOR AI CONTEXT:
@@ -294,6 +294,55 @@ export const parseCSV = (csvText: string, type: PortfolioType, source: 'Online' 
       data.push({
         date: dateStr, dateObj, value: val
       } as CashDataRow);
+    }
+
+  } else if (type === 'DIVIDENDS') {
+    // --- DIVIDENDS PARSING LOGIC ---
+    const columnMap: Record<string, number> = { date: -1, portfolio: -1, symbol: -1, value: -1 };
+    
+    headers.forEach((h, index) => {
+      if (h.includes('data')) columnMap.date = index;
+      else if (h.includes('portfel')) columnMap.portfolio = index;
+      else if (h.includes('symbol') || h.includes('aktywo')) columnMap.symbol = index;
+      else if (h.includes('kwota')) columnMap.value = index;
+    });
+
+    if (columnMap.date === -1 || columnMap.value === -1 || columnMap.portfolio === -1) {
+      report.isValid = false;
+      report.errors.push(`[DIVIDENDS] Brak wymaganych kolumn: Data, Portfel, Symbol, Kwota`);
+      return { data: [], report };
+    }
+    report.checks.structure = true;
+
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      report.stats.totalRows++;
+
+      const rowRaw = splitCSVLine(line);
+      const row = rowRaw.map(cell => cell.replace(/^"|"$/g, '').trim());
+
+      const dateStr = row[columnMap.date];
+      const dateObj = new Date(dateStr);
+      if (isNaN(dateObj.getTime())) {
+        // Skip empty rows gracefully
+        continue;
+      }
+
+      const val = parseCurrency(row[columnMap.value]);
+      if (isNaN(val)) {
+        report.errors.push(`Wiersz ${i + 1}: Błąd parsowania kwoty dywidendy.`);
+        parseErrors++;
+        continue;
+      }
+
+      data.push({
+        date: dateStr,
+        dateObj,
+        portfolio: row[columnMap.portfolio],
+        symbol: columnMap.symbol !== -1 ? row[columnMap.symbol] : 'Unknown',
+        value: val
+      } as DividendDataRow);
     }
 
   } else {

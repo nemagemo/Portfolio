@@ -1,5 +1,6 @@
 
 
+
 export const OMF_OPEN_DATA = `Status pozycji,Portfel,Typ,Symbol,ISIN,Sektor,Okres inwestycji,Ostatni zakup,Ilość,Obecna wartość,Wartość zakupu,Zysk/Strata,ROI
 Otwarta,PPK,PPK,PPK,,,,,"45,059700","7 997,65 zł","3 335,73 zł","4 661,92 zł","139,76%"
 Otwarta,IKE,ETF,NDIA.L,IE00BZCQB185,,416,2025-07-09,"35,794600","1 275,63 zł","1 371,84 zł","-96,21 zł","-7,01%"
@@ -49,6 +50,7 @@ Otwarta,Krypto,Krypto,AZERO,,,565,2024-10-04,"89,463599","4,31 zł","174,03 zł"
 Otwarta,Krypto,Krypto,FOREX,,,719,2024-06-14,"5388,141100","10,02 zł","132,99 zł","-122,97 zł","-92,47%"
 Otwarta,Krypto,Krypto,KAVA,,,719,2024-01-06,"9,283358","4,09 zł","30,14 zł","-26,05 zł","-86,43%"
 Otwarta,Krypto,Krypto,5IRE,,,688,2024-04-14,"80,090420","0,16 zł","56,89 zł","-56,73 zł","-99,72%"
+Otwarta,IKE,Gotówka,PLN-IKE,,,0,2025-11-07,"0,000000","0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Gotówka,Gotówka,PLN,,,382,2025-11-07,"1107,930000","1 107,93 zł","1 107,93 zł","0,00 zł","0,00%"`;
 
 export const OMF_LAST_UPDATED = '2025-11-27';
