@@ -31,35 +31,35 @@ export const StatsCard: React.FC<StatsCardProps> = ({
   const containerClass = className || "bg-white rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow duration-300";
 
   return (
-    <div className={`p-6 ${containerClass}`}>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-medium opacity-70">{title}</h3>
-        <div className={`p-2 rounded-lg bg-opacity-10 ${colorClass}`}>
-          <Icon size={20} />
+    <div className={`p-4 ${containerClass}`}>
+      <div className="flex items-center justify-between mb-1">
+        <h3 className="text-xs font-bold uppercase tracking-wider opacity-60 truncate pr-2">{title}</h3>
+        <div className={`p-1.5 rounded-md bg-opacity-10 shrink-0 ${colorClass}`}>
+          <Icon size={16} />
         </div>
       </div>
       <div className="flex flex-col">
-        <span className="text-2xl font-bold">{value}</span>
+        <span className="text-xl sm:text-2xl font-bold tracking-tight truncate">{value}</span>
         
         {(subValue || trend !== undefined || leftTrend !== undefined) && (
-          <div className="flex items-center mt-1 text-sm space-x-3">
+          <div className="flex items-center mt-0.5 text-xs sm:text-sm space-x-3">
             {/* Left Trend (e.g. 24h) */}
             {leftTrend !== undefined && (
-              <span className={`flex items-center font-medium ${leftTrend >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                {leftTrend >= 0 ? <ArrowUpRight size={16} className="mr-1" /> : <ArrowDownRight size={16} className="mr-1" />}
+              <span className={`flex items-center font-bold ${leftTrend >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                {leftTrend >= 0 ? <ArrowUpRight size={14} className="mr-0.5" /> : <ArrowDownRight size={14} className="mr-0.5" />}
                 {Math.abs(leftTrend).toFixed(2)}%{leftTrendLabel && <span className="ml-1 font-normal opacity-60">{leftTrendLabel}</span>}
               </span>
             )}
 
             {/* Main Trend (e.g. m/m) */}
             {trend !== undefined && (
-              <span className={`flex items-center font-medium ${trend >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                {trend >= 0 ? <ArrowUpRight size={16} className="mr-1" /> : <ArrowDownRight size={16} className="mr-1" />}
+              <span className={`flex items-center font-bold ${trend >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                {trend >= 0 ? <ArrowUpRight size={14} className="mr-0.5" /> : <ArrowDownRight size={14} className="mr-0.5" />}
                 {Math.abs(trend).toFixed(2)}%{trendLabel && <span className="ml-1 font-normal opacity-60">{trendLabel}</span>}
               </span>
             )}
             
-            {subValue && <span className="opacity-50">{subValue}</span>}
+            {subValue && <span className="opacity-50 truncate font-medium">{subValue}</span>}
           </div>
         )}
       </div>

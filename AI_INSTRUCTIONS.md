@@ -162,7 +162,12 @@ Aplikacja stosuje hybrydowy model wyceny w czasie rzeczywistym:
 
 ## PROTOKÓŁ WERYFIKACJI OBLICZEŃ (TRIPLE CHECK)
 
-**KRYTYCZNE:** Każde wyliczenie finansowe musi zostać zweryfikowane **3 RAZY**.
-1.  **Weryfikacja 1 (Logika):** Czy wzór jest poprawny dla danego portfela (np. Snowball dla Krypto)?
-2.  **Weryfikacja 2 (Dane):** Czy sumy z plików (`OMFopen`, `OMFclosed`) są pobrane poprawnie?
-3.  **Weryfikacja 3 (Spójność):** Czy `Wartość - Wkład = Zysk`? Czy ROI ma sens?
+**KRYTYCZNE:** Przed każdą edycją plików historycznych (`IKE.ts`, `Krypto.ts`) AI musi wykonać weryfikację krzyżową.
+
+1.  **Weryfikacja 1 (Snowball Math):**
+    *   Oblicz teoretyczny wkład własny:
+    *   `Wkład = (Suma Wartości Zakupu Otwartych) - (Suma Zysków Zamkniętych) - (Suma Aktywnych Dywidend)`
+2.  **Weryfikacja 2 (History Consistency):**
+    *   Sprawdź, czy wartość wpisywana do pliku historycznego jako "Wkład" zgadza się z wynikiem z punktu 1.
+3.  **Akcja Naprawcza:**
+    *   Jeśli różnica > 5 PLN, **PRZERWIJ OPERACJĘ** i poinformuj użytkownika o niespójności, lub skoryguj wpis, wyjaśniając przyczynę (np. "Znalazłem pominiętą dywidendę").

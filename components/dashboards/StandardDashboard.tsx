@@ -1,12 +1,10 @@
 
-
 import React, { useMemo, useState } from 'react';
-import { Wallet, Building2, TrendingUp, ArrowUpRight, Timer, ShieldCheck, Trophy, DollarSign } from 'lucide-react';
+import { Wallet, TrendingUp, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { SummaryStats, PortfolioType, AnyDataRow, DividendDataRow } from '../../types';
-import { StatsCard } from '../StatsCard';
 import { Theme, themeStyles } from '../../theme/styles';
 import { ValueCompositionChart, ROIChart, CapitalStructureHistoryChart, CryptoValueChart, DividendChart } from '../Charts';
-import { TaxToggleIcon } from '../Icons';
+import { TaxToggleIcon, IconEmployer, IconState, IconExit, IconHourglass, IconTaxShield, IconDividends, IconTrophy } from '../Icons';
 import { parseCSV } from '../../utils/parser';
 import { DIVIDENDS_DATA } from '../../CSV/Dividends';
 
@@ -33,6 +31,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
 }) => {
   const styles = themeStyles[theme];
   const [dividendViewMode, setDividendViewMode] = useState<'Yearly' | 'Quarterly'>('Yearly');
+  const isNeon = theme === 'neon';
 
   const monthsToPayout = useMemo(() => {
     if (portfolioType !== 'PPK') return 0;
@@ -44,27 +43,10 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
     return Math.max(0, months);
   }, [portfolioType]);
 
-  const getTextColorClass = (type: string) => {
-    if (theme === 'neon') return 'text-cyan-400';
-    switch(type) {
-      case 'PPK': return 'text-indigo-700';
-      case 'CRYPTO': return 'text-violet-700';
-      case 'IKE': return 'text-cyan-700';
-      default: return 'text-blue-700';
-    }
-  };
-
-  const getProfitColorClass = (val: number) => {
-    if (theme === 'neon') return val >= 0 ? "text-emerald-400" : "text-rose-400";
-    return val >= 0 ? "text-emerald-600" : "text-rose-600";
-  };
-
   // Calculate Dividend Data if IKE
   const dividendChartData = useMemo(() => {
     if (portfolioType !== 'IKE') return [];
     
-    // Parse dividends here to avoid adding heavy logic to usePortfolioData just for this view
-    // In a real app, this would come from props
     const divRes = parseCSV(DIVIDENDS_DATA, 'DIVIDENDS', 'Offline');
     const dividends = divRes.data as DividendDataRow[];
     
@@ -86,11 +68,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
     return Object.entries(grouped)
         .map(([label, value]) => ({ label, value }))
         .sort((a, b) => {
-            // Basic sort logic: Year or Year+Quarter
             if (dividendViewMode === 'Yearly') return a.label.localeCompare(b.label);
-            // For quarters "Q2 '24" vs "Q1 '25", manual sort might be needed if dates span widely
-            // But string compare works for "Q1 '24" vs "Q2 '24"
-            // A better way is to store sort key separately, but this suffices for simple display
             const yearA = parseInt(a.label.split("'")[1]);
             const yearB = parseInt(b.label.split("'")[1]);
             if (yearA !== yearB) return yearA - yearB;
@@ -104,68 +82,155 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
 
   if (!stats) return null;
 
-  // Determine title for Value Card
-  const valueCardTitle = portfolioType === 'PPK' ? "Wartość Całkowita" : "Wartość";
+  // Unify Investment Value (PPK uses totalEmployee, others use totalInvestment)
+  const investedValue = stats.totalInvestment ?? stats.totalEmployee ?? 0;
+  const profitValue = stats.totalProfit || 0;
+  const totalValue = stats.totalValue || 0;
+  const currentRoi = stats.currentRoi || 0;
 
   return (
     <>
-      <div className={`grid grid-cols-1 gap-6 mb-4 ${portfolioType === 'PPK' ? 'lg:grid-cols-3 xl:grid-cols-4' : 'lg:grid-cols-4'}`}>
-        {portfolioType === 'PPK' ? (
-           <div className={`${styles.cardContainer} p-6 hover:shadow-md transition-shadow duration-300`}>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className={`text-sm font-medium ${styles.textSub}`}>Wartość</h3>
-                <div className={`p-2 rounded-lg ${theme === 'neon' ? 'bg-indigo-900/30 text-indigo-400 border border-indigo-500/50' : 'bg-slate-50 text-indigo-700'}`}><Wallet size={20} /></div>
+      {/* PORTFOLIO HEADER (New Unified Style) */}
+      <div className={`w-full p-6 lg:p-8 ${styles.cardContainer} relative overflow-hidden mb-8`}>
+        {/* Decorative Background Elements for Neon */}
+        {isNeon && (
+          <div className={`absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none ${portfolioType === 'CRYPTO' ? 'bg-violet-500/10' : 'bg-indigo-500/10'}`}></div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 relative z-10">
+          
+          {/* LEFT: Main Capital Stats (5 cols) */}
+          <div className="lg:col-span-5 flex flex-col justify-center">
+            <h2 className={`text-xs uppercase tracking-widest font-bold mb-2 flex items-center ${isNeon ? 'text-cyan-600' : 'text-slate-400'}`}>
+              <Wallet size={14} className="mr-2" /> {portfolioType === 'PPK' ? "Wartość Całkowita" : "Wartość Portfela"}
+            </h2>
+            <div className="flex items-baseline">
+              <span className={`text-4xl sm:text-5xl font-black tracking-tight ${isNeon ? 'text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-500' : 'text-slate-900'}`}>
+                {totalValue.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+              <span className={`text-xl ml-2 font-medium ${isNeon ? 'text-cyan-700' : 'text-slate-400'}`}>zł</span>
+            </div>
+            
+            <div className="mt-4 flex items-center">
+              <div className={`h-1.5 w-full rounded-full overflow-hidden ${isNeon ? 'bg-slate-800' : 'bg-slate-100'}`}>
+                <div 
+                  className={`h-full rounded-full ${isNeon ? 'bg-blue-500' : 'bg-slate-400'}`} 
+                  style={{ width: `${(investedValue && totalValue) ? Math.min(100, (investedValue / totalValue) * 100) : 0}%` }}
+                ></div>
               </div>
-              <div className="flex flex-col">
-                 <span className={`text-2xl font-bold ${styles.text}`}>{`${(stats.totalValue || 0).toLocaleString('pl-PL')} zł`}</span>
-                 <div className="flex items-center mt-1 text-sm space-x-2">
-                    <span className={`flex items-center font-bold text-base ${theme === 'neon' ? 'text-slate-400' : 'text-slate-600'}`}>
-                       {((stats as any).customExitValue || 0).toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł
-                    </span>
+            </div>
+            <div className="flex justify-between mt-2 text-xs font-medium font-mono">
+              <span className={isNeon ? 'text-blue-400' : 'text-slate-500'}>
+                {portfolioType === 'PPK' ? "Wkład Własny" : "Zainwestowano"}: {investedValue.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł
+              </span>
+              <span className={isNeon ? 'text-cyan-600' : 'text-slate-400'}>
+                {investedValue && totalValue ? ((investedValue / totalValue) * 100).toFixed(1) : 0}%
+              </span>
+            </div>
+          </div>
+
+          {/* MIDDLE: Performance Stats (3 cols) */}
+          <div className={`lg:col-span-3 flex flex-col justify-center lg:border-l lg:border-r ${isNeon ? 'lg:border-cyan-900/30' : 'lg:border-slate-100'} lg:px-8`}>
+             <h2 className={`text-xs uppercase tracking-widest font-bold mb-3 ${isNeon ? 'text-cyan-600' : 'text-slate-400'}`}>
+               Wynik
+             </h2>
+             <div className={`text-2xl sm:text-3xl font-bold mb-1 ${profitValue >= 0 ? (isNeon ? 'text-[#39ff14] drop-shadow-[0_0_5px_rgba(57,255,20,0.5)]' : 'text-emerald-600') : 'text-rose-500'}`}>
+                {profitValue > 0 ? '+' : ''}{profitValue.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł
+             </div>
+             
+             <div className="flex items-center mt-2">
+                <span className={`px-2.5 py-1 rounded text-sm font-bold flex items-center ${
+                  currentRoi >= 0 
+                    ? (isNeon ? 'bg-green-900/30 text-green-400 border border-green-500/30' : 'bg-emerald-100 text-emerald-700') 
+                    : 'bg-rose-100 text-rose-700'
+                }`}>
+                  {currentRoi >= 0 ? <TrendingUp size={14} className="mr-1.5"/> : <TrendingUp size={14} className="mr-1.5 rotate-180"/>}
+                  {currentRoi.toFixed(2)}% ROI
+                </span>
+             </div>
+          </div>
+
+          {/* RIGHT: Specific Metrics Grid (4 cols) */}
+          <div className="lg:col-span-4 grid grid-cols-2 gap-3">
+             {/* PPK SPECIFIC METRICS */}
+             {portfolioType === 'PPK' && (
+               <>
+                 <div className={`p-3 rounded-lg border relative ${isNeon ? 'bg-black/40 border-cyan-900/30' : 'bg-slate-50 border-slate-100'}`}>
+                    <div className="flex justify-between items-start mb-1">
+                      <div className={`text-[10px] uppercase font-bold ${isNeon ? 'text-purple-400' : 'text-slate-400'}`}>Pracodawca</div>
+                      <IconEmployer className={`w-4 h-4 ${isNeon ? 'text-purple-500/80' : 'text-purple-400/60'}`} />
+                    </div>
+                    <div className={`text-lg font-bold ${isNeon ? 'text-purple-300' : 'text-slate-700'}`}>{stats.totalEmployer?.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</div>
+                    <div className={`text-[9px] ${isNeon ? 'text-purple-500/60' : 'text-slate-400'}`}>Dopłaty</div>
                  </div>
-              </div>
-           </div>
-        ) : (<StatsCard title={valueCardTitle} value={`${(stats.totalValue || 0).toLocaleString('pl-PL')} zł`} icon={Wallet} colorClass={getTextColorClass(portfolioType)} className={styles.cardContainer} />)}
-
-        <StatsCard title={portfolioType === 'PPK' ? "Wkład Własny" : "Zainwestowano"} value={`${(stats.totalInvestment ?? stats.totalEmployee ?? 0).toLocaleString('pl-PL')} zł`} icon={Building2} colorClass={getTextColorClass(portfolioType)} className={styles.cardContainer} />
-        
-        {portfolioType === 'PPK' && stats.totalState !== undefined ? (
-           <div className={`${styles.cardContainer} p-6 hover:shadow-md transition-shadow duration-300`}>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className={`text-sm font-medium ${styles.textSub}`}>Zysk</h3>
-                <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg} ${theme === 'neon' ? 'text-emerald-400' : 'text-emerald-600'}`}><TrendingUp size={20} /></div>
-              </div>
-              <div className="flex flex-col">
-                 <span className={`text-2xl font-bold ${styles.text}`}>{`${(stats.totalProfit || 0).toLocaleString('pl-PL')} zł`}</span>
-                 <div className="flex items-center mt-1 text-sm space-x-2">
-                    <span className={`flex items-center font-bold text-base ${theme === 'neon' ? 'text-emerald-400' : 'text-emerald-600'}`}><ArrowUpRight size={18} className="mr-0.5" />{stats.totalEmployee ? ((stats.totalProfit / stats.totalEmployee) * 100).toFixed(2) : '0.00'}%</span>
+                 <div className={`p-3 rounded-lg border relative ${isNeon ? 'bg-black/40 border-cyan-900/30' : 'bg-slate-50 border-slate-100'}`}>
+                    <div className="flex justify-between items-start mb-1">
+                      <div className={`text-[10px] uppercase font-bold ${isNeon ? 'text-pink-400' : 'text-slate-400'}`}>Państwo</div>
+                      <IconState className={`w-4 h-4 ${isNeon ? 'text-pink-500/80' : 'text-pink-400/60'}`} />
+                    </div>
+                    <div className={`text-lg font-bold ${isNeon ? 'text-pink-300' : 'text-slate-700'}`}>{stats.totalState?.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</div>
+                    <div className={`text-[9px] ${isNeon ? 'text-pink-500/60' : 'text-slate-400'}`}>Bonusy</div>
                  </div>
-              </div>
-           </div>
-        ) : (
-           <StatsCard title="Zysk/Strata" value={`${(stats.totalProfit || 0).toLocaleString('pl-PL')} zł`} trend={stats.currentRoi || 0} icon={TrendingUp} colorClass={getProfitColorClass(stats.totalProfit || 0)} className={styles.cardContainer} />
-        )}
+                 <div className={`p-3 rounded-lg border relative ${isNeon ? 'bg-black/40 border-cyan-900/30' : 'bg-slate-50 border-slate-100'}`}>
+                    <div className="flex justify-between items-start mb-1">
+                      <div className={`text-[10px] uppercase font-bold ${isNeon ? 'text-amber-400' : 'text-slate-400'}`}>Exit Value</div>
+                      <IconExit className={`w-4 h-4 ${isNeon ? 'text-amber-500/80' : 'text-amber-400/60'}`} />
+                    </div>
+                    <div className={`text-lg font-bold ${isNeon ? 'text-amber-300' : 'text-slate-700'}`}>{((stats as any).customExitValue || 0).toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</div>
+                    <div className={`text-[9px] ${isNeon ? 'text-amber-500/60' : 'text-slate-400'}`}>Wypłata teraz</div>
+                 </div>
+                 <div className={`p-3 rounded-lg border relative ${isNeon ? 'bg-black/40 border-cyan-900/30' : 'bg-slate-50 border-slate-100'}`}>
+                    <div className="flex justify-between items-start mb-1">
+                      <div className={`text-[10px] uppercase font-bold ${isNeon ? 'text-blue-400' : 'text-slate-400'}`}>Czas</div>
+                      <IconHourglass className={`w-4 h-4 ${isNeon ? 'text-blue-500/80' : 'text-blue-400/60'}`} />
+                    </div>
+                    <div className={`text-lg font-bold ${isNeon ? 'text-blue-300' : 'text-slate-700'}`}>{monthsToPayout} msc</div>
+                    <div className={`text-[9px] ${isNeon ? 'text-blue-500/60' : 'text-slate-400'}`}>Do 60 r.ż.</div>
+                 </div>
+               </>
+             )}
 
-        {portfolioType === 'PPK' && (
-           <div className={`${styles.cardContainer} p-6 hover:shadow-md transition-shadow duration-300`}>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className={`text-sm font-medium ${styles.textSub}`}>Czas do wypłaty</h3>
-                <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg} ${theme === 'neon' ? 'text-amber-400' : 'text-amber-600'}`}><Timer size={20} /></div>
-              </div>
-              <div className="flex flex-col">
-                 <span className={`text-2xl font-bold ${styles.text}`}>{monthsToPayout}</span>
-                 <span className={`text-sm mt-1 ${theme === 'neon' ? 'text-cyan-700' : 'text-slate-400'}`}>msc</span>
-              </div>
-           </div>
-        )}
+             {/* IKE SPECIFIC METRICS */}
+             {portfolioType === 'IKE' && (
+               <>
+                 <div className={`p-3 rounded-lg border relative ${isNeon ? 'bg-black/40 border-cyan-900/30' : 'bg-slate-50 border-slate-100'}`}>
+                    <div className="flex justify-between items-start mb-1">
+                      <div className={`text-[10px] uppercase font-bold ${isNeon ? 'text-cyan-400' : 'text-slate-400'}`}>Tarcza</div>
+                      <IconTaxShield className={`w-4 h-4 ${isNeon ? 'text-cyan-500/80' : 'text-cyan-400/60'}`} />
+                    </div>
+                    <div className={`text-lg font-bold ${isNeon ? 'text-cyan-300' : 'text-slate-700'}`}>{stats.taxSaved?.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</div>
+                    <div className={`text-[9px] ${isNeon ? 'text-cyan-500/60' : 'text-slate-400'}`}>Oszczędność</div>
+                 </div>
+                 <div className={`p-3 rounded-lg border relative ${isNeon ? 'bg-black/40 border-cyan-900/30' : 'bg-slate-50 border-slate-100'}`}>
+                    <div className="flex justify-between items-start mb-1">
+                      <div className={`text-[10px] uppercase font-bold ${isNeon ? 'text-emerald-400' : 'text-slate-400'}`}>Dywidendy</div>
+                      <IconDividends className={`w-4 h-4 ${isNeon ? 'text-emerald-500/80' : 'text-emerald-400/60'}`} />
+                    </div>
+                    <div className={`text-lg font-bold ${isNeon ? 'text-emerald-300' : 'text-slate-700'}`}>{totalDividends.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</div>
+                    <div className={`text-[9px] ${isNeon ? 'text-emerald-500/60' : 'text-slate-400'}`}>Suma (Brutto)</div>
+                 </div>
+               </>
+             )}
 
-        {portfolioType === 'IKE' && stats.taxSaved !== undefined && (
-           <StatsCard title="Tarcza Podatkowa" value={`${(stats.taxSaved).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`} subValue="Zaoszczędzony podatek" icon={ShieldCheck} colorClass={theme === 'neon' ? 'text-cyan-400' : "text-cyan-700 bg-cyan-50"} className={styles.cardContainer} />
-        )}
+             {/* CRYPTO SPECIFIC METRICS */}
+             {portfolioType === 'CRYPTO' && bestCrypto && (
+               <>
+                 <div className={`col-span-2 p-3 rounded-lg border relative ${isNeon ? 'bg-black/40 border-cyan-900/30' : 'bg-slate-50 border-slate-100'}`}>
+                    <div className="flex justify-between items-start mb-1">
+                      <div className={`text-[10px] uppercase font-bold ${isNeon ? 'text-yellow-400' : 'text-slate-400'}`}>Najlepsze Aktywo</div>
+                      <IconTrophy className={`w-4 h-4 ${isNeon ? 'text-yellow-500/80' : 'text-yellow-400/60'}`} />
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <div className={`text-lg font-bold ${isNeon ? 'text-yellow-300' : 'text-slate-700'}`}>{bestCrypto.symbol}</div>
+                        <div className={`text-sm font-bold ${isNeon ? 'text-yellow-300' : 'text-yellow-600'}`}>+{bestCrypto.roi}%</div>
+                    </div>
+                    <div className={`text-[9px] ${isNeon ? 'text-yellow-500/60' : 'text-slate-400'}`}>Zysk: {bestCrypto.profit.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</div>
+                 </div>
+               </>
+             )}
+          </div>
 
-        {portfolioType === 'CRYPTO' && bestCrypto && (
-          <StatsCard title="Najlepsze Aktywo" value={bestCrypto.symbol} subValue={`${bestCrypto.profit.toLocaleString('pl-PL')} zł`} trend={bestCrypto.roi} icon={Trophy} colorClass={theme === 'neon' ? 'text-yellow-400' : "text-yellow-600 bg-yellow-50"} className={styles.cardContainer} />
-        )}
+        </div>
       </div>
 
       <div className="space-y-8">

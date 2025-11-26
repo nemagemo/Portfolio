@@ -59,15 +59,24 @@ export const App: React.FC = () => {
       
       // Online logic - check for partial data
       let isPartial = false;
+      let partialLabel = 'ONLINE';
+
       if (portfolioType === 'OMF' && onlinePrices) {
-          // Check if any non-cash open asset is missing from online prices
-          const missingCount = omfActiveAssets.filter(a => a.status === 'Otwarta' && a.portfolio !== 'Gotówka' && !a.isLivePrice).length;
-          if (missingCount > 0) isPartial = true;
+          // Only count actual investment assets (exclude Cash types like PLN, PLN-IKE)
+          const investableAssets = omfActiveAssets.filter(a => a.status === 'Otwarta' && a.type !== 'Gotówka');
+          const totalAssets = investableAssets.length;
+          const loadedAssets = investableAssets.filter(a => a.isLivePrice).length;
+          
+          if (totalAssets > 0 && loadedAssets < totalAssets) {
+             isPartial = true;
+             const percent = Math.round((loadedAssets / totalAssets) * 100);
+             partialLabel = `ONLINE ${percent}%`;
+          }
       }
 
       if (isPartial) {
           return { 
-              label: 'ONLINE', 
+              label: partialLabel, 
               icon: AlertCircle, 
               colorClass: theme === 'neon' ? 'bg-yellow-900/80 text-yellow-300 border-yellow-600/50' : 'bg-amber-50 text-amber-600 border-amber-200'
           };

@@ -45,7 +45,8 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
     try {
       // Always parse dividends globally as they are needed for stats and IKE dashboard
       const divRes = parseCSV(csvSources.DIVIDENDS, 'DIVIDENDS', 'Offline');
-      setDividends(divRes.data as DividendDataRow[]);
+      const parsedDividends = divRes.data as DividendDataRow[];
+      setDividends(parsedDividends);
 
       if (portfolioType === 'OMF') {
         const openRes = parseCSV(csvSources.OMF_OPEN, 'OMF', 'Offline');
@@ -113,6 +114,43 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
         const combinedData = [...omfOpenRows, ...omfClosedRows];
         const integrity = validateOMFIntegrity(combinedData, 'Offline');
         
+        // --- CROSS-CHECK: Validate History vs Snapshot Integrity ---
+        // This protects against manual errors in IKE.ts / Krypto.ts where "Invested" is typed wrong.
+        
+        // 1. Parse History Files
+        const ikeHistoryRaw = parseCSV(csvSources.IKE, 'IKE', 'Offline').data as IKEDataRow[];
+        const cryptoHistoryRaw = parseCSV(csvSources.CRYPTO, 'CRYPTO', 'Offline').data as CryptoDataRow[];
+        
+        // 2. Calculate Theoretical IKE Investment (Snowball Formula)
+        const openIKE = omfOpenRows.filter(r => r.portfolio === 'IKE').reduce((sum, r) => sum + r.purchaseValue, 0);
+        const closedIKE = omfClosedRows.filter(r => r.portfolio === 'IKE').reduce((sum, r) => sum + r.profit, 0);
+        const divsIKE = parsedDividends.filter(d => d.portfolio === 'IKE' && d.isCounted).reduce((sum, r) => sum + r.value, 0);
+        const calcIKE = openIKE - closedIKE - divsIKE;
+
+        // 3. Compare with last recorded IKE Investment
+        if (ikeHistoryRaw.length > 0) {
+            const lastRecIKE = ikeHistoryRaw[ikeHistoryRaw.length - 1].investment;
+            if (Math.abs(lastRecIKE - calcIKE) > 5.00) {
+                integrity.isConsistent = false;
+                integrity.messages.push(`Niespójność Historii IKE: Wpisano ${lastRecIKE.toFixed(2)}, wyliczono ${calcIKE.toFixed(2)} (Różnica: ${(lastRecIKE - calcIKE).toFixed(2)}). Sprawdź CSV/IKE.ts.`);
+            }
+        }
+
+        // 4. Calculate Theoretical Crypto Investment
+        const openCrypto = omfOpenRows.filter(r => r.portfolio === 'Krypto').reduce((sum, r) => sum + r.purchaseValue, 0);
+        const closedCrypto = omfClosedRows.filter(r => r.portfolio === 'Krypto').reduce((sum, r) => sum + r.profit, 0);
+        // No dividends for crypto usually, but if added, subtract here
+        const calcCrypto = openCrypto - closedCrypto;
+
+        // 5. Compare with last recorded Crypto Investment
+        if (cryptoHistoryRaw.length > 0) {
+            const lastRecCrypto = cryptoHistoryRaw[cryptoHistoryRaw.length - 1].investment;
+            if (Math.abs(lastRecCrypto - calcCrypto) > 5.00) {
+                integrity.isConsistent = false;
+                integrity.messages.push(`Niespójność Historii Krypto: Wpisano ${lastRecCrypto.toFixed(2)}, wyliczono ${calcCrypto.toFixed(2)} (Różnica: ${(lastRecCrypto - calcCrypto).toFixed(2)}). Sprawdź CSV/Krypto.ts.`);
+            }
+        }
+
         setOmfReport(integrity); 
         setReport(openRes.report);
         setOmfActiveAssets(omfOpenRows);

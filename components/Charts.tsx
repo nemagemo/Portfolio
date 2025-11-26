@@ -88,6 +88,7 @@ const CHART_THEMES: Record<ThemeMode, {
   dailyPos: string;   // 24h Green
   dailyNeg: string;   // 24h Red
   dailyNeu: string;   // 24h Gray
+  dailyWarning: string; // 24h Offline/Warning (Yellow)
 }> = {
   light: {
     investment: '#475569', // Slate-600 (Professional Blue-Grey)
@@ -110,7 +111,8 @@ const CHART_THEMES: Record<ThemeMode, {
     barProfitNeg: '#b91c1c',
     dailyPos: '#16a34a', // Green-600
     dailyNeg: '#dc2626', // Red-600
-    dailyNeu: '#94a3b8'  // Slate-400
+    dailyNeu: '#94a3b8',  // Slate-400
+    dailyWarning: '#fbbf24' // Amber-400
   },
   comic: {
     investment: '#0ea5e9', // Cyan (Process Cyan)
@@ -133,7 +135,8 @@ const CHART_THEMES: Record<ThemeMode, {
     barProfitNeg: '#ef4444',
     dailyPos: '#22c55e', // Bright Green
     dailyNeg: '#ef4444', // Bright Red
-    dailyNeu: '#cbd5e1'
+    dailyNeu: '#cbd5e1',
+    dailyWarning: '#facc15' // Yellow-400
   },
   neon: {
     investment: '#22d3ee', // Cyan-400 (Electric Blue)
@@ -156,7 +159,8 @@ const CHART_THEMES: Record<ThemeMode, {
     barProfitNeg: '#ef4444',
     dailyPos: '#059669', // Darker Green for background block
     dailyNeg: '#991b1b', // Darker Red for background block
-    dailyNeu: '#1e293b'
+    dailyNeu: '#1e293b',
+    dailyWarning: '#facc15' // Neon Yellow
   }
 };
 
@@ -601,19 +605,22 @@ export const BubbleRiskChart: React.FC<BubbleRiskChartProps> = ({ data, themeMod
   const t = CHART_THEMES[themeMode || 'light'];
   
   // Transform data for ScatterChart
+  // UPDATED: Now includes assets without live price (change24h undefined)
+  // We set x=0 for undefined change, but flag it as offline.
   const chartData = useMemo(() => {
     return data
-      .filter(d => d.change24h !== undefined && Math.abs(d.change24h) > 0 && d.symbol !== 'PLN' && d.symbol !== 'PLN-IKE')
+      .filter(d => d.symbol !== 'PLN' && d.symbol !== 'PLN-IKE')
       .map(d => ({
         name: d.symbol,
         x: d.change24h || 0,
         y: d.roi || 0,
         z: d.currentValue,
-        portfolio: d.portfolio
+        portfolio: d.portfolio,
+        isLive: d.isLivePrice ?? false
       }));
   }, [data]);
 
-  if (chartData.length === 0) return <div className="flex items-center justify-center h-full text-slate-400 text-sm">Brak danych o zmianie 24h</div>;
+  if (chartData.length === 0) return <div className="flex items-center justify-center h-full text-slate-400 text-sm">Brak danych</div>;
 
   return (
     <div className="h-80 w-full">
@@ -648,9 +655,13 @@ export const BubbleRiskChart: React.FC<BubbleRiskChartProps> = ({ data, themeMod
                   <div style={getTooltipStyle(themeMode as ThemeMode)} className="p-2 shadow-md text-xs">
                     <p className="font-bold mb-1 text-sm">{d.name}</p>
                     <p>Wartość: {formatCurrency(d.z)}</p>
-                    <p className={d.x >= 0 ? 'text-emerald-500' : 'text-rose-500'}>
-                      24h: {d.x > 0 ? '+' : ''}{d.x.toFixed(2)}%
-                    </p>
+                    {d.isLive ? (
+                        <p className={d.x >= 0 ? 'text-emerald-500' : 'text-rose-500'}>
+                          24h: {d.x > 0 ? '+' : ''}{d.x.toFixed(2)}%
+                        </p>
+                    ) : (
+                        <p className="text-amber-500 font-bold">Cena Offline / Brak danych</p>
+                    )}
                     <p className={d.y >= 0 ? 'text-emerald-500' : 'text-rose-500'}>
                       ROI: {d.y > 0 ? '+' : ''}{d.y.toFixed(2)}%
                     </p>
@@ -665,15 +676,25 @@ export const BubbleRiskChart: React.FC<BubbleRiskChartProps> = ({ data, themeMod
           <ReferenceLine y={0} stroke={t.axis} strokeOpacity={0.5} />
           
           <Scatter name="Aktywa" data={chartData} fill="#8884d8">
-            {chartData.map((entry, index) => (
-              <Cell 
-                key={`cell-${index}`} 
-                fill={entry.x >= 0 ? t.dailyPos : t.dailyNeg} 
-                fillOpacity={0.7}
-                stroke={themeMode === 'neon' ? '#fff' : '#fff'}
-                strokeWidth={1}
-              />
-            ))}
+            {chartData.map((entry, index) => {
+              // Color Logic: Yellow for Offline, Green/Red for Live
+              let fill = t.dailyNeu;
+              if (!entry.isLive) {
+                  fill = t.dailyWarning;
+              } else {
+                  fill = entry.x >= 0 ? t.dailyPos : t.dailyNeg;
+              }
+
+              return (
+                <Cell 
+                  key={`cell-${index}`} 
+                  fill={fill} 
+                  fillOpacity={0.7}
+                  stroke={themeMode === 'neon' ? '#fff' : '#fff'}
+                  strokeWidth={1}
+                />
+              );
+            })}
           </Scatter>
         </ScatterChart>
       </ResponsiveContainer>
