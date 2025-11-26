@@ -89,19 +89,20 @@ const CHART_THEMES: Record<ThemeMode, {
   dailyNeg: string;   // 24h Red
   dailyNeu: string;   // 24h Gray
   dailyWarning: string; // 24h Offline/Warning (Yellow)
+  lineType?: 'monotone' | 'linear' | 'step'; 
 }> = {
   light: {
-    investment: '#475569', // Slate-600 (Professional Blue-Grey)
-    profit: '#059669',     // Emerald-600 (Profit Green)
-    employer: '#7c3aed',   // Violet-600 (Employer/Bonus)
-    state: '#db2777',      // Pink-600 (State/Bonus)
-    tax: '#dc2626',        // Red-600 (Tax - Distinct)
-    net: '#115e59',        // Teal-800 (Net Value - Stronger Contrast)
-    exit: '#eab308',       // Yellow-500 (Exit Value - Bright Yellow/Amber)
-    projection: '#d97706', // Amber-600 (Projection - Gold/Optimism)
-    taxedAccount: '#eab308', // Yellow-500
-    grid: '#e5e7eb',       // Gray-200
-    axis: '#6b7280',       // Gray-500
+    investment: '#475569', // Slate-600
+    profit: '#059669',     // Emerald-600
+    employer: '#7c3aed',   // Violet-600
+    state: '#db2777',      // Pink-600
+    tax: '#dc2626',        // Red-600
+    net: '#115e59',        // Teal-800
+    exit: '#eab308',       // Yellow-500
+    projection: '#d97706', // Amber-600
+    taxedAccount: '#eab308', 
+    grid: '#e5e7eb',       
+    axis: '#6b7280',       
     tooltipBg: '#ffffff',
     tooltipText: '#111827',
     tooltipBorder: '#e5e7eb',
@@ -109,47 +110,49 @@ const CHART_THEMES: Record<ThemeMode, {
     pieColors: ['#475569', '#7c3aed', '#059669', '#d97706', '#be123c', '#1e293b'],
     barProfitPos: '#059669',
     barProfitNeg: '#b91c1c',
-    dailyPos: '#16a34a', // Green-600
-    dailyNeg: '#dc2626', // Red-600
-    dailyNeu: '#94a3b8',  // Slate-400
-    dailyWarning: '#fbbf24' // Amber-400
+    dailyPos: '#16a34a', 
+    dailyNeg: '#dc2626', 
+    dailyNeu: '#94a3b8',  
+    dailyWarning: '#fbbf24',
+    lineType: 'monotone'
   },
   comic: {
-    investment: '#0ea5e9', // Cyan (Process Cyan)
+    investment: '#0ea5e9', // Cyan
     profit: '#22c55e',     // Bright Green
     employer: '#a855f7',   // Purple
     state: '#ec4899',      // Pink
     tax: '#ef4444',        // Red
-    net: '#000000',        // Black (Bold Outline Style)
-    exit: '#facc15',       // Yellow-400 (Bright Yellow)
-    projection: '#f97316', // Bright Orange (Attention)
-    taxedAccount: '#facc15', // Yellow-400 (Bright Yellow)
-    grid: '#000000',       // Black Grid
-    axis: '#000000',       // Black Axis
+    net: '#000000',        // Black
+    exit: '#facc15',       // Yellow-400
+    projection: '#f97316', // Bright Orange
+    taxedAccount: '#facc15',
+    grid: '#000000',       
+    axis: '#000000',       
     tooltipBg: '#ffffff',
     tooltipText: '#000000',
     tooltipBorder: '#000000',
-    strokeWidth: 3,        // Bold Lines
+    strokeWidth: 3,        
     pieColors: ['#0ea5e9', '#a855f7', '#22c55e', '#f59e0b', '#f43f5e', '#64748b'],
     barProfitPos: '#22c55e',
     barProfitNeg: '#ef4444',
-    dailyPos: '#22c55e', // Bright Green
-    dailyNeg: '#ef4444', // Bright Red
+    dailyPos: '#22c55e', 
+    dailyNeg: '#ef4444', 
     dailyNeu: '#cbd5e1',
-    dailyWarning: '#facc15' // Yellow-400
+    dailyWarning: '#facc15',
+    lineType: 'monotone'
   },
   neon: {
-    investment: '#22d3ee', // Cyan-400 (Electric Blue)
+    investment: '#22d3ee', // Cyan-400
     profit: '#39ff14',     // Neon Green
     employer: '#d946ef',   // Fuchsia-500
     state: '#f472b6',      // Pink-400
     tax: '#ef4444',        // Red
-    net: '#1e3a8a',        // Dark Blue (High Contrast against Green)
-    exit: '#fbbf24',       // Amber (Neon Gold)
-    projection: '#facc15', // Yellow-400 (Neon Gold)
-    taxedAccount: '#fef08a', // Yellow-200 (Pale Neon Yellow)
-    grid: '#1e293b',       // Slate-800
-    axis: '#67e8f9',       // Cyan-300
+    net: '#1e3a8a',        // Dark Blue
+    exit: '#fbbf24',       // Amber
+    projection: '#facc15', // Yellow-400
+    taxedAccount: '#fef08a',
+    grid: '#1e293b',       
+    axis: '#67e8f9',       
     tooltipBg: '#000000',
     tooltipText: '#22d3ee',
     tooltipBorder: '#22d3ee',
@@ -157,10 +160,11 @@ const CHART_THEMES: Record<ThemeMode, {
     pieColors: ['#06b6d4', '#8b5cf6', '#10b981', '#f59e0b', '#f43f5e', '#64748b'],
     barProfitPos: '#39ff14',
     barProfitNeg: '#ef4444',
-    dailyPos: '#059669', // Darker Green for background block
-    dailyNeg: '#991b1b', // Darker Red for background block
+    dailyPos: '#059669', 
+    dailyNeg: '#991b1b', 
     dailyNeu: '#1e293b',
-    dailyWarning: '#facc15' // Neon Yellow
+    dailyWarning: '#facc15',
+    lineType: 'monotone'
   }
 };
 
@@ -233,7 +237,7 @@ export const OMFAllocationChart: React.FC<OMFAllocationProps> = ({ data, title, 
             formatter={(value: number) => [`${(value || 0).toLocaleString('pl-PL')} zł`, 'Wartość']}
             contentStyle={getTooltipStyle(themeMode as ThemeMode)}
           />
-          <Legend verticalAlign="bottom" iconType="circle" />
+          <Legend verticalAlign="bottom" />
         </PieChart>
       </ResponsiveContainer>
     </div>
@@ -242,7 +246,6 @@ export const OMFAllocationChart: React.FC<OMFAllocationProps> = ({ data, title, 
 
 export const OMFStructureChart: React.FC<OMFAllocationProps> = ({ data, themeMode = 'light' }) => {
   const t = CHART_THEMES[themeMode];
-  // Generate a larger palette by repeating/shifting basic pie colors
   const extendedColors = [...t.pieColors, ...t.pieColors].map((c, i) => i % 2 === 0 ? c : c + 'CC'); 
 
   return (
@@ -275,7 +278,6 @@ export const OMFStructureChart: React.FC<OMFAllocationProps> = ({ data, themeMod
             layout="vertical" 
             verticalAlign="middle" 
             align="right"
-            iconType="circle" 
             wrapperStyle={{ fontSize: '12px', maxHeight: '480px', overflowY: 'auto' }}
             formatter={(value, entry: any) => {
                 const val = entry.payload.value;
@@ -377,7 +379,6 @@ const TreemapContent = (props: any) => {
   const dataItem = payload || {};
 
   // IMPORTANT: Do not render content for Group nodes (which have children).
-  // This ensures we only see the leaf nodes (actual assets).
   if (dataItem.children) return null;
 
   const name = nameProp || dataItem.name || '';
@@ -415,7 +416,10 @@ const TreemapContent = (props: any) => {
           fill="#fff"
           fontSize={fontSizeName}
           fontWeight="700"
-          style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9)', pointerEvents: 'none' }}
+          style={{ 
+            textShadow: '0 2px 4px rgba(0,0,0,0.9)', 
+            pointerEvents: 'none',
+          }}
         >
           {name}
         </text>
@@ -426,10 +430,14 @@ const TreemapContent = (props: any) => {
           x={x + width - padding}
           y={y + height - padding} 
           textAnchor="end"
-          fill="#fff" 
+          fill="#fff"
           fontSize={fontSizeRoi}
           fontWeight="500"
-          style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9)', pointerEvents: 'none', opacity: 0.95 }}
+          style={{ 
+            textShadow: '0 2px 4px rgba(0,0,0,0.9)', 
+            pointerEvents: 'none', 
+            opacity: 0.95,
+          }}
         >
           {roi > 0 ? '+' : ''}{Number(roi).toFixed(1)}%
         </text>
@@ -504,11 +512,10 @@ const DailyChangeContent = (props: any) => {
   const t = CHART_THEMES[themeMode as ThemeMode];
   
   // Using the same color palette logic as Heatmap ROI but mapped to 24h thresholds
-  // Default to gray if change is exactly 0 (or very close)
   let color = '#64748b'; 
   
   // Daily Logic: >=5 (DarkGreen), >=2 (MedGreen), >0 (LightGreen), 0 (Gray)
-  if (Math.abs(change) < 0.01) color = '#64748b'; // Explicit Gray for ~0%
+  if (Math.abs(change) < 0.01) color = '#64748b'; 
   else if (change >= 5) color = '#064e3b'; 
   else if (change >= 2) color = '#047857'; 
   else if (change > 0) color = '#059669'; 
@@ -548,7 +555,10 @@ const DailyChangeContent = (props: any) => {
           fill="#fff"
           fontSize={fontSizeName}
           fontWeight="700"
-          style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9)', pointerEvents: 'none' }}
+          style={{ 
+            textShadow: '0 2px 4px rgba(0,0,0,0.9)', 
+            pointerEvents: 'none',
+          }}
         >
           {name}
         </text>
@@ -559,10 +569,13 @@ const DailyChangeContent = (props: any) => {
           x={x + width - padding}
           y={y + height - padding} 
           textAnchor="end"
-          fill="#fff" 
+          fill="#fff"
           fontSize={fontSizeChange}
           fontWeight="600"
-          style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9)', pointerEvents: 'none' }}
+          style={{ 
+            textShadow: '0 2px 4px rgba(0,0,0,0.9)', 
+            pointerEvents: 'none',
+          }}
         >
           {change > 0 ? '+' : ''}{Number(change).toFixed(2)}%
         </text>
@@ -605,8 +618,6 @@ export const BubbleRiskChart: React.FC<BubbleRiskChartProps> = ({ data, themeMod
   const t = CHART_THEMES[themeMode || 'light'];
   
   // Transform data for ScatterChart
-  // UPDATED: Now includes assets without live price (change24h undefined)
-  // We set x=0 for undefined change, but flag it as offline.
   const chartData = useMemo(() => {
     return data
       .filter(d => d.symbol !== 'PLN' && d.symbol !== 'PLN-IKE')
@@ -626,7 +637,7 @@ export const BubbleRiskChart: React.FC<BubbleRiskChartProps> = ({ data, themeMod
     <div className="h-80 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke={t.grid} />
+          <CartesianGrid strokeDasharray="3 3" stroke={t.grid} strokeWidth={1} />
           <XAxis 
             type="number" 
             dataKey="x" 
@@ -660,7 +671,7 @@ export const BubbleRiskChart: React.FC<BubbleRiskChartProps> = ({ data, themeMod
                           24h: {d.x > 0 ? '+' : ''}{d.x.toFixed(2)}%
                         </p>
                     ) : (
-                        <p className="text-amber-500 font-bold">Cena Offline / Brak danych</p>
+                        <p className='text-amber-500 font-bold'>Cena Offline / Brak danych</p>
                     )}
                     <p className={d.y >= 0 ? 'text-emerald-500' : 'text-rose-500'}>
                       ROI: {d.y > 0 ? '+' : ''}{d.y.toFixed(2)}%
@@ -671,13 +682,11 @@ export const BubbleRiskChart: React.FC<BubbleRiskChartProps> = ({ data, themeMod
               return null;
             }}
           />
-          {/* Reference Lines for Quadrants */}
           <ReferenceLine x={0} stroke={t.axis} strokeOpacity={0.5} />
           <ReferenceLine y={0} stroke={t.axis} strokeOpacity={0.5} />
           
           <Scatter name="Aktywa" data={chartData} fill="#8884d8">
             {chartData.map((entry, index) => {
-              // Color Logic: Yellow for Offline, Green/Red for Live
               let fill = t.dailyNeu;
               if (!entry.isLive) {
                   fill = t.dailyWarning;
@@ -717,7 +726,6 @@ export const ContributionBarChart: React.FC<ContributionBarChartProps> = ({ data
       .filter(d => d.change24h !== undefined && Math.abs(d.change24h) > 0 && d.symbol !== 'PLN' && d.symbol !== 'PLN-IKE')
       .map(d => {
         const changePct = d.change24h || 0;
-        // Nominal Gain = Current - (Current / (1 + pct))
         const prevVal = d.currentValue / (1 + changePct / 100);
         const nominalChange = d.currentValue - prevVal;
         return {
@@ -725,17 +733,14 @@ export const ContributionBarChart: React.FC<ContributionBarChartProps> = ({ data
           value: nominalChange
         };
       })
-      .sort((a, b) => b.value - a.value); // Sort Descending (Best to Worst)
+      .sort((a, b) => b.value - a.value);
   }, [data]);
 
   if (chartData.length === 0) return <div className="flex items-center justify-center h-full text-slate-400 text-sm">Brak danych 24h</div>;
 
-  // Determine dynamic height based on number of items if needed, but here fixed height is requested.
-  // We'll filter to top 10 movers (5 gainers, 5 losers) or top 15 to fit.
   const topGainers = chartData.filter(d => d.value > 0);
   const topLosers = chartData.filter(d => d.value < 0);
   
-  // Combine top 7 gainers and bottom 7 losers for a balanced view if too many
   let displayData = chartData;
   if (chartData.length > 14) {
      displayData = [...topGainers.slice(0, 7), ...topLosers.slice(topLosers.length - 7)];
@@ -749,7 +754,7 @@ export const ContributionBarChart: React.FC<ContributionBarChartProps> = ({ data
           data={displayData} 
           margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
         >
-          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={t.grid} />
+          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={t.grid} strokeWidth={1} />
           <XAxis type="number" stroke={t.axis} fontSize={10} tickFormatter={(val) => `${val.toFixed(0)} zł`} />
           <YAxis type="category" dataKey="name" stroke={t.axis} fontSize={10} width={50} />
           <Tooltip 
@@ -757,8 +762,8 @@ export const ContributionBarChart: React.FC<ContributionBarChartProps> = ({ data
             formatter={(value: number) => [`${value > 0 ? '+' : ''}${value.toFixed(2)} zł`, 'Wpływ 24h']}
             contentStyle={getTooltipStyle(themeMode as ThemeMode)}
           />
-          <ReferenceLine x={0} stroke={t.axis} />
-          <Bar dataKey="value" name="Wpływ 24h" barSize={15} radius={[0, 3, 3, 0]}>
+          <ReferenceLine x={0} stroke={t.axis} strokeWidth={2} />
+          <Bar dataKey="value" name="Wpływ 24h" barSize={15} radius={[0, 3, 3, 0]} strokeWidth={0}>
             {displayData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.value >= 0 ? t.dailyPos : t.dailyNeg} />
             ))}
@@ -774,7 +779,7 @@ export const ContributionBarChart: React.FC<ContributionBarChartProps> = ({ data
 export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjection, themeMode = 'light' }) => {
   if (data.length === 0) return null;
   const isPPK = 'employeeContribution' in data[0];
-  const t = CHART_THEMES[themeMode];
+  const t = CHART_THEMES[themeMode || 'light'];
 
   // Prepare data with additional computed fields for PPK
   const chartData = useMemo(() => {
@@ -810,7 +815,7 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjecti
               <stop offset="95%" stopColor={t.axis} stopOpacity={0}/>
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} strokeWidth={1} />
           <XAxis 
             dataKey="date" 
             tickFormatter={formatDate} 
@@ -847,24 +852,25 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjecti
           
           {isPPK ? (
             <>
-              <Area type="monotone" dataKey="employeeContribution" name="Pracownik" stackId="1" stroke={t.investment} fill={t.investment} fillOpacity={0.9} strokeWidth={t.strokeWidth} />
-              <Area type="monotone" dataKey="employerContribution" name="Pracodawca" stackId="1" stroke={t.employer} fill={t.employer} fillOpacity={0.9} strokeWidth={t.strokeWidth} />
-              <Area type="monotone" dataKey="stateContribution" name="Państwo" stackId="1" stroke={t.state} fill={t.state} fillOpacity={0.9} strokeWidth={t.strokeWidth} />
-              <Area type="monotone" dataKey="fundProfit" name="Zysk Funduszu" stackId="1" stroke={t.profit} fill={t.profit} fillOpacity={0.9} strokeWidth={t.strokeWidth} />
+              <Area type={t.lineType || "monotone"} dataKey="employeeContribution" name="Pracownik" stackId="1" stroke={t.investment} fill={t.investment} fillOpacity={0.9} strokeWidth={t.strokeWidth} style={{ color: t.investment }} />
+              <Area type={t.lineType || "monotone"} dataKey="employerContribution" name="Pracodawca" stackId="1" stroke={t.employer} fill={t.employer} fillOpacity={0.9} strokeWidth={t.strokeWidth} style={{ color: t.employer }} />
+              <Area type={t.lineType || "monotone"} dataKey="stateContribution" name="Państwo" stackId="1" stroke={t.state} fill={t.state} fillOpacity={0.9} strokeWidth={t.strokeWidth} style={{ color: t.state }} />
+              <Area type={t.lineType || "monotone"} dataKey="fundProfit" name="Zysk Funduszu" stackId="1" stroke={t.profit} fill={t.profit} fillOpacity={0.9} strokeWidth={t.strokeWidth} style={{ color: t.profit }} />
               
               <Area 
-                type="monotone" 
+                type={t.lineType || "monotone"} 
                 dataKey="taxSigned" 
                 name="Podatek" 
                 stroke={t.tax} 
                 fill={t.tax} 
                 fillOpacity={0.9}
                 strokeWidth={t.strokeWidth}
+                style={{ color: t.tax }}
               />
               
               {/* Dashed Lines for Net and Exit */}
               <Line 
-                type="monotone" 
+                type={t.lineType || "monotone"} 
                 dataKey="netValue" 
                 name="Wartość Netto" 
                 stroke={t.net} 
@@ -873,7 +879,7 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjecti
                 dot={false} 
               />
               <Line 
-                type="monotone" 
+                type={t.lineType || "monotone"} 
                 dataKey="exitValue" 
                 name="Wartość Exit" 
                 stroke={t.exit} 
@@ -884,7 +890,7 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjecti
               
               {showProjection && (
                 <Line 
-                  type="monotone" 
+                  type={t.lineType || "monotone"} 
                   dataKey="projectedTotalValue" 
                   name="Prognoza" 
                   stroke={t.projection} 
@@ -898,16 +904,17 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjecti
           ) : (
             <>
               <Area 
-                type="monotone" 
+                type={t.lineType || "monotone"} 
                 dataKey="totalValue" 
                 name="Wartość Całkowita" 
                 stroke={t.investment} 
                 fillOpacity={1} 
                 fill="url(#colorValue)" 
                 strokeWidth={t.strokeWidth}
+                style={{ color: t.investment }}
               />
               <Area 
-                type="monotone" 
+                type={t.lineType || "monotone"} 
                 dataKey="investment" 
                 name="Wkład Własny" 
                 stroke={t.axis} 
@@ -915,6 +922,7 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjecti
                 fill="url(#colorInvest)" 
                 strokeWidth={t.strokeWidth}
                 strokeDasharray="5 5"
+                style={{ color: t.axis }}
               />
             </>
           )}
@@ -926,13 +934,13 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjecti
 
 export const ROIChart: React.FC<ChartProps> = ({ data, showExitRoi = true, themeMode = 'light' }) => {
   const hasExitRoi = showExitRoi && data.length > 0 && 'exitRoi' in data[0];
-  const t = CHART_THEMES[themeMode];
+  const t = CHART_THEMES[themeMode || 'light'];
 
   return (
     <div className="h-80 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data as any[]}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} strokeWidth={1} />
           <XAxis 
             dataKey="date" 
             tickFormatter={formatDate} 
@@ -956,9 +964,9 @@ export const ROIChart: React.FC<ChartProps> = ({ data, showExitRoi = true, theme
             contentStyle={getTooltipStyle(themeMode as ThemeMode)}
           />
           <Legend verticalAlign="top" height={36} />
-          <ReferenceLine y={0} stroke={t.tax} strokeDasharray="3 3" />
+          <ReferenceLine y={0} stroke={t.tax} strokeDasharray="3 3" strokeWidth={1} />
           <Line 
-            type="monotone" 
+            type={t.lineType || "monotone"} 
             dataKey="roi" 
             name="ROI"
             stroke={t.profit} 
@@ -968,7 +976,7 @@ export const ROIChart: React.FC<ChartProps> = ({ data, showExitRoi = true, theme
           />
           {hasExitRoi && (
             <Line 
-              type="monotone" 
+              type={t.lineType || "monotone"} 
               dataKey="exitRoi" 
               name="Exit ROI"
               stroke={t.projection} 
@@ -985,12 +993,13 @@ export const ROIChart: React.FC<ChartProps> = ({ data, showExitRoi = true, theme
 };
 
 export const ContributionComparisonChart: React.FC<ChartProps> = ({ data, themeMode = 'light' }) => {
-  const t = CHART_THEMES[themeMode];
+  const t = CHART_THEMES[themeMode || 'light'];
+
   return (
     <div className="h-80 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data as any[]}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} strokeWidth={1} />
           <XAxis 
             dataKey="date" 
             tickFormatter={formatDate} 
@@ -1021,14 +1030,11 @@ export const ContributionComparisonChart: React.FC<ChartProps> = ({ data, themeM
 };
 
 export const CryptoValueChart: React.FC<ChartProps> = ({ data, showTaxComparison, themeMode = 'light' }) => {
-  // Robust check: verify if ANY row actually has the 'taxedTotalValue' property computed.
-  // Just checking the last row (data.length > 0) is usually enough for time series, 
-  // but this ensures we don't show the line if the data type doesn't support it (e.g. Crypto).
   const hasTaxedValue = useMemo(() => {
      return data.length > 0 && data.some(d => (d as any).taxedTotalValue !== undefined);
   }, [data]);
 
-  const t = CHART_THEMES[themeMode];
+  const t = CHART_THEMES[themeMode || 'light'];
 
   return (
     <div className="h-80 w-full">
@@ -1044,7 +1050,7 @@ export const CryptoValueChart: React.FC<ChartProps> = ({ data, showTaxComparison
               <stop offset="95%" stopColor={t.axis} stopOpacity={0}/>
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} strokeWidth={1} />
           <XAxis 
             dataKey="date" 
             tickFormatter={formatDate} 
@@ -1083,16 +1089,17 @@ export const CryptoValueChart: React.FC<ChartProps> = ({ data, showTaxComparison
           <Legend verticalAlign="top" height={36} />
           
           <Area 
-            type="monotone" 
+            type={t.lineType || "monotone"} 
             dataKey="totalValue" 
             name="Wycena Portfela" 
             stroke={t.employer} 
             fillOpacity={1} 
             fill="url(#colorTotal)" 
             strokeWidth={t.strokeWidth}
+            style={{ color: t.employer }}
           />
           <Area 
-            type="monotone" 
+            type={t.lineType || "monotone"} 
             dataKey="investment" 
             name="Zainwestowany Kapitał" 
             stroke={t.axis} 
@@ -1100,11 +1107,12 @@ export const CryptoValueChart: React.FC<ChartProps> = ({ data, showTaxComparison
             fill="url(#colorInvest2)" 
             strokeWidth={t.strokeWidth}
             strokeDasharray="5 5"
+            style={{ color: t.axis }}
           />
 
           {hasTaxedValue && showTaxComparison && (
             <Line
-              type="monotone"
+              type={t.lineType || "monotone"}
               dataKey="taxedTotalValue"
               name="Konto Opodatkowane"
               stroke={t.taxedAccount} 
@@ -1120,7 +1128,7 @@ export const CryptoValueChart: React.FC<ChartProps> = ({ data, showTaxComparison
 };
 
 export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection, showCPI, themeMode = 'light' }) => {
-  const t = CHART_THEMES[themeMode];
+  const t = CHART_THEMES[themeMode || 'light'];
 
   return (
     <div className="h-96 w-full">
@@ -1136,7 +1144,7 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection,
               <stop offset="95%" stopColor={t.axis} stopOpacity={0}/>
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} strokeWidth={1} />
           <XAxis 
             dataKey="date" 
             tickFormatter={formatDate} 
@@ -1167,18 +1175,19 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection,
           
           {/* Total Value - Background Area (Green) */}
           <Area 
-            type="monotone" 
+            type={t.lineType || "monotone"} 
             dataKey="totalValue" 
             name="Wycena Portfela" 
             stroke={t.profit} 
             fillOpacity={1}
             fill="url(#colorTotalGlobal)" 
             strokeWidth={t.strokeWidth}
+            style={{ color: t.profit }}
           />
 
           {/* Investment - Overlay Area (Matches Crypto Chart Style) */}
           <Area 
-            type="monotone" 
+            type={t.lineType || "monotone"} 
             dataKey="investment" 
             name="Zainwestowany Kapitał" 
             stroke={t.axis} 
@@ -1186,11 +1195,12 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection,
             fill="url(#colorInvestGlobal)" 
             strokeWidth={t.strokeWidth}
             strokeDasharray="5 5"
+            style={{ color: t.axis }}
           />
 
           {showCPI && (
             <Line 
-              type="monotone" 
+              type={t.lineType || "monotone"} 
               dataKey="realTotalValue" 
               name="Wartość Realna (CPI)" 
               stroke={t.tax} 
@@ -1202,7 +1212,7 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection,
 
           {showProjection && (
             <Line 
-              type="monotone" 
+              type={t.lineType || "monotone"} 
               dataKey="projectedValue" 
               name="Prognoza" 
               stroke={t.projection} 
@@ -1221,7 +1231,7 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection,
 export const GlobalPerformanceChart: React.FC<ChartProps> = ({ data, themeMode = 'light' }) => {
   const [showSP500, setShowSP500] = useState(false);
   const [showWIG20, setShowWIG20] = useState(false);
-  const t = CHART_THEMES[themeMode];
+  const t = CHART_THEMES[themeMode || 'light'];
 
   const chartData = data.filter((d, i) => i >= 0);
 
@@ -1253,7 +1263,7 @@ export const GlobalPerformanceChart: React.FC<ChartProps> = ({ data, themeMode =
       <div className="h-80 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={chartData as any[]}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} strokeWidth={1} />
             <XAxis 
               dataKey="date" 
               tickFormatter={formatDate} 
@@ -1282,10 +1292,10 @@ export const GlobalPerformanceChart: React.FC<ChartProps> = ({ data, themeMode =
               contentStyle={getTooltipStyle(themeMode as ThemeMode)}
             />
             <Legend verticalAlign="top" height={36} />
-            <ReferenceLine y={0} stroke={t.axis} strokeDasharray="3 3" />
+            <ReferenceLine y={0} stroke={t.axis} strokeDasharray="3 3" strokeWidth={1} />
             
             <Line 
-              type="monotone" 
+              type={t.lineType || "monotone"} 
               dataKey="roi" 
               name="ROI" 
               stroke={t.profit} 
@@ -1294,7 +1304,7 @@ export const GlobalPerformanceChart: React.FC<ChartProps> = ({ data, themeMode =
             />
             
             <Line 
-              type="monotone" 
+              type={t.lineType || "monotone"} 
               dataKey="cumulativeTwr" 
               name="TWR" 
               stroke={t.projection} 
@@ -1305,7 +1315,7 @@ export const GlobalPerformanceChart: React.FC<ChartProps> = ({ data, themeMode =
 
             {showSP500 && (
               <Line 
-                type="monotone" 
+                type={t.lineType || "monotone"} 
                 dataKey="sp500Return" 
                 name="S&P 500" 
                 stroke={t.exit} 
@@ -1317,7 +1327,7 @@ export const GlobalPerformanceChart: React.FC<ChartProps> = ({ data, themeMode =
 
             {showWIG20 && (
               <Line 
-                type="monotone" 
+                type={t.lineType || "monotone"} 
                 dataKey="wig20Return" 
                 name="WIG20" 
                 stroke={t.employer} 
@@ -1334,7 +1344,8 @@ export const GlobalPerformanceChart: React.FC<ChartProps> = ({ data, themeMode =
 };
 
 export const PortfolioAllocationHistoryChart: React.FC<ChartProps> = ({ data, themeMode = 'light' }) => {
-  const t = CHART_THEMES[themeMode];
+  const t = CHART_THEMES[themeMode || 'light'];
+
   const chartData = data.map(row => {
     const r = row as any;
     return {
@@ -1349,7 +1360,7 @@ export const PortfolioAllocationHistoryChart: React.FC<ChartProps> = ({ data, th
     <div className="h-80 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={chartData} stackOffset="expand">
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} strokeWidth={1} />
           <XAxis 
             dataKey="date" 
             tickFormatter={formatDate} 
@@ -1369,9 +1380,9 @@ export const PortfolioAllocationHistoryChart: React.FC<ChartProps> = ({ data, th
             contentStyle={getTooltipStyle(themeMode as ThemeMode)}
           />
           <Legend verticalAlign="top" height={36} />
-          <Area type="monotone" dataKey="ppk" name="PPK" stackId="1" stroke={t.investment} fill={t.investment} fillOpacity={0.8} strokeWidth={t.strokeWidth} />
-          <Area type="monotone" dataKey="crypto" name="Krypto" stackId="1" stroke={t.employer} fill={t.employer} fillOpacity={0.8} strokeWidth={t.strokeWidth} />
-          <Area type="monotone" dataKey="ike" name="IKE" stackId="1" stroke={t.state} fill={t.state} fillOpacity={0.8} strokeWidth={t.strokeWidth} />
+          <Area type={t.lineType || "monotone"} dataKey="ppk" name="PPK" stackId="1" stroke={t.investment} fill={t.investment} fillOpacity={0.8} strokeWidth={t.strokeWidth} style={{ color: t.investment }} />
+          <Area type={t.lineType || "monotone"} dataKey="crypto" name="Krypto" stackId="1" stroke={t.employer} fill={t.employer} fillOpacity={0.8} strokeWidth={t.strokeWidth} style={{ color: t.employer }} />
+          <Area type={t.lineType || "monotone"} dataKey="ike" name="IKE" stackId="1" stroke={t.state} fill={t.state} fillOpacity={0.8} strokeWidth={t.strokeWidth} style={{ color: t.state }} />
         </AreaChart>
       </ResponsiveContainer>
     </div>
@@ -1380,7 +1391,7 @@ export const PortfolioAllocationHistoryChart: React.FC<ChartProps> = ({ data, th
 
 export const CapitalStructureHistoryChart: React.FC<ChartProps> = ({ data, themeMode = 'light' }) => {
   if (data.length === 0 || !('employeeContribution' in data[0])) return null;
-  const t = CHART_THEMES[themeMode];
+  const t = CHART_THEMES[themeMode || 'light'];
 
   const chartData = data.map(row => {
     const r = row as PPKDataRow;
@@ -1398,7 +1409,7 @@ export const CapitalStructureHistoryChart: React.FC<ChartProps> = ({ data, theme
     <div className="h-80 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={chartData} stackOffset="expand">
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} strokeWidth={1} />
           <XAxis 
             dataKey="date" 
             tickFormatter={formatDate} 
@@ -1434,10 +1445,10 @@ export const CapitalStructureHistoryChart: React.FC<ChartProps> = ({ data, theme
             contentStyle={getTooltipStyle(themeMode as ThemeMode)}
           />
           <Legend verticalAlign="top" height={36} />
-          <Area type="monotone" dataKey="employee" name="Wkład Własny" stackId="1" stroke={t.investment} fill={t.investment} fillOpacity={0.9} strokeWidth={t.strokeWidth} />
-          <Area type="monotone" dataKey="employer" name="Pracodawca" stackId="1" stroke={t.employer} fill={t.employer} fillOpacity={0.9} strokeWidth={t.strokeWidth} />
-          <Area type="monotone" dataKey="state" name="Państwo" stackId="1" stroke={t.state} fill={t.state} fillOpacity={0.9} strokeWidth={t.strokeWidth} />
-          <Area type="monotone" dataKey="profit" name="Zysk Funduszu" stackId="1" stroke={t.profit} fill={t.profit} fillOpacity={0.9} strokeWidth={t.strokeWidth} />
+          <Area type={t.lineType || "monotone"} dataKey="employee" name="Wkład Własny" stackId="1" stroke={t.investment} fill={t.investment} fillOpacity={0.9} strokeWidth={t.strokeWidth} style={{ color: t.investment }} />
+          <Area type={t.lineType || "monotone"} dataKey="employer" name="Pracodawca" stackId="1" stroke={t.employer} fill={t.employer} fillOpacity={0.9} strokeWidth={t.strokeWidth} style={{ color: t.employer }} />
+          <Area type={t.lineType || "monotone"} dataKey="state" name="Państwo" stackId="1" stroke={t.state} fill={t.state} fillOpacity={0.9} strokeWidth={t.strokeWidth} style={{ color: t.state }} />
+          <Area type={t.lineType || "monotone"} dataKey="profit" name="Zysk Funduszu" stackId="1" stroke={t.profit} fill={t.profit} fillOpacity={0.9} strokeWidth={t.strokeWidth} style={{ color: t.profit }} />
         </AreaChart>
       </ResponsiveContainer>
     </div>
@@ -1446,7 +1457,7 @@ export const CapitalStructureHistoryChart: React.FC<ChartProps> = ({ data, theme
 
 export const SeasonalityChart: React.FC<{ data: any[], themeMode?: ThemeMode }> = ({ data, themeMode = 'light' }) => {
   if (data.length < 2) return null;
-  const t = CHART_THEMES[themeMode];
+  const t = CHART_THEMES[themeMode || 'light'];
 
   const sorted = [...data].sort((a, b) => a.date.localeCompare(b.date));
   const dataMap = new Map<string, any>();
@@ -1513,15 +1524,15 @@ export const SeasonalityChart: React.FC<{ data: any[], themeMode?: ThemeMode }> 
     <div className="h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} strokeWidth={1} />
                 <XAxis dataKey="name" stroke={t.axis} fontSize={12} tickMargin={5} />
                 <YAxis stroke={t.axis} fontSize={12} unit="%" />
                 <Tooltip 
                     formatter={(value: number) => [`${value.toFixed(2)}%`, 'Średnia stopa zwrotu']}
                     contentStyle={getTooltipStyle(themeMode as ThemeMode)}
                 />
-                <ReferenceLine y={0} stroke={t.axis} />
-                <Bar dataKey="value" name="Średnia Stopa Zwrotu" stroke={themeMode === 'comic' ? '#000' : undefined} strokeWidth={themeMode === 'comic' ? 2 : 0}>
+                <ReferenceLine y={0} stroke={t.axis} strokeWidth={2} />
+                <Bar dataKey="value" name="Średnia Stopa Zwrotu" strokeWidth={0}>
                     {chartData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.value >= 0 ? t.barProfitPos : t.barProfitNeg} />
                     ))}
@@ -1558,7 +1569,7 @@ interface PPKStructureBarProps {
 
 export const PPKStructureBar: React.FC<PPKStructureBarProps> = ({ data, themeMode = 'light' }) => {
   if (!data.totalEmployee) return null;
-  const t = CHART_THEMES[themeMode];
+  const t = CHART_THEMES[themeMode || 'light'];
 
   const employee = data.totalEmployee || 0;
   const employer = data.totalEmployer || 0;
@@ -1608,9 +1619,7 @@ export const PPKStructureBar: React.FC<PPKStructureBarProps> = ({ data, themeMod
           <Bar dataKey="employer" name="Pracodawca" stackId="a" fill={t.employer} barSize={60} {...strokeProps}>
             <LabelList content={(props) => renderCustomLabel(props, "Pracodawca")} />
           </Bar>
-          <Bar dataKey="state" name="Państwo" stackId="a" fill={t.state} barSize={60} {...strokeProps}>
-            <LabelList content={(props) => renderCustomLabel(props, "Państwo")} />
-          </Bar>
+          <Bar dataKey="state" name="Państwo" stackId="a" fill={t.state} radius={[4, 4, 0, 0]} stroke={themeMode === 'comic' ? '#000' : undefined} strokeWidth={themeMode === 'comic' ? 2 : 0} />
           <Bar dataKey="profit" name="Wynik Funduszu" stackId="a" fill={fundProfit >= 0 ? t.barProfitPos : t.barProfitNeg} radius={[0, 4, 4, 0]} barSize={60} {...strokeProps}>
             <LabelList content={(props) => renderCustomLabel(props, "Zysk Funduszu")} />
           </Bar>
@@ -1626,13 +1635,13 @@ interface DividendChartProps {
 }
 
 export const DividendChart: React.FC<DividendChartProps> = ({ data, themeMode = 'light' }) => {
-  const t = CHART_THEMES[themeMode];
+  const t = CHART_THEMES[themeMode || 'light'];
 
   return (
     <div className="h-80 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} strokeWidth={1} />
           <XAxis 
             dataKey="label" 
             stroke={t.axis} 

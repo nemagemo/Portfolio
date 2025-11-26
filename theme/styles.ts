@@ -1,3 +1,4 @@
+
 export type Theme = 'light' | 'comic' | 'neon';
 
 export const themeStyles: Record<Theme, {

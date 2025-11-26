@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { CheckCircle2, AlertTriangle, XCircle, ChevronDown, ChevronUp, Scale } from 'lucide-react';
 import { ValidationReport, OMFValidationReport } from '../types';
@@ -50,11 +51,11 @@ export const DataStatus: React.FC<{ report: ValidationReport, theme: Theme }> = 
       </div>
       
       {expanded && report.errors.length > 0 && (
-        <div className="mt-4 pt-4 border-t border-black/5 text-xs font-mono">
+        <div className="mt-4 pt-4 border-t border-black/5 text-slate-700 text-xs font-mono">
           <p className="font-semibold mb-2 opacity-70">Log błędów:</p>
           <ul className="space-y-1 max-h-40 overflow-y-auto">
             {report.errors.map((err, idx) => (
-              <li key={idx} className="flex items-start space-x-2 text-slate-700">
+              <li key={idx} className="flex items-start space-x-2">
                 <span className="mt-0.5">•</span>
                 <span>{err}</span>
               </li>
@@ -108,7 +109,7 @@ export const OMFIntegrityStatus: React.FC<{ report: OMFValidationReport, theme: 
             {report.messages.length > 0 && (
               <ul className="space-y-1 mb-3 max-h-40 overflow-y-auto">
                 {report.messages.map((msg, idx) => (
-                  <li key={idx} className="flex items-start space-x-2 text-slate-700 font-medium">
+                  <li key={idx} className="flex items-start space-x-2 font-medium text-slate-700">
                     <span className="mt-0.5 text-rose-500">•</span>
                     <span>{msg}</span>
                   </li>
@@ -116,7 +117,7 @@ export const OMFIntegrityStatus: React.FC<{ report: OMFValidationReport, theme: 
               </ul>
             )}
             
-            <div className="bg-white/50 p-2 rounded text-slate-600 font-mono text-[10px] sm:text-xs">
+            <div className="bg-white/50 text-slate-600 p-2 rounded font-mono text-[10px] sm:text-xs">
                <p>Statystyki Aktywów:</p>
                <div className="grid grid-cols-3 gap-2 mt-1">
                   <div>Wszystkie: {report.stats.totalAssets}</div>

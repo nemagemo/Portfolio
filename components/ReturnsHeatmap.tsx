@@ -169,6 +169,7 @@ export const ReturnsHeatmap: React.FC<HeatmapProps> = ({ data, themeMode = 'ligh
   }
 
   const isNeon = themeMode === 'neon';
+
   const headerClass = isNeon 
     ? "py-2 text-cyan-500 font-bold font-mono border-b border-cyan-900/50 text-[10px] sm:text-xs bg-black"
     : "py-2 text-slate-600 font-semibold border-b border-slate-200 text-[10px] sm:text-xs";
@@ -179,13 +180,15 @@ export const ReturnsHeatmap: React.FC<HeatmapProps> = ({ data, themeMode = 'ligh
 
   const tableBgClass = isNeon ? "bg-black" : "bg-transparent";
   const rowBorderClass = isNeon ? "border-cyan-900/30" : "border-slate-100";
+  
   const yearCellClass = isNeon 
     ? "text-left font-bold text-cyan-400 bg-black font-mono"
     : "text-left font-bold text-slate-700 bg-white group-hover:bg-slate-50/50";
 
-  const summaryHeaderClass = (bgClass: string) => isNeon 
-    ? "py-2 text-cyan-200 font-bold font-mono border-b border-cyan-900/50 bg-cyan-950/20 text-[10px] sm:text-xs w-[5%]"
-    : `py-2 text-slate-800 font-bold border-b border-slate-200 ${bgClass} text-[10px] sm:text-xs w-[5%]`;
+  const summaryHeaderClass = (bgClass: string) => {
+      if (isNeon) return "py-2 text-cyan-200 font-bold font-mono border-b border-cyan-900/50 bg-cyan-950/20 text-[10px] sm:text-xs w-[5%]";
+      return `py-2 text-slate-800 font-bold border-b border-slate-200 ${bgClass} text-[10px] sm:text-xs w-[5%]`;
+  }
 
   return (
     <div className={`w-full overflow-hidden ${tableBgClass}`}>

@@ -112,9 +112,9 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
             </div>
             
             <div className="mt-4 flex items-center">
-              <div className={`h-1.5 w-full rounded-full overflow-hidden ${isNeon ? 'bg-slate-800' : 'bg-slate-100'}`}>
+              <div className={`h-1.5 w-full overflow-hidden ${isNeon ? 'bg-slate-800 rounded-full' : 'bg-slate-100 rounded-full'}`}>
                 <div 
-                  className={`h-full rounded-full ${isNeon ? 'bg-blue-500' : 'bg-slate-400'}`} 
+                  className={`h-full ${isNeon ? 'bg-blue-500 rounded-full' : 'bg-slate-400 rounded-full'}`} 
                   style={{ width: `${(investedValue && totalValue) ? Math.min(100, (investedValue / totalValue) * 100) : 0}%` }}
                 ></div>
               </div>
@@ -139,10 +139,10 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
              </div>
              
              <div className="flex items-center mt-2">
-                <span className={`px-2.5 py-1 rounded text-sm font-bold flex items-center ${
+                <span className={`px-2.5 py-1 text-sm font-bold flex items-center ${
                   currentRoi >= 0 
-                    ? (isNeon ? 'bg-green-900/30 text-green-400 border border-green-500/30' : 'bg-emerald-100 text-emerald-700') 
-                    : 'bg-rose-100 text-rose-700'
+                    ? (isNeon ? 'bg-green-900/30 text-green-400 border border-green-500/30 rounded' : 'bg-emerald-100 text-emerald-700 rounded') 
+                    : 'bg-rose-100 text-rose-700 rounded'
                 }`}>
                   {currentRoi >= 0 ? <TrendingUp size={14} className="mr-1.5"/> : <TrendingUp size={14} className="mr-1.5 rotate-180"/>}
                   {currentRoi.toFixed(2)}% ROI
@@ -155,7 +155,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
              {/* PPK SPECIFIC METRICS */}
              {portfolioType === 'PPK' && (
                <>
-                 <div className={`p-3 rounded-lg border relative ${isNeon ? 'bg-black/40 border-cyan-900/30' : 'bg-slate-50 border-slate-100'}`}>
+                 <div className={`p-3 border relative ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
                     <div className="flex justify-between items-start mb-1">
                       <div className={`text-[10px] uppercase font-bold ${isNeon ? 'text-purple-400' : 'text-slate-400'}`}>Pracodawca</div>
                       <IconEmployer className={`w-4 h-4 ${isNeon ? 'text-purple-500/80' : 'text-purple-400/60'}`} />
@@ -163,7 +163,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
                     <div className={`text-lg font-bold ${isNeon ? 'text-purple-300' : 'text-slate-700'}`}>{stats.totalEmployer?.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</div>
                     <div className={`text-[9px] ${isNeon ? 'text-purple-500/60' : 'text-slate-400'}`}>Dopłaty</div>
                  </div>
-                 <div className={`p-3 rounded-lg border relative ${isNeon ? 'bg-black/40 border-cyan-900/30' : 'bg-slate-50 border-slate-100'}`}>
+                 <div className={`p-3 border relative ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
                     <div className="flex justify-between items-start mb-1">
                       <div className={`text-[10px] uppercase font-bold ${isNeon ? 'text-pink-400' : 'text-slate-400'}`}>Państwo</div>
                       <IconState className={`w-4 h-4 ${isNeon ? 'text-pink-500/80' : 'text-pink-400/60'}`} />
@@ -171,7 +171,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
                     <div className={`text-lg font-bold ${isNeon ? 'text-pink-300' : 'text-slate-700'}`}>{stats.totalState?.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</div>
                     <div className={`text-[9px] ${isNeon ? 'text-pink-500/60' : 'text-slate-400'}`}>Bonusy</div>
                  </div>
-                 <div className={`p-3 rounded-lg border relative ${isNeon ? 'bg-black/40 border-cyan-900/30' : 'bg-slate-50 border-slate-100'}`}>
+                 <div className={`p-3 border relative ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
                     <div className="flex justify-between items-start mb-1">
                       <div className={`text-[10px] uppercase font-bold ${isNeon ? 'text-amber-400' : 'text-slate-400'}`}>Exit Value</div>
                       <IconExit className={`w-4 h-4 ${isNeon ? 'text-amber-500/80' : 'text-amber-400/60'}`} />
@@ -179,7 +179,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
                     <div className={`text-lg font-bold ${isNeon ? 'text-amber-300' : 'text-slate-700'}`}>{((stats as any).customExitValue || 0).toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</div>
                     <div className={`text-[9px] ${isNeon ? 'text-amber-500/60' : 'text-slate-400'}`}>Wypłata teraz</div>
                  </div>
-                 <div className={`p-3 rounded-lg border relative ${isNeon ? 'bg-black/40 border-cyan-900/30' : 'bg-slate-50 border-slate-100'}`}>
+                 <div className={`p-3 border relative ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
                     <div className="flex justify-between items-start mb-1">
                       <div className={`text-[10px] uppercase font-bold ${isNeon ? 'text-blue-400' : 'text-slate-400'}`}>Czas</div>
                       <IconHourglass className={`w-4 h-4 ${isNeon ? 'text-blue-500/80' : 'text-blue-400/60'}`} />
@@ -193,7 +193,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
              {/* IKE SPECIFIC METRICS */}
              {portfolioType === 'IKE' && (
                <>
-                 <div className={`p-3 rounded-lg border relative ${isNeon ? 'bg-black/40 border-cyan-900/30' : 'bg-slate-50 border-slate-100'}`}>
+                 <div className={`p-3 border relative ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
                     <div className="flex justify-between items-start mb-1">
                       <div className={`text-[10px] uppercase font-bold ${isNeon ? 'text-cyan-400' : 'text-slate-400'}`}>Tarcza</div>
                       <IconTaxShield className={`w-4 h-4 ${isNeon ? 'text-cyan-500/80' : 'text-cyan-400/60'}`} />
@@ -201,7 +201,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
                     <div className={`text-lg font-bold ${isNeon ? 'text-cyan-300' : 'text-slate-700'}`}>{stats.taxSaved?.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</div>
                     <div className={`text-[9px] ${isNeon ? 'text-cyan-500/60' : 'text-slate-400'}`}>Oszczędność</div>
                  </div>
-                 <div className={`p-3 rounded-lg border relative ${isNeon ? 'bg-black/40 border-cyan-900/30' : 'bg-slate-50 border-slate-100'}`}>
+                 <div className={`p-3 border relative ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
                     <div className="flex justify-between items-start mb-1">
                       <div className={`text-[10px] uppercase font-bold ${isNeon ? 'text-emerald-400' : 'text-slate-400'}`}>Dywidendy</div>
                       <IconDividends className={`w-4 h-4 ${isNeon ? 'text-emerald-500/80' : 'text-emerald-400/60'}`} />
@@ -215,7 +215,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
              {/* CRYPTO SPECIFIC METRICS */}
              {portfolioType === 'CRYPTO' && bestCrypto && (
                <>
-                 <div className={`col-span-2 p-3 rounded-lg border relative ${isNeon ? 'bg-black/40 border-cyan-900/30' : 'bg-slate-50 border-slate-100'}`}>
+                 <div className={`col-span-2 p-3 border relative ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
                     <div className="flex justify-between items-start mb-1">
                       <div className={`text-[10px] uppercase font-bold ${isNeon ? 'text-yellow-400' : 'text-slate-400'}`}>Najlepsze Aktywo</div>
                       <IconTrophy className={`w-4 h-4 ${isNeon ? 'text-yellow-500/80' : 'text-yellow-400/60'}`} />
@@ -240,10 +240,10 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
               <div className="flex flex-col md:flex-row items-center justify-between mb-6 space-y-4 md:space-y-0">
                 <div className="flex flex-col">
                   <h3 className={`text-lg font-bold ${styles.text}`}>Historyczna Wartość Portfela</h3>
-                  <p className="text-[10px] sm:text-xs text-slate-400 mt-2 font-medium leading-tight max-w-2xl">Wartość netto = Wartość po odjęciu podatku od wpłaty Pracodawcy<br/>Wartość Exit = Wartość netto - 30% wpłat od Pracodawcy - wpłaty od Państwa - 19% podatku od zysku</p>
+                  <p className={`text-[10px] sm:text-xs mt-2 font-medium leading-tight max-w-2xl ${isNeon ? 'text-slate-400' : 'text-slate-400'}`}>Wartość netto = Wartość po odjęciu podatku od wpłaty Pracodawcy<br/>Wartość Exit = Wartość netto - 30% wpłat od Pracodawcy - wpłaty od Państwa - 19% podatku od zysku</p>
                 </div>
-                <div className={`flex items-center space-x-4 p-2 rounded-lg border ${theme === 'neon' ? 'bg-black/50 border-cyan-900/50' : 'bg-slate-50 border-slate-100'}`}>
-                   <button onClick={() => setShowPPKProjection && setShowPPKProjection(!showPPKProjection)} className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${showPPKProjection ? styles.toggleProjectionActive : `bg-transparent ${theme === 'neon' ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`}`}>Droga do Emerytury</button>
+                <div className={`flex items-center space-x-4 p-2 border ${isNeon ? 'bg-black/50 border-cyan-900/50 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
+                   <button onClick={() => setShowPPKProjection && setShowPPKProjection(!showPPKProjection)} className={`flex items-center px-3 py-1.5 text-xs font-bold transition-all ${showPPKProjection ? styles.toggleProjectionActive : `bg-transparent ${isNeon ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`} rounded-md`}>Droga do Emerytury</button>
                    {showPPKProjection && ppkRateDisplay && (<span className={`text-[10px] font-mono ${styles.textSub} animate-in fade-in slide-in-from-right-4 duration-300`}>+{ppkRateDisplay.cagr.toFixed(2)}% m/m (CAGR)</span>)}
                 </div>
               </div>
@@ -265,7 +265,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
             <div className={`${styles.cardContainer} p-6 lg:col-span-2`}>
               <div className="flex items-center justify-between mb-6">
                 <h3 className={`text-lg font-bold ${styles.text}`}>{portfolioType === 'IKE' && showTaxComparison ? 'Historyczna Wartość Portfela (IKE vs Opodatkowane)' : 'Historyczna Wartość Portfela'}</h3>
-                {portfolioType === 'IKE' && (<button onClick={() => setShowTaxComparison && setShowTaxComparison(!showTaxComparison)} className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all ${showTaxComparison ? styles.toggleCPIActive : `bg-transparent ${theme === 'neon' ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`}`} title="Pokaż porównanie z kontem opodatkowanym"><TaxToggleIcon className="w-4 h-4 mr-2" />Belka</button>)}
+                {portfolioType === 'IKE' && (<button onClick={() => setShowTaxComparison && setShowTaxComparison(!showTaxComparison)} className={`flex items-center px-3 py-1.5 text-xs font-bold transition-all ${showTaxComparison ? styles.toggleCPIActive : `bg-transparent ${isNeon ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`} rounded-md`} title="Pokaż porównanie z kontem opodatkowanym"><TaxToggleIcon className="w-4 h-4 mr-2" />Belka</button>)}
               </div>
               <CryptoValueChart data={data} showTaxComparison={showTaxComparison} themeMode={theme} />
             </div>
@@ -277,16 +277,16 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
                     <h3 className={`text-lg font-bold ${styles.text}`}>Otrzymane Dywidendy</h3>
                     <p className={`text-sm ${styles.textSub}`}>Suma: {totalDividends.toLocaleString('pl-PL')} zł</p>
                   </div>
-                  <div className={`flex items-center space-x-2 p-1 rounded-lg border ${theme === 'neon' ? 'bg-black/50 border-cyan-900/50' : 'bg-slate-50 border-slate-100'}`}>
+                  <div className={`flex items-center space-x-2 p-1 border ${isNeon ? 'bg-black/50 border-cyan-900/50 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
                     <button 
                       onClick={() => setDividendViewMode('Yearly')} 
-                      className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${dividendViewMode === 'Yearly' ? (theme === 'neon' ? 'bg-cyan-900 text-cyan-300' : 'bg-white text-slate-800 shadow-sm') : (theme === 'neon' ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')}`}
+                      className={`px-3 py-1.5 text-xs font-bold transition-all ${dividendViewMode === 'Yearly' ? (isNeon ? 'bg-cyan-900 text-cyan-300' : 'bg-white text-slate-800 shadow-sm') : (isNeon ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')} rounded-md`}
                     >
                       Rocznie
                     </button>
                     <button 
                       onClick={() => setDividendViewMode('Quarterly')} 
-                      className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${dividendViewMode === 'Quarterly' ? (theme === 'neon' ? 'bg-cyan-900 text-cyan-300' : 'bg-white text-slate-800 shadow-sm') : (theme === 'neon' ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')}`}
+                      className={`px-3 py-1.5 text-xs font-bold transition-all ${dividendViewMode === 'Quarterly' ? (isNeon ? 'bg-cyan-900 text-cyan-300' : 'bg-white text-slate-800 shadow-sm') : (isNeon ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')} rounded-md`}
                     >
                       Kwartalnie
                     </button>

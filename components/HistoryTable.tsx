@@ -87,7 +87,7 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({ data, type, omfVaria
         {type === 'OMF' && omfVariant === 'active' && title && (
           <div className={`px-6 py-4 border-b flex justify-between items-center ${isNeon ? 'bg-black/40 border-cyan-900/30' : 'bg-slate-50 border-slate-200'}`}>
             <h3 className={`text-lg font-bold ${isNeon ? 'text-cyan-400 font-mono' : 'text-slate-800'}`}>{title}</h3>
-            <span className={`text-xs font-medium px-2 py-1 rounded-full transition-all duration-300 ${isNeon ? 'bg-cyan-900/30 text-cyan-300 border border-cyan-500/50 font-mono' : 'bg-emerald-100 text-emerald-700'}`}>
+            <span className={`text-xs font-medium px-2 py-1 transition-all duration-300 ${isNeon ? 'rounded-full bg-cyan-900/30 text-cyan-300 border border-cyan-500/50 font-mono' : 'rounded-full bg-emerald-100 text-emerald-700'}`}>
               {displayData.length} pozycji
             </span>
           </div>
@@ -103,10 +103,10 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({ data, type, omfVaria
             <div className="flex space-x-2">
               <button
                 onClick={() => setSelectedPortfolio('ALL')}
-                className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
+                className={`px-3 py-1 text-xs font-medium transition-colors ${
                   selectedPortfolio === 'ALL' 
-                    ? (isNeon ? 'bg-cyan-600 text-black shadow-[0_0_10px_rgba(8,145,178,0.5)] font-bold' : 'bg-slate-800 text-white')
-                    : (isNeon ? 'bg-black border border-cyan-900/50 text-cyan-600 hover:text-cyan-300 hover:border-cyan-500' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100')
+                    ? (isNeon ? 'rounded-full bg-cyan-600 text-black shadow-[0_0_10px_rgba(8,145,178,0.5)] font-bold' : 'rounded-full bg-slate-800 text-white')
+                    : (isNeon ? 'rounded-full bg-black border border-cyan-900/50 text-cyan-600 hover:text-cyan-300 hover:border-cyan-500' : 'rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-100')
                 }`}
               >
                 Wszystkie
@@ -115,10 +115,10 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({ data, type, omfVaria
                 <button
                   key={p}
                   onClick={() => setSelectedPortfolio(p)}
-                  className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
+                  className={`px-3 py-1 text-xs font-medium transition-colors ${
                     selectedPortfolio === p 
-                      ? (isNeon ? 'bg-cyan-600 text-black shadow-[0_0_10px_rgba(8,145,178,0.5)] font-bold' : 'bg-slate-800 text-white')
-                      : (isNeon ? 'bg-black border border-cyan-900/50 text-cyan-600 hover:text-cyan-300 hover:border-cyan-500' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100')
+                      ? (isNeon ? 'rounded-full bg-cyan-600 text-black shadow-[0_0_10px_rgba(8,145,178,0.5)] font-bold' : 'rounded-full bg-slate-800 text-white')
+                      : (isNeon ? 'rounded-full bg-black border border-cyan-900/50 text-cyan-600 hover:text-cyan-300 hover:border-cyan-500' : 'rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-100')
                   }`}
                 >
                   {p}
