@@ -1,4 +1,6 @@
 
+
+
 # Instrukcje i Niestandardowe Polecenia dla AI
 
 **ZASADA EDYCJI TEGO PLIKU:**
@@ -21,8 +23,8 @@ W pliku `OMFopen.ts`, kolumna `Wartość Zakupu` dla wiersza PPK reprezentuje **
 
 ### OMF - Zainwestowany Kapitał w IKE i Krypto (Efekt Kuli Śnieżnej)
 W pliku `OMFopen.ts` oraz w wyliczeniach historycznych dla portfeli **IKE** oraz **Krypto**, obowiązuje specjalna zasada obliczania **Wkładu (Zainwestowano)**, aby uwzględnić efekt reinwestycji zysków (Kula Śnieżna):
-*   **Formuła:** `Wkład = Suma(Wartość Zakupu z OMFopen.ts) - Suma(Zysk z OMFclosed.ts) - Suma(Dywidend z Dividends.ts)`.
-*   **Cel:** Zysk z zamkniętych pozycji oraz otrzymane dywidendy reinwestowane w nowe pozycje nie są "nowym kapitałem" z zewnątrz.
+*   **Formuła:** `Wkład = Suma(Wartość Zakupu z OMFopen.ts) - Suma(Zysk z OMFclosed.ts) - Suma(Aktywnych Dywidend z Dividends.ts)`.
+*   **Cel:** Zysk z zamkniętych pozycji oraz otrzymane i reinwestowane dywidendy nie są "nowym kapitałem" z zewnątrz.
 
 ---
 
@@ -142,9 +144,9 @@ Aplikacja stosuje hybrydowy model wyceny w czasie rzeczywistym:
 ### Polecenie: `DodajDywidende`
 **Wyzwalacz:** "Dostałem dywidendę X zł z spółki Y, data Z"
 **Procedura:**
-1.  Dopisz wiersz do `CSV/Dividends.ts` (Data, Portfel, Symbol, Kwota).
-2.  Zwiększ wartość (Ilość i Wartość) pozycji `PLN-IKE` w `CSV/OMFopen.ts` o kwotę dywidendy.
-3.  **Efekt:** Zwiększa się gotówka, ale dzięki wpisowi w `Dividends.ts`, formuła w `usePortfolioData` odejmie tę kwotę od `Zainwestowanego Kapitału`. (Darmowa gotówka nie zwiększa wkładu).
+1.  Dopisz wiersz do `CSV/Dividends.ts` (Data, Portfel, Symbol, Kwota, Status="Aktywna").
+2.  **AUTOMATYCZNE KSIĘGOWANIE:** Znajdź pozycję `PLN-IKE` w `CSV/OMFopen.ts` i **zwiększ jej wartość (Obecna wartość oraz Ilość)** o kwotę otrzymanej dywidendy netto.
+3.  **Efekt:** Gotówka na koncie rośnie, ale wkład własny (Net Invested Capital) nie rośnie (bo dywidenda w `Dividends.ts` niweluje ten wzrost w formule kuli śnieżnej).
 
 ### Polecenie: `ZakupIKE` (Reinwestycja lub Zakup)
 **Wyzwalacz:** "Kupiłem X za kwotę Y na IKE"

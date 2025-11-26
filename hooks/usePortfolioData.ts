@@ -1,5 +1,4 @@
 
-
 import { useState, useEffect, useMemo } from 'react';
 import { AnyDataRow, ValidationReport, OMFValidationReport, OMFDataRow, PortfolioType, GlobalHistoryRow, SummaryStats, PPKDataRow, CryptoDataRow, IKEDataRow, CashDataRow, DividendDataRow } from '../types';
 import { parseCSV, validateOMFIntegrity } from '../utils/parser';
@@ -175,13 +174,15 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
     });
 
     // Snowball Adjustments (IKE dividends logic)
-    const totalDividendsIKE = dividendsData
-        .filter(d => d.portfolio === 'IKE')
+    // Only subtract dividends that are marked as "active" (isCounted = true) from the invested capital.
+    // Historical/Legacy dividends provided for visualization only should NOT reduce the capital base.
+    const totalActiveDividendsIKE = dividendsData
+        .filter(d => d.portfolio === 'IKE' && d.isCounted)
         .reduce((acc, row) => acc + row.value, 0);
 
     // If we bought assets using dividends, 'liveTotals.IKE.inv' (Purchase Value) includes that amount.
     // We must subtract it to keep "Net Invested" correct (only external cash).
-    const liveNetInvIKE = liveTotals.IKE.inv - closedProfits.IKE - totalDividendsIKE;
+    const liveNetInvIKE = liveTotals.IKE.inv - closedProfits.IKE - totalActiveDividendsIKE;
     const liveNetInvCrypto = liveTotals.CRYPTO.inv - closedProfits.CRYPTO;
 
     // Dates Union (Including historical Cash dates)
@@ -329,9 +330,9 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
         const last = globalHistoryData[globalHistoryData.length - 1];
         if (!last) return null;
 
-        // Dividends for Stats Calculation
-        const totalDividendsIKE = dividends
-            .filter(d => d.portfolio === 'IKE')
+        // Dividends for Stats Calculation - FILTERED
+        const totalActiveDividendsIKE = dividends
+            .filter(d => d.portfolio === 'IKE' && d.isCounted)
             .reduce((acc, row) => acc + row.value, 0);
 
         // Recalculate Investment from active assets for precision (snapshot approach)
@@ -355,7 +356,7 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
 
         // Logic: We subtract dividends from "Invested Capital" for IKE assets because that capital
         // was generated internally, not contributed from outside.
-        const otherNetInvested = otherOpenPurchase - closedProfitOffset - totalDividendsIKE;
+        const otherNetInvested = otherOpenPurchase - closedProfitOffset - totalActiveDividendsIKE;
         
         const totalInvestedSnapshot = ppkInvested + cashInvested + otherNetInvested;
         

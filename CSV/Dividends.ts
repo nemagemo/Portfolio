@@ -1,3 +1,34 @@
 
 
-export const DIVIDENDS_DATA = `Data,Portfel,Symbol,Kwota`;
+export const DIVIDENDS_DATA = `Data,Portfel,Symbol,Kwota,Status
+2025-08-15,IKE,GAW,"6,04 zł",Historyczna
+2025-10-03,IKE,GAW,"3,85 zł",Historyczna
+2024-11-29,IKE,GAW,"1,44 zł",Historyczna
+2025-02-14,IKE,GAW,"2,46 zł",Historyczna
+2025-05-07,IKE,GAW,"4,33 zł",Historyczna
+2025-02-28,IKE,GAW,"4,79 zł",Historyczna
+2025-06-05,IKE,ABS,"33,00 zł",Historyczna
+2025-08-15,IKE,ACN,"2,88 zł",Historyczna
+2024-11-15,IKE,ACN,"0,55 zł",Historyczna
+2025-02-14,IKE,ACN,"1,12 zł",Historyczna
+2025-05-15,IKE,ACN,"2,10 zł",Historyczna
+2025-07-09,IKE,CDR,"5,06 zł",Historyczna
+2024-11-22,IKE,FAST,"0,87 zł",Historyczna
+2025-02-28,IKE,FAST,"1,79 zł",Historyczna
+2025-04-30,IKE,LPP,"16,09 zł",Historyczna
+2025-07-28,IKE,NEU,"15,99 zł",Historyczna
+2024-11-27,IKE,PAYX,"1,10 zł",Historyczna
+2025-02-27,IKE,PAYX,"2,52 zł",Historyczna
+2025-07-15,IKE,PLW,"67,57 zł",Historyczna
+2025-03-10,IKE,ROL,"1,22 zł",Historyczna
+2025-06-10,IKE,ROL,"1,69 zł",Historyczna
+2025-09-10,IKE,ROL,"1,93 zł",Historyczna
+2024-12-10,IKE,ROL,"0,71 zł",Historyczna
+2025-11-21,IKE,GAW,"5,91 zł",Aktywna
+2025-11-25,IKE,FAST,"3,15 zł",Aktywna
+2025-10-10,IKE,FRO,"69,08 zł",Aktywna
+2025-11-14,IKE,ACN,"3,40 zł",Aktywna
+2025-09-25,IKE,KRU,"41,92 zł",Aktywna
+2025-09-03,IKE,KTY,"15,26 zł",Aktywna
+2025-11-05,IKE,KTY,"35,43 zł",Aktywna
+2025-10-31,IKE,LPP,"16,34 zł",Aktywna`;

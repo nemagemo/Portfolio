@@ -65,6 +65,7 @@ export interface DividendDataRow {
   portfolio: string; // e.g. 'IKE'
   symbol: string;    // e.g. 'KTY'
   value: number;     // Net amount received
+  isCounted: boolean; // If true, subtracted from Net Invested (Snowball). If false, visualization only.
 }
 
 /**
