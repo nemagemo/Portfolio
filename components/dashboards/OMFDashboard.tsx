@@ -1,10 +1,10 @@
 
 import React, { useState, useMemo } from 'react';
-import { LayoutGrid, TrendingUp, Wallet, Timer, Percent, Activity, Calendar, Milestone, LayoutTemplate, Flame, CalendarDays, Snowflake, PieChart, ChevronDown, ChevronUp } from 'lucide-react';
+import { LayoutGrid, TrendingUp, Wallet, Timer, Percent, Activity, Calendar, Milestone, LayoutTemplate, Flame, CalendarDays, Snowflake, PieChart, ChevronDown, ChevronUp, BarChart2, ScatterChart } from 'lucide-react';
 import { SummaryStats, OMFDataRow, GlobalHistoryRow } from '../../types';
 import { StatsCard } from '../StatsCard';
 import { Theme, themeStyles } from '../../theme/styles';
-import { GlobalSummaryChart, GlobalPerformanceChart, OMFTreemapChart, DailyChangeHeatmap, SeasonalityChart, PortfolioAllocationHistoryChart } from '../Charts';
+import { GlobalSummaryChart, GlobalPerformanceChart, OMFTreemapChart, DailyChangeHeatmap, SeasonalityChart, PortfolioAllocationHistoryChart, BubbleRiskChart, ContributionBarChart } from '../Charts';
 import { ReturnsHeatmap } from '../ReturnsHeatmap';
 import { HistoryTable } from '../HistoryTable';
 import { NoPPKIcon } from '../Icons';
@@ -39,6 +39,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
   const styles = themeStyles[theme];
   const [isActivePositionsExpanded, setIsActivePositionsExpanded] = useState(false);
   const [isClosedHistoryExpanded, setIsClosedHistoryExpanded] = useState(false);
+  const [bubbleChartFilter, setBubbleChartFilter] = useState<'ALL' | 'KRYPTO' | 'IKE'>('ALL');
 
   const investmentDuration = useMemo(() => {
     if (globalHistory.length === 0) return { months: 0 };
@@ -51,6 +52,11 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
     months += d2.getMonth();
     return { months: Math.max(0, months) };
   }, [globalHistory]);
+
+  const filteredBubbleData = useMemo(() => {
+    if (bubbleChartFilter === 'ALL') return activeAssets;
+    return activeAssets.filter(a => a.portfolio.toUpperCase().includes(bubbleChartFilter));
+  }, [activeAssets, bubbleChartFilter]);
 
   if (!stats) return null;
 
@@ -127,13 +133,20 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
         <OMFTreemapChart data={omfStructureData} themeMode={theme} />
       </div>
 
-      {/* Heatmap 24h */}
+      {/* Bubble Risk Map (Renamed to Zmiana 24h and Full Width) */}
       <div className={`${styles.cardContainer} p-6`}>
         <div className="flex items-center justify-between mb-6">
-          <div><h3 className={`text-lg font-bold ${styles.text}`}>Heatmap 24h</h3></div>
-          <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><Flame className={theme === 'neon' ? 'text-rose-400' : 'text-rose-600'} size={20} /></div>
+          <div><h3 className={`text-lg font-bold ${styles.text}`}>Zmiana 24h</h3></div>
+          <div className="flex space-x-2 items-center">
+             <div className={`flex items-center space-x-1 p-1 rounded-lg border ${theme === 'neon' ? 'bg-black/50 border-cyan-900/50' : 'bg-slate-50 border-slate-100'}`}>
+                <button onClick={() => setBubbleChartFilter('ALL')} className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${bubbleChartFilter === 'ALL' ? (theme === 'neon' ? 'bg-cyan-900 text-cyan-300' : 'bg-white text-slate-800 shadow-sm') : (theme === 'neon' ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')}`}>Wszystkie</button>
+                <button onClick={() => setBubbleChartFilter('KRYPTO')} className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${bubbleChartFilter === 'KRYPTO' ? (theme === 'neon' ? 'bg-cyan-900 text-cyan-300' : 'bg-white text-slate-800 shadow-sm') : (theme === 'neon' ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')}`}>Krypto</button>
+                <button onClick={() => setBubbleChartFilter('IKE')} className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${bubbleChartFilter === 'IKE' ? (theme === 'neon' ? 'bg-cyan-900 text-cyan-300' : 'bg-white text-slate-800 shadow-sm') : (theme === 'neon' ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')}`}>IKE</button>
+             </div>
+             <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><ScatterChart className={theme === 'neon' ? 'text-amber-400' : 'text-amber-600'} size={20} /></div>
+          </div>
         </div>
-        <DailyChangeHeatmap data={dailyChangeData} themeMode={theme} />
+        <BubbleRiskChart data={filteredBubbleData} themeMode={theme} />
       </div>
 
       {/* Monthly Returns */}

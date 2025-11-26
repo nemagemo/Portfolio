@@ -19,9 +19,12 @@ import {
   Cell,
   LabelList,
   ComposedChart,
-  Treemap
+  Treemap,
+  ScatterChart,
+  Scatter,
+  ZAxis
 } from 'recharts';
-import { PPKDataRow, AnyDataRow, SummaryStats } from '../types';
+import { PPKDataRow, AnyDataRow, SummaryStats, OMFDataRow } from '../types';
 
 // Logo Imports
 import { PPKLogo } from '../logos/PPKLogo';
@@ -582,6 +585,164 @@ export const DailyChangeHeatmap: React.FC<DailyChangeHeatmapProps> = ({ data, th
           fill="#8884d8"
           content={(props) => <DailyChangeContent {...props} themeMode={themeMode as ThemeMode} />}
         />
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+// --- BUBBLE RISK CHART ---
+
+interface BubbleRiskChartProps {
+  data: OMFDataRow[];
+  themeMode?: ThemeMode;
+}
+
+export const BubbleRiskChart: React.FC<BubbleRiskChartProps> = ({ data, themeMode = 'light' }) => {
+  const t = CHART_THEMES[themeMode || 'light'];
+  
+  // Transform data for ScatterChart
+  const chartData = useMemo(() => {
+    return data
+      .filter(d => d.change24h !== undefined && Math.abs(d.change24h) > 0 && d.symbol !== 'PLN' && d.symbol !== 'PLN-IKE')
+      .map(d => ({
+        name: d.symbol,
+        x: d.change24h || 0,
+        y: d.roi || 0,
+        z: d.currentValue,
+        portfolio: d.portfolio
+      }));
+  }, [data]);
+
+  if (chartData.length === 0) return <div className="flex items-center justify-center h-full text-slate-400 text-sm">Brak danych o zmianie 24h</div>;
+
+  return (
+    <div className="h-80 w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke={t.grid} />
+          <XAxis 
+            type="number" 
+            dataKey="x" 
+            name="Zmiana 24h" 
+            unit="%" 
+            stroke={t.axis} 
+            fontSize={12}
+            label={{ value: 'Zmiana 24h (%)', position: 'insideBottom', offset: -10, fill: t.axis, fontSize: 10 }}
+          />
+          <YAxis 
+            type="number" 
+            dataKey="y" 
+            name="ROI" 
+            unit="%" 
+            stroke={t.axis} 
+            fontSize={12}
+            label={{ value: 'Całkowite ROI (%)', angle: -90, position: 'insideLeft', fill: t.axis, fontSize: 10 }}
+          />
+          <ZAxis type="number" dataKey="z" range={[60, 600]} name="Wartość" unit=" zł" />
+          <Tooltip 
+            cursor={{ strokeDasharray: '3 3' }} 
+            content={({ active, payload }) => {
+              if (active && payload && payload.length) {
+                const d = payload[0].payload;
+                return (
+                  <div style={getTooltipStyle(themeMode as ThemeMode)} className="p-2 shadow-md text-xs">
+                    <p className="font-bold mb-1 text-sm">{d.name}</p>
+                    <p>Wartość: {formatCurrency(d.z)}</p>
+                    <p className={d.x >= 0 ? 'text-emerald-500' : 'text-rose-500'}>
+                      24h: {d.x > 0 ? '+' : ''}{d.x.toFixed(2)}%
+                    </p>
+                    <p className={d.y >= 0 ? 'text-emerald-500' : 'text-rose-500'}>
+                      ROI: {d.y > 0 ? '+' : ''}{d.y.toFixed(2)}%
+                    </p>
+                  </div>
+                );
+              }
+              return null;
+            }}
+          />
+          {/* Reference Lines for Quadrants */}
+          <ReferenceLine x={0} stroke={t.axis} strokeOpacity={0.5} />
+          <ReferenceLine y={0} stroke={t.axis} strokeOpacity={0.5} />
+          
+          <Scatter name="Aktywa" data={chartData} fill="#8884d8">
+            {chartData.map((entry, index) => (
+              <Cell 
+                key={`cell-${index}`} 
+                fill={entry.x >= 0 ? t.dailyPos : t.dailyNeg} 
+                fillOpacity={0.7}
+                stroke={themeMode === 'neon' ? '#fff' : '#fff'}
+                strokeWidth={1}
+              />
+            ))}
+          </Scatter>
+        </ScatterChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+// --- CONTRIBUTION BAR CHART ---
+
+interface ContributionBarChartProps {
+  data: OMFDataRow[];
+  themeMode?: ThemeMode;
+}
+
+export const ContributionBarChart: React.FC<ContributionBarChartProps> = ({ data, themeMode = 'light' }) => {
+  const t = CHART_THEMES[themeMode || 'light'];
+
+  const chartData = useMemo(() => {
+    return data
+      .filter(d => d.change24h !== undefined && Math.abs(d.change24h) > 0 && d.symbol !== 'PLN' && d.symbol !== 'PLN-IKE')
+      .map(d => {
+        const changePct = d.change24h || 0;
+        // Nominal Gain = Current - (Current / (1 + pct))
+        const prevVal = d.currentValue / (1 + changePct / 100);
+        const nominalChange = d.currentValue - prevVal;
+        return {
+          name: d.symbol,
+          value: nominalChange
+        };
+      })
+      .sort((a, b) => b.value - a.value); // Sort Descending (Best to Worst)
+  }, [data]);
+
+  if (chartData.length === 0) return <div className="flex items-center justify-center h-full text-slate-400 text-sm">Brak danych 24h</div>;
+
+  // Determine dynamic height based on number of items if needed, but here fixed height is requested.
+  // We'll filter to top 10 movers (5 gainers, 5 losers) or top 15 to fit.
+  const topGainers = chartData.filter(d => d.value > 0);
+  const topLosers = chartData.filter(d => d.value < 0);
+  
+  // Combine top 7 gainers and bottom 7 losers for a balanced view if too many
+  let displayData = chartData;
+  if (chartData.length > 14) {
+     displayData = [...topGainers.slice(0, 7), ...topLosers.slice(topLosers.length - 7)];
+  }
+
+  return (
+    <div className="h-80 w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart 
+          layout="vertical" 
+          data={displayData} 
+          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={t.grid} />
+          <XAxis type="number" stroke={t.axis} fontSize={10} tickFormatter={(val) => `${val.toFixed(0)} zł`} />
+          <YAxis type="category" dataKey="name" stroke={t.axis} fontSize={10} width={50} />
+          <Tooltip 
+            cursor={{fill: 'transparent'}}
+            formatter={(value: number) => [`${value > 0 ? '+' : ''}${value.toFixed(2)} zł`, 'Wpływ 24h']}
+            contentStyle={getTooltipStyle(themeMode as ThemeMode)}
+          />
+          <ReferenceLine x={0} stroke={t.axis} />
+          <Bar dataKey="value" name="Wpływ 24h" barSize={15} radius={[0, 3, 3, 0]}>
+            {displayData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.value >= 0 ? t.dailyPos : t.dailyNeg} />
+            ))}
+          </Bar>
+        </BarChart>
       </ResponsiveContainer>
     </div>
   );
