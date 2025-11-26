@@ -54,12 +54,24 @@ export const App: React.FC = () => {
 
   // Determine Status Label logic
   const statusLogic = useMemo(() => {
-      if (isRefreshing) return { label: 'ODŚWIEŻANIE...', icon: RefreshCw, colorClass: 'bg-blue-50 text-blue-600 border-blue-200', spin: true };
-      if (pricingMode === 'Offline') return { label: 'OFFLINE', icon: WifiOff, colorClass: theme === 'neon' ? 'bg-slate-800/80 text-slate-400 border-slate-600/50' : 'bg-slate-100 text-slate-500 border-slate-200' };
+      if (isRefreshing) return { label: 'Odświeżanie danych...', icon: RefreshCw, colorClass: 'bg-blue-50 text-blue-600 border-blue-200', spin: true, percent: 0, isPartial: false };
+      
+      // Date formatting for tooltip
+      const dateInfo = OMF_LAST_UPDATED ? ` (Dane z: ${OMF_LAST_UPDATED})` : '';
+
+      if (pricingMode === 'Offline') return { 
+          label: `Tryb Offline - Kliknij aby odświeżyć${dateInfo}`, 
+          icon: WifiOff, 
+          colorClass: theme === 'neon' ? 'bg-slate-800/80 text-slate-400 border-slate-600/50' : 'bg-slate-100 text-slate-500 border-slate-200',
+          spin: false,
+          percent: 0,
+          isPartial: false
+      };
       
       // Online logic - check for partial data
       let isPartial = false;
-      let partialLabel = 'ONLINE';
+      let percent = 100;
+      let tooltipLabel = 'Tryb Online (Wszystkie ceny aktualne)';
 
       if (portfolioType === 'OMF' && onlinePrices) {
           // Only count actual investment assets (exclude Cash types like PLN, PLN-IKE)
@@ -69,23 +81,29 @@ export const App: React.FC = () => {
           
           if (totalAssets > 0 && loadedAssets < totalAssets) {
              isPartial = true;
-             const percent = Math.round((loadedAssets / totalAssets) * 100);
-             partialLabel = `ONLINE ${percent}%`;
+             percent = Math.round((loadedAssets / totalAssets) * 100);
+             tooltipLabel = `Tryb Online (${percent}% cen pobranych)`;
           }
       }
 
       if (isPartial) {
           return { 
-              label: partialLabel, 
+              label: tooltipLabel, 
               icon: AlertCircle, 
-              colorClass: theme === 'neon' ? 'bg-yellow-900/80 text-yellow-300 border-yellow-600/50' : 'bg-amber-50 text-amber-600 border-amber-200'
+              colorClass: theme === 'neon' ? 'bg-yellow-900/80 text-yellow-300 border-yellow-600/50' : 'bg-amber-50 text-amber-600 border-amber-200',
+              spin: false,
+              percent,
+              isPartial: true
           };
       }
 
       return { 
-          label: 'ONLINE', 
+          label: tooltipLabel, 
           icon: Wifi, 
-          colorClass: theme === 'neon' ? 'bg-blue-900/80 text-blue-300 border-blue-600/50' : 'bg-blue-50 text-blue-600 border-blue-200'
+          colorClass: theme === 'neon' ? 'bg-blue-900/80 text-blue-300 border-blue-600/50' : 'bg-blue-50 text-blue-600 border-blue-200',
+          spin: false,
+          percent: 100,
+          isPartial: false
       };
   }, [pricingMode, isRefreshing, theme, onlinePrices, omfActiveAssets, portfolioType]);
 
@@ -297,13 +315,45 @@ export const App: React.FC = () => {
     <div className={`min-h-screen ${styles.appBg} ${styles.text} pb-12 transition-colors duration-300`}>
       <header className={`${styles.headerBg} ${styles.headerBorder} border-b sticky top-0 z-50 transition-colors duration-300`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="w-24"></div>
+          
+          {/* LEFT: Status Indicator (Moved here) */}
+          <div className="w-24 flex items-center">
+             {isOfflineValid && (
+                <div 
+                  className={`
+                    flex items-center rounded-full border transition-all duration-300 overflow-hidden
+                    ${statusLogic.colorClass}
+                    ${statusLogic.isPartial ? 'hover:pr-3 hover:pl-1 cursor-help group' : 'p-2'}
+                  `}
+                  title={statusLogic.label}
+                >
+                  <button 
+                    onClick={fetchPrices} 
+                    disabled={isRefreshing} 
+                    className={`p-0 focus:outline-none ${isRefreshing ? 'opacity-75 cursor-wait' : ''}`}
+                  >
+                     <statusLogic.icon size={18} className={`${statusLogic.spin ? 'animate-spin' : ''}`} />
+                  </button>
+                  
+                  {/* Percentage Text - Only visible on hover if partial */}
+                  {statusLogic.isPartial && (
+                     <span className="max-w-0 overflow-hidden group-hover:max-w-[60px] transition-all duration-500 text-[10px] font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 pl-0 group-hover:pl-1.5">
+                        {statusLogic.percent}%
+                     </span>
+                  )}
+                </div>
+             )}
+          </div>
+
+          {/* CENTER: Navigation Tabs */}
           <div className={`p-1 rounded-lg flex space-x-1 overflow-x-auto ${theme === 'neon' ? 'bg-black border border-cyan-900/50' : 'bg-slate-100'}`}>
             <button onClick={() => handlePortfolioChange('OMF')} className={`flex items-center px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'OMF' ? styles.buttonActive : styles.buttonInactive}`}><LayoutGrid size={16} className="mr-2 hidden sm:block" />OMF</button>
             <button onClick={() => handlePortfolioChange('PPK')} className={`flex items-center px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'PPK' ? styles.buttonActive : styles.buttonInactive}`}><Briefcase size={16} className="mr-2 hidden sm:block" />PPK</button>
             <button onClick={() => handlePortfolioChange('CRYPTO')} className={`flex items-center px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'CRYPTO' ? styles.buttonActive : styles.buttonInactive}`}><Coins size={16} className="mr-2 hidden sm:block" />Krypto</button>
             <button onClick={() => handlePortfolioChange('IKE')} className={`flex items-center px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'IKE' ? styles.buttonActive : styles.buttonInactive}`}><PiggyBank size={16} className="mr-2 hidden sm:block" />IKE</button>
           </div>
+
+          {/* RIGHT: Theme Toggles */}
           <div className="w-24 flex justify-end space-x-2">
              <button onClick={() => setTheme('light')} className={`p-2 rounded-md transition-all ${theme === 'light' ? 'bg-slate-200 text-slate-800' : 'text-slate-400 hover:bg-slate-100'}`}><Sun size={16} /></button>
              <button onClick={() => setTheme('comic')} className={`p-2 rounded-md transition-all ${theme === 'comic' ? 'bg-yellow-300 border-2 border-black text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-slate-400 hover:bg-slate-100'}`}><Palette size={16} /></button>
@@ -313,19 +363,8 @@ export const App: React.FC = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {isOfflineValid ? (
-           <div className="flex flex-col items-center mb-6 space-y-2">
-              <div className="flex items-center space-x-2">
-                <button onClick={fetchPrices} disabled={isRefreshing} className={`text-xs font-bold px-3 py-1 rounded-full flex items-center shadow-sm transition-all ${isRefreshing ? 'opacity-75 cursor-wait' : 'hover:opacity-80 active:scale-95'} border ${statusLogic.colorClass}`}>
-                   <statusLogic.icon size={14} className={`mr-1.5 ${statusLogic.spin ? 'animate-spin' : ''}`} />
-                   {statusLogic.label}
-                </button>
-              </div>
-              {pricingMode !== 'Online' && OMF_LAST_UPDATED && (
-                  <span className={`text-[10px] ${theme === 'neon' ? 'text-slate-600' : 'text-slate-400'}`}>Ostatnia aktualizacja: {OMF_LAST_UPDATED}</span>
-              )}
-           </div>
-        ) : (
+        {/* Validation/Integrity Status Cards (Only if issues exist) */}
+        {!isOfflineValid && (
            <>
              {portfolioType === 'OMF' && omfReport && <OMFIntegrityStatus report={omfReport} theme={theme} />}
              {portfolioType !== 'OMF' && report && <DataStatus report={report} theme={theme} />}
