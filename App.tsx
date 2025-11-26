@@ -37,8 +37,7 @@ export const App: React.FC = () => {
     omfActiveAssets, 
     omfClosedAssets, 
     globalHistoryData, 
-    stats, 
-    dailyChangeData 
+    stats
   } = usePortfolioData({ 
     portfolioType, 
     onlinePrices, 
@@ -177,9 +176,17 @@ export const App: React.FC = () => {
     if (portfolioType !== 'OMF' || !omfActiveAssets.length) return [];
     const groups: Record<string, any[]> = {};
     let cryptoRestVal = 0, cryptoRestPurch = 0;
+    let aggregatedCashVal = 0;
 
     omfActiveAssets.forEach(a => {
-      const p = a.portfolio || 'Inne';
+      // AGGREGATION LOGIC: Sum PLN and PLN-IKE into one variable
+      if (a.symbol === 'PLN' || a.symbol === 'PLN-IKE') {
+        aggregatedCashVal += a.currentValue;
+        return; // Skip adding them as individual items
+      }
+
+      let p = a.portfolio || 'Inne';
+      
       if (p.toUpperCase().includes('KRYPTO') && a.currentValue < 1000) {
          cryptoRestVal += a.currentValue;
          cryptoRestPurch += a.purchaseValue;
@@ -189,10 +196,17 @@ export const App: React.FC = () => {
       }
     });
 
+    // Add "Reszta Krypto" Tile
     if (cryptoRestVal > 0) {
        const aggRoi = cryptoRestPurch > 0 ? ((cryptoRestVal - cryptoRestPurch)/cryptoRestPurch)*100 : 0;
        if (!groups['Krypto']) groups['Krypto'] = [];
        groups['Krypto'].push({ name: 'Reszta Krypto', value: cryptoRestVal, roi: aggRoi, portfolio: 'Krypto' });
+    }
+
+    // Add Aggregated "PLN" Tile to "Gotówka" Group
+    if (aggregatedCashVal > 0) {
+        if (!groups['Gotówka']) groups['Gotówka'] = [];
+        groups['Gotówka'].push({ name: 'PLN', value: aggregatedCashVal, roi: 0, portfolio: 'Gotówka' });
     }
 
     const ORDER = ['PPK', 'IKE', 'Krypto', 'Gotówka'];
@@ -212,6 +226,58 @@ export const App: React.FC = () => {
         totalValue: r.totalValueNoPPK || 0
      }));
   }, [globalHistoryData, portfolioType]);
+
+  const dailyChangeData = useMemo(() => {
+    if (portfolioType !== 'OMF' || !omfActiveAssets.length) return [];
+    const groups: Record<string, any[]> = {};
+    let cryptoRestNow = 0, cryptoRestPrev = 0;
+    let aggregatedCashNow = 0;
+
+    omfActiveAssets.forEach(a => {
+        // AGGREGATION LOGIC: Sum PLN and PLN-IKE
+        if (a.symbol === 'PLN' || a.symbol === 'PLN-IKE') {
+            aggregatedCashNow += a.currentValue;
+            return; // Skip individual addition
+        }
+
+        const p = a.portfolio || 'Inne';
+        const isCrypto = p.toUpperCase().includes('KRYPTO');
+        
+        if (isCrypto && a.currentValue < 1000) {
+            cryptoRestNow += a.currentValue;
+            // Only include change in aggregated calculation if it's valid
+            if (a.change24h !== undefined) {
+                const divisor = 1 + (a.change24h || 0) / 100;
+                cryptoRestPrev += divisor !== 0 ? a.currentValue / divisor : a.currentValue;
+            } else {
+                cryptoRestPrev += a.currentValue; // Assume no change for fallback assets
+            }
+        } else {
+            if (!groups[p]) groups[p] = [];
+            // Pass change24h (can be undefined)
+            groups[p].push({ name: a.symbol, size: a.currentValue, change24h: a.change24h, portfolio: p });
+        }
+    });
+
+    if (cryptoRestNow > 0) {
+        const avgChange = cryptoRestPrev > 0 ? ((cryptoRestNow - cryptoRestPrev) / cryptoRestPrev) * 100 : 0;
+        if (!groups['Krypto']) groups['Krypto'] = [];
+        groups['Krypto'].push({ name: 'Reszta Krypto', size: cryptoRestNow, change24h: avgChange, portfolio: 'Krypto' });
+    }
+
+    // Add Aggregated "PLN" Tile
+    if (aggregatedCashNow > 0) {
+        if (!groups['Gotówka']) groups['Gotówka'] = [];
+        // Cash change is usually 0 for base currency (1 PLN = 1 PLN)
+        groups['Gotówka'].push({ name: 'PLN', size: aggregatedCashNow, change24h: 0, portfolio: 'Gotówka' });
+    }
+
+    const ORDER = ['PPK', 'IKE', 'Krypto', 'Gotówka'];
+    return Object.keys(groups).map(key => ({
+        name: key,
+        children: groups[key].sort((a, b) => b.size - a.size)
+    })).sort((a, b) => ORDER.indexOf(a.name) - ORDER.indexOf(b.name));
+  }, [omfActiveAssets, portfolioType]);
 
   const bestCrypto = useMemo(() => {
     if (portfolioType !== 'CRYPTO') return null;

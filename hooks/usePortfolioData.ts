@@ -478,7 +478,17 @@ export const usePortfolioData = ({ portfolioType, onlinePrices, historyPrices, e
                 .filter(r => r.portfolio === 'IKE')
                 .reduce((acc, curr) => acc + curr.profit, 0);
             
-            taxSaved = closedIkeProfit > 0 ? closedIkeProfit * 0.19 : 0;
+            // 1. Capital Gains Tax Shield (from closed positions)
+            const capitalGainsTaxSaved = closedIkeProfit > 0 ? closedIkeProfit * 0.19 : 0;
+
+            // 2. Dividend Tax Shield (All IKE dividends, active + historical)
+            // We take ALL because tax was saved on all of them, regardless of snowball tracking
+            const totalIkeDividends = dividends
+                .filter(d => d.portfolio === 'IKE')
+                .reduce((acc, d) => acc + d.value, 0);
+            const dividendTaxSaved = totalIkeDividends * 0.19;
+
+            taxSaved = capitalGainsTaxSaved + dividendTaxSaved;
         } else if (portfolioType === 'CRYPTO') {
              taxSaved = 0; 
         }
