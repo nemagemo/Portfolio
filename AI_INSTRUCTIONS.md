@@ -133,18 +133,25 @@ Aplikacja stosuje hybrydowy model wyceny w czasie rzeczywistym:
     *   Sformatuj i dopisz nowy wiersz do `CSV/Cash.ts`.
 5.  **Aktualizacja Dat:** Zaktualizuj zmienne `*_LAST_UPDATED` we wszystkich plikach CSV na nową datę.
 
+### Polecenie: `WplataIKE`
+**Wyzwalacz:** "Wpłaciłem X zł na IKE"
+**Procedura:**
+1.  Zwiększ wartość (Ilość i Wartość) pozycji `PLN-IKE` w `CSV/OMFopen.ts` o kwotę wpłaty.
+2.  **Efekt:** Zwiększa się suma `Wartość zakupu` w portfelu IKE, co poprawnie zwiększa `Zainwestowany Kapitał`.
+
 ### Polecenie: `DodajDywidende`
 **Wyzwalacz:** "Dostałem dywidendę X zł z spółki Y, data Z"
 **Procedura:**
 1.  Dopisz wiersz do `CSV/Dividends.ts` (Data, Portfel, Symbol, Kwota).
-2.  Zwiększ wartość (Ilość i Wartość) pozycji `PLN-IKE` w `CSV/OMFopen.ts` o kwotę dywidendy. (Gotówka z dywidend trafia na konto).
+2.  Zwiększ wartość (Ilość i Wartość) pozycji `PLN-IKE` w `CSV/OMFopen.ts` o kwotę dywidendy.
+3.  **Efekt:** Zwiększa się gotówka, ale dzięki wpisowi w `Dividends.ts`, formuła w `usePortfolioData` odejmie tę kwotę od `Zainwestowanego Kapitału`. (Darmowa gotówka nie zwiększa wkładu).
 
-### Polecenie: `KupnoZaDywidendy` (Reinwestycja)
-**Wyzwalacz:** "Kupiłem X za kwotę Y używając gotówki IKE"
+### Polecenie: `ZakupIKE` (Reinwestycja lub Zakup)
+**Wyzwalacz:** "Kupiłem X za kwotę Y na IKE"
 **Procedura:**
-1.  Dodaj/Zaktualizuj pozycję aktywa w `CSV/OMFopen.ts` (zwiększ `Wartość zakupu` i `Ilość`).
+1.  Dodaj/Zaktualizuj pozycję aktywa w `CSV/OMFopen.ts` (zwiększ `Wartość zakupu` i `Ilość` wyliczoną z ceny).
 2.  Zmniejsz pozycję `PLN-IKE` w `CSV/OMFopen.ts` o kwotę zakupu.
-3.  **Ważne:** Nie zmienia to sumarycznego `Zainwestowanego Kapitału` w IKE, ponieważ formuła w `usePortfolioData` automatycznie odejmuje dywidendy.
+3.  **Zasada:** Nie ma znaczenia czy gotówka pochodziła z dywidend czy wpłaty. Jest to transfer wewnątrz portfela (Gotówka -> Aktywo). Suma `Wartość zakupu` portfela IKE pozostaje bez zmian (wzrost na aktywie, spadek na gotówce).
 
 ### Polecenie: `UpdateDate`
 **Procedura:** Aktualizacja `OMF_LAST_UPDATED` oraz `DATA_LAST_UPDATED`.
