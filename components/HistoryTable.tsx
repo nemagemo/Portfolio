@@ -14,23 +14,23 @@ interface HistoryTableProps {
 export const HistoryTable: React.FC<HistoryTableProps> = ({ data, type, omfVariant = 'active', title, themeMode = 'light' }) => {
   const [selectedPortfolio, setSelectedPortfolio] = useState<string>('ALL');
   
-  // Extract unique portfolios for filter dropdown (Only for OMF Active)
+  // Extract unique portfolios for filter dropdown (For OMF)
   const availablePortfolios = useMemo(() => {
-    if (type !== 'OMF' || omfVariant !== 'active') return [];
+    if (type !== 'OMF') return [];
     const portfolios = new Set<string>();
     data.forEach(row => {
       const r = row as OMFDataRow;
       if (r.portfolio) portfolios.add(r.portfolio);
     });
     return Array.from(portfolios).sort();
-  }, [data, type, omfVariant]);
+  }, [data, type]);
 
   const filteredData = useMemo(() => {
-     if (type === 'OMF' && omfVariant === 'active' && selectedPortfolio !== 'ALL') {
+     if (type === 'OMF' && selectedPortfolio !== 'ALL') {
         return data.filter(row => (row as OMFDataRow).portfolio === selectedPortfolio);
      }
      return data;
-  }, [data, selectedPortfolio, type, omfVariant]);
+  }, [data, selectedPortfolio, type]);
 
   // Helper for conditional classes based on theme
   const isNeon = themeMode === 'neon';
@@ -84,7 +84,7 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({ data, type, omfVaria
     return (
       <div>
         {/* Internal Header with Dynamic Count */}
-        {type === 'OMF' && omfVariant === 'active' && title && (
+        {type === 'OMF' && title && (
           <div className={`px-6 py-4 border-b flex justify-between items-center ${isNeon ? 'bg-black/40 border-cyan-900/30' : 'bg-slate-50 border-slate-200'}`}>
             <h3 className={`text-lg font-bold ${isNeon ? 'text-cyan-400 font-mono' : 'text-slate-800'}`}>{title}</h3>
             <span className={`text-xs font-medium px-2 py-1 transition-all duration-300 ${isNeon ? 'rounded-full bg-cyan-900/30 text-cyan-300 border border-cyan-500/50 font-mono' : 'rounded-full bg-emerald-100 text-emerald-700'}`}>
@@ -94,7 +94,7 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({ data, type, omfVaria
         )}
 
         {/* Filter Bar */}
-        {type === 'OMF' && omfVariant === 'active' && (
+        {type === 'OMF' && (
           <div className={`px-6 py-3 flex items-center space-x-3 border-b ${isNeon ? 'bg-black/60 border-cyan-900/30' : 'bg-slate-50 border-slate-100'}`}>
             <div className={`flex items-center text-sm ${isNeon ? 'text-cyan-600 font-mono' : 'text-slate-500'}`}>
               <Filter size={16} className="mr-2" />
@@ -140,7 +140,7 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({ data, type, omfVaria
                 {omfVariant !== 'closed' && (
                   <th className="px-4 py-3 font-semibold text-right">Ilość</th>
                 )}
-                <th className="px-4 py-3 font-semibold text-right">Cena Zakupu</th>
+                <th className="px-4 py-3 font-semibold text-right">Wartość Zakupu</th>
                 <th className="px-4 py-3 font-semibold text-right">
                    {omfVariant === 'closed' ? 'Wartość Sprzedaży' : 'Obecna Wartość'}
                 </th>

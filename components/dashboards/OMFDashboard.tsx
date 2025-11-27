@@ -53,8 +53,75 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
   }, [globalHistory]);
 
   const filteredBubbleData = useMemo(() => {
-    if (bubbleChartFilter === 'ALL') return activeAssets;
-    return activeAssets.filter(a => a.portfolio.toUpperCase().includes(bubbleChartFilter));
+    // 1. Initial filter based on tabs
+    let baseData = activeAssets;
+    if (bubbleChartFilter !== 'ALL') {
+        baseData = activeAssets.filter(a => a.portfolio.toUpperCase().includes(bubbleChartFilter));
+    }
+
+    // 2. Identify Small Crypto and Others
+    const smallCrypto: OMFDataRow[] = [];
+    const others: OMFDataRow[] = [];
+
+    baseData.forEach(asset => {
+        // Condition: Portfolio Krypto AND Value < 1000 PLN
+        // Note: We check if portfolio includes 'Krypto' to handle case sensitivity/variations
+        if (asset.portfolio.toUpperCase().includes('KRYPTO') && asset.currentValue < 1000) {
+            smallCrypto.push(asset);
+        } else {
+            others.push(asset);
+        }
+    });
+
+    // 3. Aggregate Small Crypto if they exist
+    if (smallCrypto.length > 0) {
+        let totalCurrent = 0;
+        let totalPurchase = 0;
+        let totalPrev24h = 0;
+        let hasLivePrice = false;
+
+        smallCrypto.forEach(a => {
+            totalCurrent += a.currentValue;
+            totalPurchase += a.purchaseValue;
+            if (a.isLivePrice) hasLivePrice = true;
+
+            // 24h Change Calculation for Aggregation
+            // PrevValue = CurrentValue / (1 + change%)
+            const change = a.change24h || 0;
+            // Protect against division by zero if change is -100% (unlikely but safe)
+            const divisor = 1 + (change / 100);
+            const prev = divisor !== 0 ? a.currentValue / divisor : 0;
+            totalPrev24h += prev;
+        });
+
+        // Calculate aggregated metrics
+        const aggProfit = totalCurrent - totalPurchase;
+        const aggRoi = totalPurchase > 0 ? (aggProfit / totalPurchase) * 100 : 0;
+        const aggChange24h = totalPrev24h > 0 ? ((totalCurrent - totalPrev24h) / totalPrev24h) * 100 : 0;
+
+        // Create Synthetic Node "Reszta Krypto"
+        const syntheticNode: OMFDataRow = {
+            symbol: 'Reszta Krypto',
+            portfolio: 'Krypto',
+            status: 'Otwarta',
+            type: 'Agregat',
+            sector: '', 
+            quantity: 0, 
+            lastPurchaseDate: '', 
+            investmentPeriod: '', 
+            currentValue: totalCurrent,
+            purchaseValue: totalPurchase,
+            profit: aggProfit,
+            roi: aggRoi,
+            change24h: aggChange24h,
+            isLivePrice: hasLivePrice // If at least one sub-asset is live, show as live (or logic: all must be live?)
+                                      // Better: if at least one is live, we have *some* live movement.
+        };
+
+        others.push(syntheticNode);
+    }
+
+    return others;
   }, [activeAssets, bubbleChartFilter]);
 
   const isNeon = theme === 'neon';
@@ -74,18 +141,18 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 relative z-10">
           
           {/* LEFT: Main Capital Stats (5 cols) */}
-          <div className="lg:col-span-5 flex flex-col justify-center">
+          <div className="lg:col-span-5 flex flex-col justify-center relative">
             <h2 className={`text-[10px] uppercase tracking-widest font-bold mb-1 flex items-center ${isNeon ? 'text-cyan-600' : 'text-slate-400'}`}>
               <Wallet size={12} className="mr-1.5" /> Wartość Portfela
             </h2>
-            <div className="flex items-baseline">
+            <div className="flex items-baseline relative z-10">
               <span className={`text-3xl sm:text-4xl font-black tracking-tight ${isNeon ? 'text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-500' : 'text-slate-900'}`}>
                 {(stats.totalValue || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
               <span className={`text-lg ml-1.5 font-medium ${isNeon ? 'text-cyan-700' : 'text-slate-400'}`}>zł</span>
             </div>
             
-            <div className="mt-2 flex items-center">
+            <div className="mt-2 flex items-center relative z-10">
               <div className={`h-1 w-full overflow-hidden ${isNeon ? 'bg-slate-800 rounded-full' : 'bg-slate-100 rounded-full'}`}>
                 <div 
                   className={`h-full ${isNeon ? 'bg-blue-500 rounded-full' : 'bg-slate-400 rounded-full'}`} 
@@ -93,7 +160,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
                 ></div>
               </div>
             </div>
-            <div className="flex justify-between mt-1 text-[10px] sm:text-xs font-medium font-mono">
+            <div className="flex justify-between mt-1 text-[10px] sm:text-xs font-medium font-mono relative z-10">
               <span className={isNeon ? 'text-blue-400' : 'text-slate-500'}>
                 Wkład: {(stats.totalInvestment || 0).toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł
               </span>
@@ -234,7 +301,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
           <div>
             <h3 className={`text-lg font-bold ${styles.text}`}>Zmiana dzienna</h3>
             <p className={`text-[10px] sm:text-xs mt-1 ${isNeon ? 'text-slate-500' : 'text-slate-400'}`}>
-              Gdy zmiana dzienna wynosi 0 lub jest bardzo duża, może to wskazywać na błąd synchronizacji danych. <br/>
+              Gdy zmiana wynosi 0 lub jest bardzo duża, może to wskazywać na błąd synchronizacji danych. <br/>
               Elementy oznaczone na żółto nie mają aktualnej ceny (Offline).
             </p>
           </div>
@@ -299,7 +366,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
       {/* Closed Positions Table */}
       <div className={`${styles.cardContainer} overflow-hidden`}>
         <div className={`px-6 py-4 border-b flex justify-between items-center cursor-pointer transition-colors ${isNeon ? 'bg-black/20 border-cyan-900/30 hover:bg-cyan-950/10' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`} onClick={() => setIsClosedHistoryExpanded(!isClosedHistoryExpanded)}>
-          <div className="flex items-center space-x-2"><h3 className={`text-lg font-bold ${styles.text}`}>Historia Zamkniętych Pozycji</h3>{isClosedHistoryExpanded ? <ChevronUp size={20} className={isNeon ? 'text-cyan-600' : 'text-slate-400'}/> : <ChevronDown size={20} className={isNeon ? 'text-cyan-600' : 'text-slate-400'}/>}</div>
+          <div className="flex items-center space-x-2"><h3 className={`text-lg font-bold ${styles.text}`}>Zamknięte Pozycje</h3>{isClosedHistoryExpanded ? <ChevronUp size={20} className={isNeon ? 'text-cyan-600' : 'text-slate-400'}/> : <ChevronDown size={20} className={isNeon ? 'text-cyan-600' : 'text-slate-400'}/>}</div>
           <span className={`text-xs font-medium px-2 py-1 transition-all ${isNeon ? 'rounded-full bg-slate-800 text-slate-400 border border-slate-700' : 'rounded-full bg-slate-200 text-slate-600'}`}>{closedAssets.length} pozycji</span>
         </div>
         {isClosedHistoryExpanded && (<HistoryTable data={closedAssets} type="OMF" omfVariant="closed" themeMode={theme} />)}
