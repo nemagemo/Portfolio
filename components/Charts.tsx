@@ -654,7 +654,7 @@ export const BubbleRiskChart: React.FC<BubbleRiskChartProps> = ({ data, themeMod
             unit="%" 
             stroke={t.axis} 
             fontSize={12}
-            label={{ value: 'Całkowite ROI (%)', angle: -90, position: 'insideLeft', fill: t.axis, fontSize: 10 }}
+            label={{ value: 'Całkowite ROI (%)', angle: -90, position: 'insideLeft', fill: t.axis, fontSize: 10, style: { textAnchor: 'middle' } }}
           />
           <ZAxis type="number" dataKey="z" range={[60, 600]} name="Wartość" unit=" zł" />
           <Tooltip 
@@ -704,6 +704,17 @@ export const BubbleRiskChart: React.FC<BubbleRiskChartProps> = ({ data, themeMod
                 />
               );
             })}
+            <LabelList 
+                dataKey="name" 
+                position="top" 
+                offset={5}
+                style={{ 
+                    fontSize: '10px', 
+                    fill: themeMode === 'neon' ? '#a5f3fc' : '#1e293b',
+                    fontWeight: 'bold',
+                    pointerEvents: 'none'
+                }} 
+            />
           </Scatter>
         </ScatterChart>
       </ResponsiveContainer>

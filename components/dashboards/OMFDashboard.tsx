@@ -164,7 +164,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
              {/* Metric Block: Daily Change */}
              <div className={`p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
                 <div className="flex justify-between items-start mb-0.5">
-                  <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-cyan-400' : 'text-slate-400'}`}>24h</div>
+                  <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-cyan-400' : 'text-slate-400'}`}>Intraday</div>
                   <IconPulse className={`w-4 h-4 ${isNeon ? 'text-cyan-500/80' : 'text-cyan-400/60'}`} />
                 </div>
                 <div className={`text-lg sm:text-xl font-bold flex items-center ${
@@ -232,9 +232,9 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
       <div className={`${styles.cardContainer} p-6`}>
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className={`text-lg font-bold ${styles.text}`}>Zmiana 24h</h3>
+            <h3 className={`text-lg font-bold ${styles.text}`}>Zmiana dzienna</h3>
             <p className={`text-[10px] sm:text-xs mt-1 ${isNeon ? 'text-slate-500' : 'text-slate-400'}`}>
-              Gdy zmiana wynosi 0 lub jest bardzo duża, może to wskazywać na błąd synchronizacji danych. <br/>
+              Gdy zmiana dzienna wynosi 0 lub jest bardzo duża, może to wskazywać na błąd synchronizacji danych. <br/>
               Elementy oznaczone na żółto nie mają aktualnej ceny (Offline).
             </p>
           </div>

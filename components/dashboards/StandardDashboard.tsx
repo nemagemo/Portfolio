@@ -207,7 +207,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
                       <IconDividends className={`w-4 h-4 ${isNeon ? 'text-emerald-500/80' : 'text-emerald-400/60'}`} />
                     </div>
                     <div className={`text-lg sm:text-xl font-bold ${isNeon ? 'text-emerald-300' : 'text-slate-700'}`}>{totalDividends.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</div>
-                    <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-emerald-500/60' : 'text-slate-400'}`}>Suma (Brutto)</div>
+                    <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-emerald-500/60' : 'text-slate-400'}`}>Suma</div>
                  </div>
                </>
              )}
@@ -270,6 +270,11 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
               <CryptoValueChart data={data} showTaxComparison={showTaxComparison} themeMode={theme} />
             </div>
             
+            <div className={`${styles.cardContainer} p-6 lg:col-span-2`}>
+              <h3 className={`text-lg font-bold ${styles.text} mb-6`}>ROI w czasie</h3>
+              <ROIChart data={data} themeMode={theme} />
+            </div>
+
             {portfolioType === 'IKE' && (
               <div className={`${styles.cardContainer} p-6 lg:col-span-2`}>
                 <div className="flex items-center justify-between mb-6">
@@ -295,11 +300,6 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
                 <DividendChart data={dividendChartData} themeMode={theme} />
               </div>
             )}
-
-            <div className={`${styles.cardContainer} p-6 lg:col-span-2`}>
-              <h3 className={`text-lg font-bold ${styles.text} mb-6`}>ROI w czasie</h3>
-              <ROIChart data={data} themeMode={theme} />
-            </div>
           </div>
         )}
       </div>
