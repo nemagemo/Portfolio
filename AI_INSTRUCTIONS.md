@@ -10,6 +10,41 @@ Ten plik służy do zachowania ciągłości pracy nad projektem pomiędzy sesjam
 
 ---
 
+## Architektura i Lokalizacja Logiki (Po Refaktoryzacji)
+
+W projekcie przeprowadzono refaktoryzację (podział "God Hooka" i "God Componentu"). Oto mapa kluczowej logiki biznesowej:
+
+1.  **Parsowanie Danych (`utils/parser.ts`):**
+    *   Centralny punkt przetwarzania CSV.
+    *   Używa wzorca Strategii: `parseCSV` deleguje do `parseOMF`, `parsePPK` itd.
+    *   Zawiera logikę walidacji integralności matematycznej (`validateOMFIntegrity`).
+
+2.  **Wycena i Stan Portfela (`hooks/useAssetPricing.ts`):**
+    *   Odpowiada za logikę: CSV Snapshot + Ceny Online/Fallback = Aktualny Stan.
+    *   Realizuje priorytet cen: Google Sheets (Online) > Fallback (Hardcoded) > CSV.
+    *   Wykonuje Cross-Check historii (czy historia zgadza się z wyliczonym stanem obecnym).
+
+3.  **Historia i Wyniki (`hooks/useGlobalHistory.ts`):**
+    *   Buduje główną oś czasu (`globalHistoryData`).
+    *   Oblicza **TWR** (Time-Weighted Return) metodą łańcuchową.
+    *   Oblicza **Real Value** (wartość skorygowaną o inflację CPI).
+    *   Implementuje logikę "Kuli Śnieżnej" (Zainwestowany Kapitał = Zakupy - Zamknięte Zyski - Dywidendy).
+
+4.  **Transformacje Wykresów (`hooks/useChartTransformations.ts`):**
+    *   Przygotowuje dane specyficznie pod bibliotekę Recharts.
+    *   Agregacja Treemapy.
+    *   Grupowanie małych aktywów w "Reszta Krypto" dla wykresu bąbelkowego.
+
+5.  **Projekcje (`hooks/useProjections.ts`):**
+    *   Wylicza "Drogę do Miliona" (OMF) i "Drogę do Emerytury" (PPK).
+    *   Obsługuje metody LTM i CAGR.
+
+6.  **Komponenty Wykresów (`components/charts/*`):**
+    *   Podzielone tematycznie: `OMFCharts`, `TimeCharts` (liniowe), `BarCharts`.
+    *   Wspólne style i logotypy w `chartUtils.tsx`.
+
+---
+
 ## Ważne Definicje Danych
 
 ### Struktura Danych PPK

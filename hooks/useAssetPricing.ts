@@ -1,4 +1,6 @@
 
+
+
 import { useState, useEffect } from 'react';
 import { 
   AnyDataRow, ValidationReport, OMFValidationReport, OMFDataRow, 
@@ -22,6 +24,20 @@ interface UseAssetPricingProps {
   dividends: DividendDataRow[];
 }
 
+/**
+ * useAssetPricing Hook
+ * ====================
+ * Responsible for the "Now" state of the portfolio.
+ * 
+ * Logic Flow:
+ * 1. Parse CSV files (OMF Open/Closed).
+ * 2. Apply Pricing Strategy:
+ *    - IF Online Price exists -> Use it (Live Mode)
+ *    - ELSE IF Fallback Price exists -> Use it (Offline Mode)
+ *    - ELSE -> Use value from CSV (Snapshot Mode)
+ * 3. Validate Integrity:
+ *    - Cross-check sum of assets vs historical records (IKE.ts, Krypto.ts).
+ */
 export const useAssetPricing = ({ portfolioType, onlinePrices, historyPrices, dividends }: UseAssetPricingProps) => {
   const [data, setData] = useState<AnyDataRow[]>([]);
   const [report, setReport] = useState<ValidationReport | null>(null);
@@ -46,7 +62,7 @@ export const useAssetPricing = ({ portfolioType, onlinePrices, historyPrices, di
         const closedRes = parseCSV(csvSources.OMF_CLOSED, 'OMF', 'Offline');
         const omfClosedRows = closedRes.data as OMFDataRow[];
 
-        // Revaluation Logic for OMF
+        // --- Revaluation Logic ---
         omfOpenRows = omfOpenRows.map(row => {
             if (row.status !== 'Otwarta' && row.status !== 'Gotówka') return row;
 
@@ -54,18 +70,18 @@ export const useAssetPricing = ({ portfolioType, onlinePrices, historyPrices, di
             let finalPrice: number | undefined = undefined;
             let isLivePrice = false;
 
-            // Priority 1: Online Price
+            // Priority 1: Online Price (Google Sheets)
             if (onlinePrices && onlinePrices[symbolKey] > 0) {
                 finalPrice = onlinePrices[symbolKey];
                 isLivePrice = true;
             } 
-            // Priority 2: Fallback Price (Offline)
+            // Priority 2: Fallback Price (Hardcoded in constants/fallbackPrices.ts)
             else if (FALLBACK_PRICES[symbolKey] > 0) {
                 finalPrice = FALLBACK_PRICES[symbolKey];
                 isLivePrice = false;
             }
             
-            // If we found a valid price (Online or Fallback), recalculate.
+            // If we found a valid price (Online or Fallback), recalculate current value.
             if (finalPrice !== undefined && finalPrice > 0) {
                 let newCurrentValue = 0;
                 if (row.quantity > 0) {
@@ -77,6 +93,7 @@ export const useAssetPricing = ({ portfolioType, onlinePrices, historyPrices, di
                 const newProfit = newCurrentValue - row.purchaseValue;
                 const newRoi = row.purchaseValue > 0 ? (newProfit / row.purchaseValue) * 100 : 0;
 
+                // Calculate 24h Change if history is available
                 let change24h = undefined;
                 if (isLivePrice) {
                     const prevPrice = historyPrices?.[symbolKey];
@@ -95,6 +112,7 @@ export const useAssetPricing = ({ portfolioType, onlinePrices, historyPrices, di
                 } as OMFDataRow;
             }
             
+            // Fallback to CSV values if no pricing available
             return { ...row, isLivePrice: false, change24h: undefined };
         });
 
@@ -102,13 +120,17 @@ export const useAssetPricing = ({ portfolioType, onlinePrices, historyPrices, di
         const integrity = validateOMFIntegrity(combinedData, 'Offline');
         
         // --- CROSS-CHECK: Validate History vs Snapshot Integrity ---
+        // This ensures that the historical data files (IKE.ts, Krypto.ts) match the mathematical reality
+        // derived from the individual asset purchase history.
         const ikeHistoryRaw = parseCSV(csvSources.IKE, 'IKE', 'Offline').data as IKEDataRow[];
         const cryptoHistoryRaw = parseCSV(csvSources.CRYPTO, 'CRYPTO', 'Offline').data as CryptoDataRow[];
         
-        // IKE Check
+        // IKE Integrity Check
         const openIKE = omfOpenRows.filter(r => r.portfolio === 'IKE').reduce((sum, r) => sum + r.purchaseValue, 0);
         const closedIKE = omfClosedRows.filter(r => r.portfolio === 'IKE').reduce((sum, r) => sum + r.profit, 0);
         const divsIKE = dividends.filter(d => d.portfolio === 'IKE' && d.isCounted).reduce((sum, r) => sum + r.value, 0);
+        
+        // Theoretical Invested = Purchase Cost (Open) - Profits Taken (Closed) - Dividends (Reinvested)
         const calcIKE = openIKE - closedIKE - divsIKE;
 
         if (ikeHistoryRaw.length > 0) {
@@ -119,7 +141,7 @@ export const useAssetPricing = ({ portfolioType, onlinePrices, historyPrices, di
             }
         }
 
-        // Crypto Check
+        // Crypto Integrity Check
         const openCrypto = omfOpenRows.filter(r => r.portfolio === 'Krypto').reduce((sum, r) => sum + r.purchaseValue, 0);
         const closedCrypto = omfClosedRows.filter(r => r.portfolio === 'Krypto').reduce((sum, r) => sum + r.profit, 0);
         const calcCrypto = openCrypto - closedCrypto;
@@ -139,7 +161,7 @@ export const useAssetPricing = ({ portfolioType, onlinePrices, historyPrices, di
         setData(combinedData);
 
       } else if (portfolioType !== 'DIVIDENDS') {
-        // Standard Portfolios
+        // Standard Portfolios (PPK, IKE History, etc.)
         const sourceData = csvSources[portfolioType as keyof typeof csvSources];
         if (sourceData) {
             const result = parseCSV(sourceData, portfolioType, 'Offline');

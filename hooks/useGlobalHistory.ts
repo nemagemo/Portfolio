@@ -1,4 +1,6 @@
 
+
+
 import { useMemo } from 'react';
 import { GlobalHistoryRow, PortfolioType, OMFDataRow, DividendDataRow, PPKDataRow, CryptoDataRow, IKEDataRow, CashDataRow } from '../types';
 import { parseCSV } from '../utils/parser';
@@ -19,6 +21,19 @@ interface UseGlobalHistoryProps {
   excludePPK: boolean;
 }
 
+/**
+ * useGlobalHistory Hook
+ * =====================
+ * This hook builds the master timeline of the portfolio.
+ * It merges historical CSV data (PPK, IKE, Crypto, Cash) with the current live state.
+ * 
+ * Key Responsibilities:
+ * 1. Data Merging: Aligning all sources to a common date axis.
+ * 2. Snowball Logic: Correctly calculating "Net Invested Capital" by subtracting 
+ *    closed profits and reinvested dividends from the gross purchase cost.
+ * 3. TWR (Time-Weighted Return): Calculating geometric returns to neutralize the impact of deposits/withdrawals.
+ * 4. Real Value: Adjusting the nominal portfolio value using CPI inflation data (Chain-Linking).
+ */
 export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAssets, dividends, excludePPK }: UseGlobalHistoryProps) => {
   return useMemo<GlobalHistoryRow[]>(() => {
     if (portfolioType !== 'OMF') return [];
@@ -28,7 +43,7 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
     const ikeData = parseCSV(IKE_DATA, 'IKE', 'Offline').data as IKEDataRow[];
     const cashData = parseCSV(CASH_DATA, 'CASH', 'Offline').data as CashDataRow[];
 
-    // Map Lookups
+    // Map Lookups for faster access by Date
     const createMap = (arr: any[]) => new Map<string, { inv: number, profit: number }>(
         arr.map(r => [r.date, { inv: r.investment ?? (r.totalValue - r.profit), profit: r.profit }])
     );
@@ -37,7 +52,8 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
     const ikeMap = createMap(ikeData);
     const cashMap = new Map(cashData.map(r => [r.date, r.value]));
 
-    // Live Totals & Snowball Effect
+    // --- LIVE TOTALS & SNOWBALL LOGIC ---
+    // Calculate the current state from OMF snapshots.
     const closedProfits = { IKE: 0, CRYPTO: 0 };
     omfClosedAssets.forEach(a => {
         if (a.portfolio.toUpperCase().includes('IKE')) closedProfits.IKE += a.profit;
@@ -56,7 +72,9 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
         target.val += a.currentValue;
     });
 
-    // Snowball Adjustments
+    // Snowball Adjustments:
+    // Net Invested = Gross Purchase Value (Current Open) - Realized Profits (Closed) - Reinvested Dividends.
+    // This ensures that reinvesting profits isn't counted as "new money" from the user's pocket.
     const totalActiveDividendsIKE = dividends
         .filter(d => d.portfolio === 'IKE' && d.isCounted)
         .reduce((acc, row) => acc + row.value, 0);
@@ -64,11 +82,11 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
     const liveNetInvIKE = liveTotals.IKE.inv - closedProfits.IKE - totalActiveDividendsIKE;
     const liveNetInvCrypto = liveTotals.CRYPTO.inv - closedProfits.CRYPTO;
 
-    // Dates Union
+    // Dates Union & Sorting
     const allDates = new Set([...ppkMap.keys(), ...cryptoMap.keys(), ...ikeMap.keys(), ...cashMap.keys()]);
     const sortedDates = Array.from(allDates).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
 
-    // Update Last Point with Live Data
+    // Update Last Point with Live Data (Live prices usually newer than CSV history)
     if (sortedDates.length > 0) {
         const lastDate = sortedDates[sortedDates.length - 1];
         
@@ -98,12 +116,14 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
     let twrProduct = 1, prevTwrVal = 0, prevTwrInv = 0;
     
     // --- REAL VALUE CALCULATION (CPI - Chain Linked) ---
+    // Formula: RealValue_t = (RealValue_{t-1} + NominalChange) / (1 + InflationRate)
     let currentRealValue = 0;
     let lastTotalValueForReal = 0;
     const startSP500 = sortedDates[0] ? (SP500_DATA[sortedDates[0]] || Object.values(SP500_DATA)[0]) : 0;
     const startWIG20 = sortedDates[0] ? (WIG20_DATA[sortedDates[0]] || Object.values(WIG20_DATA)[0]) : 0;
 
     return sortedDates.map((date, index) => {
+        // Carry forward last known values if data missing for a month
         if (ppkMap.has(date)) lastPPK = ppkMap.get(date)!;
         if (cryptoMap.has(date)) lastCrypto = cryptoMap.get(date)!;
         if (ikeMap.has(date)) lastIKE = ikeMap.get(date)!;
@@ -120,18 +140,19 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
              cashVal = cashMap.get(date) || 0;
         }
         const cashInv = cashVal;
-        const cashProfit = 0;
+        const cashProfit = 0; // Cash generates no profit in this model
 
         const totalInvestment = currentPPKInv + lastCrypto.inv + lastIKE.inv + cashInv;
         const totalProfit = currentPPKProfit + lastCrypto.profit + lastIKE.profit + cashProfit;
         const totalValue = totalInvestment + totalProfit;
 
-        // NoPPK specific calculation
+        // NoPPK specific calculation (Used for Heatmap/Active Management Analysis)
         const invNoPPK = lastCrypto.inv + lastIKE.inv + cashInv;
         const profitNoPPK = lastCrypto.profit + lastIKE.profit + cashProfit;
         const valNoPPK = invNoPPK + profitNoPPK;
 
-        // TWR Calculation
+        // --- TWR Calculation (Active Management Only - IKE + Crypto) ---
+        // TWR removes the effect of cash inflows/outflows to show pure investment skill.
         const currCrypto = cryptoMap.get(date) || lastCrypto;
         const currIKE = ikeMap.get(date) || lastIKE;
         const currTwrInv = currCrypto.inv + currIKE.inv;
@@ -139,12 +160,12 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
         const currTwrVal = currTwrInv + currTwrProfit;
 
         if (index > 0) {
-            const flow = currTwrInv - prevTwrInv;
-            const denom = prevTwrVal + flow;
+            const flow = currTwrInv - prevTwrInv; // Net Deposit/Withdrawal
+            const denom = prevTwrVal + flow;      // Denominator: Start Value + Flows
             if (denom !== 0) {
-                const gain = currTwrVal - prevTwrVal - flow;
+                const gain = currTwrVal - prevTwrVal - flow; // Pure Investment Gain
                 const r = gain / denom;
-                twrProduct *= (1 + r);
+                twrProduct *= (1 + r); // Chain link: (1+r1)*(1+r2)...
             }
         } else if (currTwrInv > 0) {
             const r = currTwrProfit / currTwrInv;
@@ -159,11 +180,12 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
             currentRealValue = totalValue;
         } else {
             const nominalChange = totalValue - lastTotalValueForReal;
+            // Adjust current month's ending value by inflation factor
             currentRealValue = (currentRealValue + nominalChange) / (1 + inflationRate);
         }
         lastTotalValueForReal = totalValue;
 
-        // Benchmarks
+        // Benchmarks (Relative Performance)
         const [y, m, d] = date.split('-');
         let nY = parseInt(y), nM = parseInt(m) + 1;
         if (nM > 12) { nM = 1; nY++; }
