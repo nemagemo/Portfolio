@@ -634,9 +634,9 @@ export const BubbleRiskChart: React.FC<BubbleRiskChartProps> = ({ data, themeMod
   if (chartData.length === 0) return <div className="flex items-center justify-center h-full text-slate-400 text-sm">Brak danych</div>;
 
   return (
-    <div className="h-80 w-full">
+    <div className="h-[400px] w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+        <ScatterChart margin={{ top: 40, right: 20, bottom: 20, left: 20 }}>
           <CartesianGrid strokeDasharray="3 3" stroke={t.grid} strokeWidth={1} />
           <XAxis 
             type="number" 
