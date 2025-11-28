@@ -1,17 +1,17 @@
 
 import React, { useMemo, useState } from 'react';
-import { Wallet, TrendingUp, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Wallet, TrendingUp } from 'lucide-react';
 import { SummaryStats, PortfolioType, AnyDataRow, DividendDataRow } from '../../types';
 import { Theme, themeStyles } from '../../theme/styles';
 import { ValueCompositionChart, ROIChart, PPKLeverageChart, CryptoValueChart, DividendChart } from '../Charts';
 import { TaxToggleIcon, IconEmployer, IconState, IconExit, IconHourglass, IconTaxShield, IconDividends, IconTrophy } from '../Icons';
-import { parseCSV } from '../../utils/parser';
-import { DIVIDENDS_DATA } from '../../CSV/Dividends';
+import { useDividendGrouping } from '../../hooks/useChartTransformations';
 
 interface StandardDashboardProps {
   portfolioType: PortfolioType;
   stats: SummaryStats | null;
   data: AnyDataRow[];
+  dividends: DividendDataRow[];
   theme: Theme;
   showPPKProjection?: boolean;
   setShowPPKProjection?: (v: boolean) => void;
@@ -23,7 +23,7 @@ interface StandardDashboardProps {
 }
 
 export const StandardDashboard: React.FC<StandardDashboardProps> = ({
-  portfolioType, stats, data, theme,
+  portfolioType, stats, data, dividends, theme,
   showPPKProjection, setShowPPKProjection,
   showTaxComparison, setShowTaxComparison,
   ppkRateDisplay, ppkChartDataWithProjection,
@@ -43,38 +43,11 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
     return Math.max(0, months);
   }, [portfolioType]);
 
-  // Calculate Dividend Data if IKE
-  const dividendChartData = useMemo(() => {
-    if (portfolioType !== 'IKE') return [];
-    
-    const divRes = parseCSV(DIVIDENDS_DATA, 'DIVIDENDS', 'Offline');
-    const dividends = divRes.data as DividendDataRow[];
-    
-    const ikeDividends = dividends.filter(d => d.portfolio === 'IKE');
-    const grouped: Record<string, number> = {};
-
-    ikeDividends.forEach(d => {
-       let key = '';
-       if (dividendViewMode === 'Yearly') {
-          key = d.dateObj.getFullYear().toString();
-       } else {
-          const q = Math.floor(d.dateObj.getMonth() / 3) + 1;
-          const y = d.dateObj.getFullYear().toString().slice(-2);
-          key = `Q${q} '${y}`;
-       }
-       grouped[key] = (grouped[key] || 0) + d.value;
-    });
-
-    return Object.entries(grouped)
-        .map(([label, value]) => ({ label, value }))
-        .sort((a, b) => {
-            if (dividendViewMode === 'Yearly') return a.label.localeCompare(b.label);
-            const yearA = parseInt(a.label.split("'")[1]);
-            const yearB = parseInt(b.label.split("'")[1]);
-            if (yearA !== yearB) return yearA - yearB;
-            return a.label.localeCompare(b.label);
-        });
-  }, [portfolioType, dividendViewMode]);
+  // Use the hook to transform dividend data based on view mode
+  const dividendChartData = useDividendGrouping(
+      portfolioType === 'IKE' ? dividends : [], 
+      dividendViewMode
+  );
 
   const totalDividends = useMemo(() => {
       return dividendChartData.reduce((acc, curr) => acc + curr.value, 0);
@@ -82,7 +55,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
 
   if (!stats) return null;
 
-  // Unify Investment Value (PPK uses totalEmployee, others use totalInvestment)
+  // Unify Investment Value
   const investedValue = stats.totalInvestment ?? stats.totalEmployee ?? 0;
   const profitValue = stats.totalProfit || 0;
   const totalValue = stats.totalValue || 0;

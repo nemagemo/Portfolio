@@ -27,31 +27,23 @@ interface OMFDashboardProps {
   chartDataWithProjection: GlobalHistoryRow[];
   omfStructureData: any[];
   heatmapHistoryData: any[];
+  investmentDurationMonths: number;
 }
 
 export const OMFDashboard: React.FC<OMFDashboardProps> = ({
   stats, theme, activeAssets, closedAssets, globalHistory, dailyChangeData,
   excludePPK, setExcludePPK, showCPI, setShowCPI, showProjection, setShowProjection,
   projectionMethod, setProjectionMethod, rateDisplay, chartDataWithProjection,
-  omfStructureData, heatmapHistoryData
+  omfStructureData, heatmapHistoryData, investmentDurationMonths
 }) => {
   const styles = themeStyles[theme];
   const [isActivePositionsExpanded, setIsActivePositionsExpanded] = useState(false);
   const [isClosedHistoryExpanded, setIsClosedHistoryExpanded] = useState(false);
   const [bubbleChartFilter, setBubbleChartFilter] = useState<'ALL' | 'KRYPTO' | 'IKE'>('ALL');
 
-  const investmentDuration = useMemo(() => {
-    if (globalHistory.length === 0) return { months: 0 };
-    const start = globalHistory[0].date;
-    const end = globalHistory[globalHistory.length - 1].date;
-    const d1 = new Date(start);
-    const d2 = new Date(end);
-    let months = (d2.getFullYear() - d1.getFullYear()) * 12;
-    months -= d1.getMonth();
-    months += d2.getMonth();
-    return { months: Math.max(0, months) };
-  }, [globalHistory]);
-
+  // Filter Bubble Chart Data based on user selection
+  // Note: basic aggregation logic is handled in `useChartTransformations` (dailyChangeData),
+  // but detailed view/filtering happens here for UI interaction.
   const filteredBubbleData = useMemo(() => {
     // 1. Initial filter based on tabs
     let baseData = activeAssets;
@@ -70,8 +62,6 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
     const others: OMFDataRow[] = [];
 
     baseData.forEach(asset => {
-        // Condition: Portfolio Krypto AND Value < 1000 PLN
-        // Note: We check if portfolio includes 'Krypto' to handle case sensitivity/variations
         if (asset.portfolio.toUpperCase().includes('KRYPTO') && asset.currentValue < 1000) {
             smallCrypto.push(asset);
         } else {
@@ -91,21 +81,16 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
             totalPurchase += a.purchaseValue;
             if (a.isLivePrice) hasLivePrice = true;
 
-            // 24h Change Calculation for Aggregation
-            // PrevValue = CurrentValue / (1 + change%)
             const change = a.change24h || 0;
-            // Protect against division by zero if change is -100% (unlikely but safe)
             const divisor = 1 + (change / 100);
             const prev = divisor !== 0 ? a.currentValue / divisor : 0;
             totalPrev24h += prev;
         });
 
-        // Calculate aggregated metrics
         const aggProfit = totalCurrent - totalPurchase;
         const aggRoi = totalPurchase > 0 ? (aggProfit / totalPurchase) * 100 : 0;
         const aggChange24h = totalPrev24h > 0 ? ((totalCurrent - totalPrev24h) / totalPrev24h) * 100 : 0;
 
-        // Create Synthetic Node "Reszta Krypto"
         const syntheticNode: OMFDataRow = {
             symbol: 'Reszta Krypto',
             portfolio: 'Krypto',
@@ -120,7 +105,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
             profit: aggProfit,
             roi: aggRoi,
             change24h: aggChange24h,
-            isLivePrice: hasLivePrice // If at least one sub-asset is live, show as live.
+            isLivePrice: hasLivePrice
         };
 
         others.push(syntheticNode);
@@ -229,7 +214,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
                   <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-blue-400' : 'text-slate-400'}`}>Czas</div>
                   <IconHourglass className={`w-4 h-4 ${isNeon ? 'text-blue-500/80' : 'text-blue-400/60'}`} />
                 </div>
-                <div className={`text-lg sm:text-xl font-bold ${isNeon ? 'text-blue-300' : 'text-slate-700'}`}>{investmentDuration.months} <span className="text-[10px] font-normal">msc</span></div>
+                <div className={`text-lg sm:text-xl font-bold ${isNeon ? 'text-blue-300' : 'text-slate-700'}`}>{investmentDurationMonths} <span className="text-[10px] font-normal">msc</span></div>
                 <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-blue-500/60' : 'text-slate-400'}`}>od startu</div>
              </div>
 
