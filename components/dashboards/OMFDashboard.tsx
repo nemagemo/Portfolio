@@ -59,7 +59,13 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
         baseData = activeAssets.filter(a => a.portfolio.toUpperCase().includes(bubbleChartFilter));
     }
 
-    // 2. Identify Small Crypto and Others
+    // SPECIAL RULE: If user specifically filters for KRYPTO, do NOT aggregate small assets.
+    // Show them individually for detailed inspection.
+    if (bubbleChartFilter === 'KRYPTO') {
+        return baseData;
+    }
+
+    // 2. Identify Small Crypto and Others (Aggregation Logic for ALL view)
     const smallCrypto: OMFDataRow[] = [];
     const others: OMFDataRow[] = [];
 
@@ -114,8 +120,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
             profit: aggProfit,
             roi: aggRoi,
             change24h: aggChange24h,
-            isLivePrice: hasLivePrice // If at least one sub-asset is live, show as live (or logic: all must be live?)
-                                      // Better: if at least one is live, we have *some* live movement.
+            isLivePrice: hasLivePrice // If at least one sub-asset is live, show as live.
         };
 
         others.push(syntheticNode);

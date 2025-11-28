@@ -3,7 +3,7 @@ import React, { useMemo, useState } from 'react';
 import { Wallet, TrendingUp, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { SummaryStats, PortfolioType, AnyDataRow, DividendDataRow } from '../../types';
 import { Theme, themeStyles } from '../../theme/styles';
-import { ValueCompositionChart, ROIChart, CapitalStructureHistoryChart, CryptoValueChart, DividendChart } from '../Charts';
+import { ValueCompositionChart, ROIChart, PPKLeverageChart, CryptoValueChart, DividendChart } from '../Charts';
 import { TaxToggleIcon, IconEmployer, IconState, IconExit, IconHourglass, IconTaxShield, IconDividends, IconTrophy } from '../Icons';
 import { parseCSV } from '../../utils/parser';
 import { DIVIDENDS_DATA } from '../../CSV/Dividends';
@@ -256,8 +256,8 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
             </div>
 
             <div className={`${styles.cardContainer} p-6 lg:col-span-2`}>
-              <h3 className={`text-lg font-bold ${styles.text} mb-6`}>Struktura Kapitału w czasie</h3>
-              <CapitalStructureHistoryChart data={data} themeMode={theme} />
+              <h3 className={`text-lg font-bold ${styles.text} mb-6`}>Ja vs Reszta</h3>
+              <PPKLeverageChart data={data} themeMode={theme} />
             </div>
           </div>
         ) : (

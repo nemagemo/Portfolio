@@ -1359,11 +1359,15 @@ export const PortfolioAllocationHistoryChart: React.FC<ChartProps> = ({ data, th
 
   const chartData = data.map(row => {
     const r = row as any;
+    // Handle specific artifact where 0 value in stacked area can sometimes show stroke
+    const ikeVal = (r.ikeShare || 0) * 100;
+    
     return {
       date: r.date,
       ppk: (r.ppkShare || 0) * 100,
       crypto: (r.cryptoShare || 0) * 100,
-      ike: (r.ikeShare || 0) * 100,
+      // FIX: Use undefined to prevent visible stroke line when value is 0.
+      ike: ikeVal > 0 ? ikeVal : undefined,
     };
   });
 
@@ -1400,18 +1404,18 @@ export const PortfolioAllocationHistoryChart: React.FC<ChartProps> = ({ data, th
   );
 };
 
-export const CapitalStructureHistoryChart: React.FC<ChartProps> = ({ data, themeMode = 'light' }) => {
+export const PPKLeverageChart: React.FC<ChartProps> = ({ data, themeMode = 'light' }) => {
   if (data.length === 0 || !('employeeContribution' in data[0])) return null;
   const t = CHART_THEMES[themeMode || 'light'];
 
   const chartData = data.map(row => {
     const r = row as PPKDataRow;
+    const own = r.employeeContribution;
+    const free = r.totalValue - r.employeeContribution; // Employer + State + Profit
     return {
       date: r.date,
-      employee: r.employeeContribution,
-      employer: r.employerContribution,
-      state: r.stateContribution,
-      profit: r.fundProfit, 
+      own,
+      free,
       total: r.totalValue
     };
   });
@@ -1419,7 +1423,7 @@ export const CapitalStructureHistoryChart: React.FC<ChartProps> = ({ data, theme
   return (
     <div className="h-80 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={chartData} stackOffset="expand">
+        <BarChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} strokeWidth={1} />
           <XAxis 
             dataKey="date" 
@@ -1427,40 +1431,127 @@ export const CapitalStructureHistoryChart: React.FC<ChartProps> = ({ data, theme
             stroke={t.axis} 
             fontSize={12}
             tickMargin={10}
+            minTickGap={15}
             padding={{ left: 10, right: 30 }}
           />
           <YAxis 
+            tickFormatter={(val) => `${(val/1000).toFixed(0)}k`} 
             stroke={t.axis} 
-            fontSize={12} 
-            tickFormatter={(val) => `${(val * 100).toFixed(0)}%`}
+            fontSize={12}
           />
           <Tooltip 
             formatter={(value: number, name: string, item: any) => {
                const payload = item.payload;
-               const total = payload.employee + payload.employer + payload.state + payload.profit;
-               const percent = total !== 0 ? (value / total) * 100 : 0;
-               
-               const nameMap: Record<string, string> = {
-                 employee: 'Wkład Własny',
-                 employer: 'Pracodawca',
-                 state: 'Państwo',
-                 profit: 'Zysk Funduszu' 
+               const percent = payload.total > 0 ? (value / payload.total) * 100 : 0;
+               const labels: Record<string, string> = {
+                 own: 'Mój Wkład',
+                 free: 'Darmowe Środki (Pracodawca+Państwo+Zysk)'
                };
-
-               return [
-                 `${percent.toFixed(1)}% (${value.toLocaleString('pl-PL')} zł)`, 
-                 nameMap[name] || name
-               ];
+               return [`${value.toLocaleString('pl-PL')} zł (${percent.toFixed(1)}%)`, labels[name] || name];
             }}
             labelFormatter={formatDate}
             contentStyle={getTooltipStyle(themeMode as ThemeMode)}
           />
           <Legend verticalAlign="top" height={36} />
-          <Area type={t.lineType || "monotone"} dataKey="employee" name="Wkład Własny" stackId="1" stroke={t.investment} fill={t.investment} fillOpacity={0.9} strokeWidth={t.strokeWidth} style={{ color: t.investment }} />
-          <Area type={t.lineType || "monotone"} dataKey="employer" name="Pracodawca" stackId="1" stroke={t.employer} fill={t.employer} fillOpacity={0.9} strokeWidth={t.strokeWidth} style={{ color: t.employer }} />
-          <Area type={t.lineType || "monotone"} dataKey="state" name="Państwo" stackId="1" stroke={t.state} fill={t.state} fillOpacity={0.9} strokeWidth={t.strokeWidth} style={{ color: t.state }} />
-          <Area type={t.lineType || "monotone"} dataKey="profit" name="Zysk Funduszu" stackId="1" stroke={t.profit} fill={t.profit} fillOpacity={0.9} strokeWidth={t.strokeWidth} style={{ color: t.profit }} />
-        </AreaChart>
+          <Bar dataKey="own" name="Mój Wkład" stackId="a" fill={t.investment} radius={[0, 0, 4, 4]} />
+          <Bar dataKey="free" name="Darmowe Środki" stackId="a" fill={t.profit} radius={[4, 4, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+export const PPKAnnualFlowChart: React.FC<ChartProps> = ({ data, themeMode = 'light' }) => {
+  if (data.length < 2 || !('employeeContribution' in data[0])) return null;
+  const t = CHART_THEMES[themeMode || 'light'];
+
+  const annualData = useMemo(() => {
+      const yearsMap = new Map<number, { 
+          lastDate: string, 
+          emp: number, 
+          boss: number, 
+          state: number, 
+          total: number 
+      }>();
+
+      // Find the last record for each year
+      data.forEach(row => {
+          const r = row as PPKDataRow;
+          const y = r.dateObj.getFullYear();
+          const current = yearsMap.get(y);
+          // Assuming data is chronological, overwrite to get the latest
+          yearsMap.set(y, {
+              lastDate: r.date,
+              emp: r.employeeContribution,
+              boss: r.employerContribution,
+              state: r.stateContribution || 0,
+              total: r.totalValue
+          });
+      });
+
+      const years = Array.from(yearsMap.keys()).sort((a, b) => a - b);
+      const chartData = [];
+
+      for (let i = 0; i < years.length; i++) {
+          const year = years[i];
+          const curr = yearsMap.get(year)!;
+          let prev = { emp: 0, boss: 0, state: 0, total: 0 };
+          
+          // Get end of previous year values if available
+          if (i > 0) {
+              prev = yearsMap.get(years[i-1])!;
+          } else {
+              // For the very first year in dataset, we might want to subtract the *very first* record 
+              // to show flow within that year, OR just show total accumulated up to that point.
+              // Here, for simplicity, the first bar shows total accumulated value up to end of that year.
+          }
+
+          const flowEmp = curr.emp - prev.emp;
+          const flowBoss = curr.boss - prev.boss;
+          const flowState = curr.state - prev.state;
+          const totalChange = curr.total - prev.total;
+          
+          // Profit flow is the remainder of total change after contributions
+          const flowProfit = totalChange - (flowEmp + flowBoss + flowState);
+
+          chartData.push({
+              year: year.toString(),
+              emp: flowEmp,
+              boss: flowBoss,
+              state: flowState,
+              profit: flowProfit
+          });
+      }
+      return chartData;
+  }, [data]);
+
+  return (
+    <div className="h-80 w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={annualData}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} strokeWidth={1} />
+          <XAxis dataKey="year" stroke={t.axis} fontSize={12} tickMargin={10} />
+          <YAxis stroke={t.axis} fontSize={12} tickFormatter={(val) => `${(val/1000).toFixed(0)}k`} />
+          <Tooltip 
+            formatter={(value: number, name: string) => {
+               const labels: Record<string, string> = {
+                 emp: 'Wpłaty Własne',
+                 boss: 'Wpłaty Pracodawcy',
+                 state: 'Dopłaty Państwa',
+                 profit: 'Wynik Inwestycyjny'
+               };
+               return [`${value.toLocaleString('pl-PL', {maximumFractionDigits: 0})} zł`, labels[name] || name];
+            }}
+            contentStyle={getTooltipStyle(themeMode as ThemeMode)}
+            cursor={{fill: 'transparent'}}
+          />
+          <Legend verticalAlign="top" height={36} />
+          <ReferenceLine y={0} stroke={t.axis} strokeWidth={1} />
+          <Bar dataKey="emp" name="Wpłaty Własne" stackId="a" fill={t.investment} />
+          <Bar dataKey="boss" name="Wpłaty Pracodawcy" stackId="a" fill={t.employer} />
+          <Bar dataKey="state" name="Dopłaty Państwa" stackId="a" fill={t.state} />
+          <Bar dataKey="profit" name="Wynik Inwestycyjny" stackId="a" fill={t.barProfitPos} />
+        </BarChart>
       </ResponsiveContainer>
     </div>
   );
