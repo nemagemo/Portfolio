@@ -176,11 +176,11 @@ export const BubbleRiskChart: React.FC<BubbleRiskChartProps> = ({ data, themeMod
           <XAxis 
             type="number" 
             dataKey="x" 
-            name="Zmiana 24h" 
+            name="Intraday" 
             unit="%" 
             stroke={t.axis} 
             fontSize={12}
-            label={{ value: 'Zmiana 24h (%)', position: 'insideBottom', offset: -10, fill: t.axis, fontSize: 10 }}
+            label={{ value: 'Intraday (%)', position: 'insideBottom', offset: -10, fill: t.axis, fontSize: 10 }}
           />
           <YAxis 
             type="number" 
@@ -203,7 +203,7 @@ export const BubbleRiskChart: React.FC<BubbleRiskChartProps> = ({ data, themeMod
                     <p>Wartość: {formatCurrency(d.z)}</p>
                     {d.isLive ? (
                         <p className={d.x >= 0 ? 'text-emerald-500' : 'text-rose-500'}>
-                          24h: {d.x > 0 ? '+' : ''}{d.x.toFixed(2)}%
+                          Intraday: {d.x > 0 ? '+' : ''}{d.x.toFixed(2)}%
                         </p>
                     ) : (
                         <p className='text-amber-500 font-bold'>Cena Offline / Brak danych</p>

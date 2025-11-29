@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { OMFDataRow } from '../../types';
-import { Filter, AlertCircle } from 'lucide-react';
+import { Filter, AlertCircle, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 
 interface AssetsTableProps {
   data: OMFDataRow[];
@@ -10,8 +10,17 @@ interface AssetsTableProps {
   themeMode?: 'light' | 'comic' | 'neon';
 }
 
+type SortKey = keyof OMFDataRow | 'change24h';
+type SortDirection = 'asc' | 'desc';
+
+interface SortConfig {
+  key: SortKey;
+  direction: SortDirection;
+}
+
 export const AssetsTable: React.FC<AssetsTableProps> = ({ data, variant = 'active', title, themeMode = 'light' }) => {
   const [selectedPortfolio, setSelectedPortfolio] = useState<string>('ALL');
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'lastPurchaseDate', direction: 'desc' });
   
   // Extract unique portfolios for filter dropdown
   const availablePortfolios = useMemo(() => {
@@ -29,17 +38,49 @@ export const AssetsTable: React.FC<AssetsTableProps> = ({ data, variant = 'activ
      return data;
   }, [data, selectedPortfolio]);
 
-  // Sort by Last Purchase Date Descending
+  // Sort Logic
   const displayData = useMemo(() => {
-    return [...filteredData].sort((a, b) => {
-      const dateA = a.lastPurchaseDate || '';
-      const dateB = b.lastPurchaseDate || '';
-      if (!dateA && !dateB) return 0;
-      if (!dateA) return 1;
-      if (!dateB) return -1;
-      return dateB.localeCompare(dateA);
+    const sorted = [...filteredData];
+    
+    sorted.sort((a, b) => {
+      const aValue = a[sortConfig.key];
+      const bValue = b[sortConfig.key];
+
+      // Handle specific column logic
+      if (sortConfig.key === 'investmentPeriod') {
+         const aNum = parseInt(String(aValue || '0'), 10);
+         const bNum = parseInt(String(bValue || '0'), 10);
+         return sortConfig.direction === 'asc' ? aNum - bNum : bNum - aNum;
+      }
+
+      // Handle numeric comparisons (with null safety)
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
+      }
+
+      // Handle string comparisons
+      const aStr = String(aValue || '').toLowerCase();
+      const bStr = String(bValue || '').toLowerCase();
+
+      if (aStr < bStr) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aStr > bStr) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
     });
-  }, [filteredData]);
+
+    return sorted;
+  }, [filteredData, sortConfig]);
+
+  const requestSort = (key: SortKey) => {
+    let direction: SortDirection = 'desc'; // Default to desc for most financial stats
+    
+    // If sorting by symbol, default to asc
+    if (key === 'symbol') direction = 'asc';
+
+    if (sortConfig.key === key) {
+      direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
+    }
+    setSortConfig({ key, direction });
+  };
 
   // Styles
   const isNeon = themeMode === 'neon';
@@ -76,6 +117,28 @@ export const AssetsTable: React.FC<AssetsTableProps> = ({ data, variant = 'activ
         return `px-2 py-1 rounded-none border ${color} bg-black/50 text-xs font-mono shadow-[0_0_5px_rgba(0,0,0,0.5)]`;
     }
     return `px-2 py-1 rounded-full text-xs font-semibold ${val >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`;
+  };
+
+  // Helper to render sortable table header
+  const SortableHeader = ({ label, sortKey, align = 'left' }: { label: string, sortKey: SortKey, align?: 'left' | 'right' | 'center' }) => {
+    const isActive = sortConfig.key === sortKey;
+    return (
+      <th 
+        className={`px-4 py-3 font-semibold cursor-pointer group select-none text-${align} transition-colors ${isActive ? (isNeon ? 'text-cyan-200' : 'text-slate-900') : 'hover:text-slate-500'}`}
+        onClick={() => requestSort(sortKey)}
+      >
+        <div className={`flex items-center ${align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : 'justify-start'}`}>
+          {label}
+          <span className="ml-1 inline-block w-4">
+            {isActive ? (
+              sortConfig.direction === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />
+            ) : (
+              <ArrowUpDown size={12} className="opacity-0 group-hover:opacity-30 transition-opacity" />
+            )}
+          </span>
+        </div>
+      </th>
+    );
   };
 
   return (
@@ -127,22 +190,27 @@ export const AssetsTable: React.FC<AssetsTableProps> = ({ data, variant = 'activ
         <table className={`min-w-full text-sm text-left ${isNeon ? 'text-cyan-300 font-mono' : 'text-slate-600'}`}>
           <thead className={getHeaderClass()}>
             <tr>
-              <th className="px-4 py-3 font-semibold">Symbol</th>
-              <th className="px-4 py-3 font-semibold">
-                 {variant === 'closed' ? 'Data Sprzedaży' : 'Ostatni Zakup'}
-              </th>
-              <th className="px-4 py-3 font-semibold text-center">Okres (dni)</th>
+              <SortableHeader label="Symbol" sortKey="symbol" />
+              <SortableHeader label={variant === 'closed' ? 'Data Sprzedaży' : 'Ostatni Zakup'} sortKey="lastPurchaseDate" />
+              <SortableHeader label="Okres (dni)" sortKey="investmentPeriod" align="center" />
+              
               {variant !== 'closed' && (
-                <th className="px-4 py-3 font-semibold text-right">Ilość</th>
+                <SortableHeader label="Ilość" sortKey="quantity" align="right" />
               )}
-              <th className="px-4 py-3 font-semibold text-right">Wartość Zakupu</th>
-              <th className="px-4 py-3 font-semibold text-right">
-                 {variant === 'closed' ? 'Wartość Sprzedaży' : 'Obecna Wartość'}
-              </th>
-              <th className="px-4 py-3 font-semibold text-right">Wynik</th>
-              <th className="px-4 py-3 font-semibold text-right">ROI</th>
+              
+              <SortableHeader label="Wartość Zakupu" sortKey="purchaseValue" align="right" />
+              
+              <SortableHeader 
+                label={variant === 'closed' ? 'Wartość Sprzedaży' : 'Obecna Wartość'} 
+                sortKey="currentValue" 
+                align="right" 
+              />
+              
+              <SortableHeader label="Wynik" sortKey="profit" align="right" />
+              <SortableHeader label="ROI" sortKey="roi" align="right" />
+              
               {variant !== 'closed' && (
-                <th className="px-4 py-3 font-semibold text-right">24h</th>
+                <SortableHeader label="24h" sortKey="change24h" align="right" />
               )}
             </tr>
           </thead>

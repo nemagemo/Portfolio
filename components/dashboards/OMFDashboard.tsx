@@ -285,11 +285,11 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
         <OMFTreemapChart data={omfStructureData} themeMode={theme} />
       </div>
 
-      {/* Bubble Risk Map (Zmiana 24h) */}
+      {/* Bubble Risk Map (Intraday) */}
       <div className={`${styles.cardContainer} p-6`}>
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className={`text-lg font-bold ${styles.text}`}>Zmiana dzienna</h3>
+            <h3 className={`text-lg font-bold ${styles.text}`}>Intraday</h3>
             <p className={`text-[10px] sm:text-xs mt-1 ${isNeon ? 'text-slate-500' : 'text-slate-400'}`}>
               Gdy zmiana wynosi 0 lub jest bardzo duża, może to wskazywać na błąd synchronizacji danych. <br/>
               Elementy oznaczone na żółto nie mają aktualnej ceny (Offline).
