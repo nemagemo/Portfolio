@@ -122,7 +122,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
     <div className="space-y-8">
       
       {/* PORTFOLIO HEADER (Compact Style) */}
-      <div className={`w-full p-4 ${styles.cardContainer} relative overflow-hidden`}>
+      <div className={`w-full p-3 sm:p-4 ${styles.cardContainer} relative overflow-hidden`}>
         {/* Decorative Background Elements for Neon */}
         {isNeon && (
           <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
@@ -240,7 +240,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
       </div>
 
       {/* Main Chart */}
-      <div className={`${styles.cardContainer} p-6`}>
+      <div className={`${styles.cardContainer} p-3 sm:p-6`}>
         <div className="flex flex-col md:flex-row items-center justify-between mb-6 space-y-4 md:space-y-0">
           <div>
             <h3 className={`text-lg font-bold ${styles.text}`}>Historia Old Man Fund</h3>
@@ -268,7 +268,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
       </div>
 
       {/* Performance Chart */}
-      <div className={`${styles.cardContainer} p-6`}>
+      <div className={`${styles.cardContainer} p-3 sm:p-6`}>
         <div className="flex items-center justify-between mb-6">
           <div><h3 className={`text-lg font-bold ${styles.text}`}>Efektywność Old Man Fund</h3><p className={`text-sm ${styles.textSub}`}>ROI oraz TWR w czasie</p></div>
           <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><TrendingUp className={isNeon ? 'text-purple-400' : 'text-purple-600'} size={20} /></div>
@@ -326,7 +326,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
       </div>
 
       {/* Allocation History */}
-      <div className={`${styles.cardContainer} p-6`}>
+      <div className={`${styles.cardContainer} p-3 sm:p-6`}>
         <div className="flex items-center justify-between mb-6">
           <div><h3 className={`text-lg font-bold ${styles.text}`}>Historia Alokacji Portfela</h3><p className={`text-sm ${styles.textSub}`}>Zmiana udziału procentowego PPK, Crypto i IKE w czasie</p></div>
           <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><PieChart className={isNeon ? 'text-blue-400' : 'text-blue-600'} size={20} /></div>

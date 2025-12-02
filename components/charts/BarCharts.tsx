@@ -26,21 +26,21 @@ export const PPKLeverageChart: React.FC<ChartProps> = ({ data, themeMode = 'ligh
   return (
     <div className="h-80 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={chartData}>
+        <BarChart data={chartData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} strokeWidth={1} />
           <XAxis 
             dataKey="date" 
             tickFormatter={formatDate} 
             stroke={t.axis} 
-            fontSize={12}
+            fontSize={10}
             tickMargin={10}
             minTickGap={15}
-            padding={{ left: 10, right: 30 }}
+            padding={{ left: 10, right: 10 }}
           />
           <YAxis 
             tickFormatter={(val) => `${(val/1000).toFixed(0)}k`} 
             stroke={t.axis} 
-            fontSize={12}
+            fontSize={10}
           />
           <Tooltip 
             formatter={(value: number, name: string, item: any) => {
@@ -55,7 +55,12 @@ export const PPKLeverageChart: React.FC<ChartProps> = ({ data, themeMode = 'ligh
             labelFormatter={formatDate}
             contentStyle={getTooltipStyle(themeMode as ThemeMode)}
           />
-          <Legend verticalAlign="top" height={36} />
+          <Legend 
+            verticalAlign="top" 
+            height={36} 
+            iconSize={8}
+            wrapperStyle={{ fontSize: '10px' }}
+          />
           <Bar dataKey="own" name="Mój Wkład" stackId="a" fill={t.investment} radius={[0, 0, 4, 4]} />
           <Bar dataKey="free" name="Darmowe Środki" stackId="a" fill={t.profit} radius={[4, 4, 0, 0]} />
         </BarChart>
@@ -132,10 +137,10 @@ export const SeasonalityChart: React.FC<{ data: any[], themeMode?: ThemeMode }> 
   return (
     <div className="h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData}>
+            <BarChart data={chartData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} strokeWidth={1} />
-                <XAxis dataKey="name" stroke={t.axis} fontSize={12} tickMargin={5} />
-                <YAxis stroke={t.axis} fontSize={12} unit="%" />
+                <XAxis dataKey="name" stroke={t.axis} fontSize={10} tickMargin={5} />
+                <YAxis stroke={t.axis} fontSize={10} unit="%" />
                 <Tooltip 
                     formatter={(value: number) => [`${value.toFixed(2)}%`, 'Średnia stopa zwrotu']}
                     contentStyle={getTooltipStyle(themeMode as ThemeMode)}
@@ -168,12 +173,12 @@ export const DividendChart: React.FC<DividendChartProps> = ({ data, themeMode = 
           <XAxis 
             dataKey="label" 
             stroke={t.axis} 
-            fontSize={12} 
+            fontSize={10} 
             tickMargin={10}
           />
           <YAxis 
             stroke={t.axis} 
-            fontSize={12} 
+            fontSize={10} 
             tickFormatter={(val) => `${val} zł`}
           />
           <Bar 
@@ -188,7 +193,7 @@ export const DividendChart: React.FC<DividendChartProps> = ({ data, themeMode = 
                 dataKey="value" 
                 position="top" 
                 formatter={(val: number) => `${val.toLocaleString('pl-PL')} zł`}
-                style={{ fill: t.axis, fontSize: '12px', fontWeight: 'bold' }}
+                style={{ fill: t.axis, fontSize: '10px', fontWeight: 'bold' }}
             />
           </Bar>
         </BarChart>

@@ -35,7 +35,7 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjecti
   return (
     <div className="h-96 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={chartData as any[]}>
+        <ComposedChart data={chartData as any[]} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
           <defs>
             <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor={t.investment} stopOpacity={0.8}/>
@@ -51,14 +51,14 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjecti
             dataKey="date" 
             tickFormatter={formatDate} 
             stroke={t.axis} 
-            fontSize={12}
+            fontSize={10}
             tickMargin={10}
-            padding={{ left: 10, right: 30 }}
+            padding={{ left: 10, right: 10 }}
           />
           <YAxis 
             tickFormatter={(val) => `${(val/1000).toFixed(0)}k`} 
             stroke={t.axis} 
-            fontSize={12}
+            fontSize={10}
           />
           <Tooltip 
             formatter={(value: number, name: string) => {
@@ -79,7 +79,12 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjecti
             labelFormatter={formatDate}
             contentStyle={getTooltipStyle(themeMode as ThemeMode)}
           />
-          <Legend verticalAlign="top" height={36} />
+          <Legend 
+            verticalAlign="top" 
+            height={36} 
+            iconSize={8}
+            wrapperStyle={{ fontSize: '10px', paddingTop: '0px' }}
+          />
           
           {isPPK ? (
             <>
@@ -170,20 +175,20 @@ export const ROIChart: React.FC<ChartProps> = ({ data, showExitRoi = true, theme
   return (
     <div className="h-80 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data as any[]}>
+        <LineChart data={data as any[]} margin={{ top: 10, right: 5, left: -20, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} strokeWidth={1} />
           <XAxis 
             dataKey="date" 
             tickFormatter={formatDate} 
             stroke={t.axis} 
-            fontSize={12}
+            fontSize={10}
             tickMargin={10}
             minTickGap={15}
-            padding={{ left: 10, right: 30 }}
+            padding={{ left: 10, right: 10 }}
           />
           <YAxis 
             stroke={t.axis} 
-            fontSize={12} 
+            fontSize={10} 
             unit="%" 
           />
           <Tooltip 
@@ -194,7 +199,12 @@ export const ROIChart: React.FC<ChartProps> = ({ data, showExitRoi = true, theme
             labelFormatter={formatDate}
             contentStyle={getTooltipStyle(themeMode as ThemeMode)}
           />
-          <Legend verticalAlign="top" height={36} />
+          <Legend 
+            verticalAlign="top" 
+            height={36} 
+            iconSize={8}
+            wrapperStyle={{ fontSize: '10px' }}
+          />
           <ReferenceLine y={0} stroke={t.tax} strokeDasharray="3 3" strokeWidth={1} />
           <Line 
             type={t.lineType || "monotone"} 
@@ -233,7 +243,7 @@ export const CryptoValueChart: React.FC<ChartProps> = ({ data, showTaxComparison
   return (
     <div className="h-80 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={data as any[]}>
+        <ComposedChart data={data as any[]} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
           <defs>
             <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor={t.employer} stopOpacity={0.8}/>
@@ -249,15 +259,15 @@ export const CryptoValueChart: React.FC<ChartProps> = ({ data, showTaxComparison
             dataKey="date" 
             tickFormatter={formatDate} 
             stroke={t.axis} 
-            fontSize={12}
+            fontSize={10}
             tickMargin={10}
             minTickGap={15}
-            padding={{ left: 10, right: 30 }}
+            padding={{ left: 10, right: 10 }}
           />
           <YAxis 
             tickFormatter={(val) => `${(val/1000).toFixed(0)}k`} 
             stroke={t.axis} 
-            fontSize={12}
+            fontSize={10}
           />
           <Tooltip 
             formatter={(value: number, name: string, item: any) => {
@@ -280,7 +290,12 @@ export const CryptoValueChart: React.FC<ChartProps> = ({ data, showTaxComparison
             labelFormatter={formatDate}
             contentStyle={getTooltipStyle(themeMode as ThemeMode)}
           />
-          <Legend verticalAlign="top" height={36} />
+          <Legend 
+            verticalAlign="top" 
+            height={36} 
+            iconSize={8}
+            wrapperStyle={{ fontSize: '10px' }}
+          />
           
           <Area 
             type={t.lineType || "monotone"} 
@@ -327,7 +342,7 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection,
   return (
     <div className="h-96 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={data as any[]}>
+        <ComposedChart data={data as any[]} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
           <defs>
             <linearGradient id="colorTotalGlobal" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor={t.profit} stopOpacity={0.8}/>
@@ -343,14 +358,14 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection,
             dataKey="date" 
             tickFormatter={formatDate} 
             stroke={t.axis} 
-            fontSize={12}
+            fontSize={10}
             tickMargin={10}
-            padding={{ left: 10, right: 30 }}
+            padding={{ left: 10, right: 10 }}
           />
           <YAxis 
             tickFormatter={(val) => `${(val/1000).toFixed(0)}k`} 
             stroke={t.axis} 
-            fontSize={12}
+            fontSize={10}
           />
           <Tooltip 
             formatter={(value: number, name: string) => {
@@ -365,7 +380,12 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection,
             labelFormatter={formatDate}
             contentStyle={getTooltipStyle(themeMode as ThemeMode)}
           />
-          <Legend verticalAlign="top" height={36} />
+          <Legend 
+            verticalAlign="top" 
+            height={36} 
+            iconSize={8}
+            wrapperStyle={{ fontSize: '10px' }}
+          />
           
           {/* Total Value - Background Area (Green) */}
           <Area 
@@ -456,19 +476,19 @@ export const GlobalPerformanceChart: React.FC<ChartProps> = ({ data, themeMode =
 
       <div className="h-80 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={chartData as any[]}>
+          <ComposedChart data={chartData as any[]} margin={{ top: 10, right: 5, left: -20, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} strokeWidth={1} />
             <XAxis 
               dataKey="date" 
               tickFormatter={formatDate} 
               stroke={t.axis} 
-              fontSize={12}
+              fontSize={10}
               tickMargin={10}
-              padding={{ left: 10, right: 30 }}
+              padding={{ left: 10, right: 10 }}
             />
             <YAxis 
               stroke={t.axis} 
-              fontSize={12} 
+              fontSize={10} 
               unit="%" 
             />
             <Tooltip 
@@ -485,7 +505,12 @@ export const GlobalPerformanceChart: React.FC<ChartProps> = ({ data, themeMode =
               labelFormatter={formatDate}
               contentStyle={getTooltipStyle(themeMode as ThemeMode)}
             />
-            <Legend verticalAlign="top" height={36} />
+            <Legend 
+              verticalAlign="top" 
+              height={36} 
+              iconSize={8}
+              wrapperStyle={{ fontSize: '10px' }}
+            />
             <ReferenceLine y={0} stroke={t.axis} strokeDasharray="3 3" strokeWidth={1} />
             
             <Line 
@@ -557,19 +582,19 @@ export const PortfolioAllocationHistoryChart: React.FC<ChartProps> = ({ data, th
   return (
     <div className="h-80 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={chartData} stackOffset="expand">
+        <AreaChart data={chartData} stackOffset="expand" margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} strokeWidth={1} />
           <XAxis 
             dataKey="date" 
             tickFormatter={formatDate} 
             stroke={t.axis} 
-            fontSize={12}
+            fontSize={10}
             tickMargin={10}
-            padding={{ left: 10, right: 30 }}
+            padding={{ left: 10, right: 10 }}
           />
           <YAxis 
             stroke={t.axis} 
-            fontSize={12} 
+            fontSize={10} 
             tickFormatter={(val) => `${(val * 100).toFixed(0)}%`}
           />
           <Tooltip 
@@ -577,7 +602,12 @@ export const PortfolioAllocationHistoryChart: React.FC<ChartProps> = ({ data, th
             labelFormatter={formatDate}
             contentStyle={getTooltipStyle(themeMode as ThemeMode)}
           />
-          <Legend verticalAlign="top" height={36} />
+          <Legend 
+            verticalAlign="top" 
+            height={36} 
+            iconSize={8}
+            wrapperStyle={{ fontSize: '10px' }}
+          />
           <Area type={t.lineType || "monotone"} dataKey="ppk" name="PPK" stackId="1" stroke={t.investment} fill={t.investment} fillOpacity={0.8} strokeWidth={t.strokeWidth} style={{ color: t.investment }} />
           <Area type={t.lineType || "monotone"} dataKey="crypto" name="Krypto" stackId="1" stroke={t.employer} fill={t.employer} fillOpacity={0.8} strokeWidth={t.strokeWidth} style={{ color: t.employer }} />
           <Area type={t.lineType || "monotone"} dataKey="ike" name="IKE" stackId="1" stroke={t.state} fill={t.state} fillOpacity={0.8} strokeWidth={t.strokeWidth} style={{ color: t.state }} />
