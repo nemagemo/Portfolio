@@ -70,6 +70,19 @@ export const MobileNotice: React.FC<MobileNoticeProps> = ({ theme }) => {
           <p className={`text-xs leading-relaxed ${isNeon ? 'text-cyan-100/80' : 'text-slate-500'}`}>
             Widzisz uproszczoną wersję OMF. Pełne wersja dostępna tylko na komputerze.
           </p>
+          
+          <button 
+            onClick={handleDismiss}
+            className={`
+                mt-3 px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all w-full sm:w-auto
+                ${isNeon 
+                    ? 'bg-cyan-900/30 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-800/50' 
+                    : 'bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200'
+                }
+            `}
+          >
+            Rozumiem
+          </button>
         </div>
 
         {/* Close Button */}
@@ -82,22 +95,6 @@ export const MobileNotice: React.FC<MobileNoticeProps> = ({ theme }) => {
         >
           <X size={16} />
         </button>
-
-        {/* Action Button (Optional, purely for closing) */}
-        <div className="absolute bottom-3 right-3 sm:static sm:mt-0">
-             <button 
-                onClick={handleDismiss}
-                className={`
-                    px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all
-                    ${isNeon 
-                        ? 'bg-cyan-900/30 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-800/50' 
-                        : 'bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200'
-                    }
-                `}
-             >
-                Rozumiem
-             </button>
-        </div>
       </div>
     </div>
   );
