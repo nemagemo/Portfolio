@@ -11,6 +11,7 @@ import { StandardDashboard } from './components/dashboards/StandardDashboard';
 import { OMFDashboard } from './components/dashboards/OMFDashboard';
 import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
+import { MobileNotice } from './components/MobileNotice';
 
 export const App: React.FC = () => {
   const [portfolioType, setPortfolioType] = useState<PortfolioType>('OMF');
@@ -97,7 +98,7 @@ export const App: React.FC = () => {
         omfActiveAssets={omfActiveAssets}
       />
 
-      <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+      <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full relative">
         {!isOfflineValid && (
            <>
              {portfolioType === 'OMF' && omfReport && <OMFIntegrityStatus report={omfReport} theme={theme} />}
@@ -130,6 +131,8 @@ export const App: React.FC = () => {
       </main>
 
       <Footer theme={theme} />
+      
+      <MobileNotice theme={theme} />
     </div>
   );
 };
