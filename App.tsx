@@ -141,13 +141,13 @@ export const App: React.FC = () => {
       <header className={`${styles.headerBg} ${styles.headerBorder} sticky top-0 z-50 transition-colors duration-300`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           
-          {/* LEFT: Logo */}
-          <div className="flex items-center">
-             <HeaderLogo className={`h-8 sm:h-10 w-auto ${theme === 'neon' ? 'text-cyan-400' : 'text-slate-800'}`} />
+          {/* LEFT: Logo - Flex-1 to push center */}
+          <div className="flex-1 flex items-center justify-start">
+             <HeaderLogo className={`h-6 sm:h-8 w-auto ${theme === 'neon' ? 'text-cyan-400' : 'text-slate-800'}`} />
           </div>
 
           {/* CENTER: Navigation Tabs */}
-          <div className={`p-1 flex space-x-1 overflow-x-auto ${theme === 'neon' ? 'bg-black border border-cyan-900/50 rounded-lg' : 'bg-slate-100 rounded-lg'}`}>
+          <div className={`p-1 flex space-x-1 overflow-x-auto shrink-0 ${theme === 'neon' ? 'bg-black border border-cyan-900/50 rounded-lg' : 'bg-slate-100 rounded-lg'}`}>
             <button onClick={() => handlePortfolioChange('OMF')} className={`flex items-center justify-center px-3 sm:px-4 py-1 text-2xl font-bold leading-none transition-all whitespace-nowrap ${portfolioType === 'OMF' ? styles.buttonActive : styles.buttonInactive} rounded-md`}>
               Σ
             </button>
@@ -156,8 +156,8 @@ export const App: React.FC = () => {
             <button onClick={() => handlePortfolioChange('IKE')} className={`flex items-center px-3 sm:px-4 py-1.5 text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'IKE' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><PiggyBank size={16} className="mr-2 hidden sm:block" />IKE</button>
           </div>
 
-          {/* RIGHT: Status & Theme Toggles */}
-          <div className="flex items-center justify-end space-x-3">
+          {/* RIGHT: Status & Theme Toggles - Flex-1 to push center */}
+          <div className="flex-1 flex items-center justify-end space-x-3">
              {/* Status Indicator (Moved from Left) */}
              {isOfflineValid && (
                 <div 
