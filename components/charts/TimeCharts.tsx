@@ -446,9 +446,17 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection,
   );
 };
 
-export const GlobalPerformanceChart: React.FC<ChartProps> = ({ data, themeMode = 'light' }) => {
-  const [showSP500, setShowSP500] = useState(false);
-  const [showWIG20, setShowWIG20] = useState(false);
+interface GlobalPerformanceChartProps extends ChartProps {
+    showSP500?: boolean;
+    showWIG20?: boolean;
+}
+
+export const GlobalPerformanceChart: React.FC<GlobalPerformanceChartProps> = ({ 
+    data, 
+    themeMode = 'light',
+    showSP500 = false,
+    showWIG20 = false
+}) => {
   const t = CHART_THEMES[themeMode || 'light'];
   const config = useChartConfig();
 
@@ -456,29 +464,6 @@ export const GlobalPerformanceChart: React.FC<ChartProps> = ({ data, themeMode =
 
   return (
     <div className="w-full">
-      <div className="flex justify-end space-x-2 md:space-x-3 mb-2 px-1 md:px-2">
-        <button
-          onClick={() => setShowSP500(!showSP500)}
-          className={`px-2 py-0.5 md:px-3 md:py-1 text-[10px] md:text-xs font-medium rounded-full transition-all ${
-            showSP500 
-              ? 'bg-slate-700 text-white ring-2 ring-slate-700 ring-offset-1' 
-              : `border border-slate-300 ${themeMode === 'neon' ? 'bg-slate-700 text-slate-200' : 'bg-white text-slate-600'} hover:opacity-80`
-          }`}
-        >
-          S&P 500
-        </button>
-        <button
-          onClick={() => setShowWIG20(!showWIG20)}
-          className={`px-2 py-0.5 md:px-3 md:py-1 text-[10px] md:text-xs font-medium rounded-full transition-all ${
-            showWIG20 
-              ? 'bg-purple-800 text-white ring-2 ring-purple-800 ring-offset-1' 
-              : `border border-slate-300 ${themeMode === 'neon' ? 'bg-slate-700 text-slate-200' : 'bg-white text-slate-600'} hover:opacity-80`
-          }`}
-        >
-          WIG20
-        </button>
-      </div>
-
       <div className="h-80 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={chartData as any[]} margin={config.margin}>

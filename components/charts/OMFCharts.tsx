@@ -75,7 +75,7 @@ const TreemapContent = (props: any) => {
           textAnchor="start"
           fill={symbolColor}
           fontSize={fontSizeName}
-          fontWeight={isNeon ? "900" : "700"}
+          fontWeight={isNeon ? "700" : "700"} // Reduced to 700
           style={{ 
             textShadow: textShadow, 
             pointerEvents: 'none',
@@ -92,7 +92,7 @@ const TreemapContent = (props: any) => {
           textAnchor="end"
           fill={roiColor}
           fontSize={fontSizeRoi}
-          fontWeight={isNeon ? "900" : "500"}
+          fontWeight={isNeon ? "700" : "500"} // Reduced to 700
           style={{ 
             textShadow: textShadow, 
             pointerEvents: 'none', 

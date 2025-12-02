@@ -131,7 +131,7 @@ export const Header: React.FC<HeaderProps> = ({
                   flex items-center transition-all duration-300 overflow-hidden
                   ${statusLogic.colorClass}
                   rounded-full
-                  ${statusLogic.isPartial ? 'hover:pr-3 hover:pl-1 cursor-help group' : 'md:p-1 lg:p-2'}
+                  ${statusLogic.isPartial ? 'hover:pr-3 hover:pl-1 cursor-help group' : 'p-2 md:p-1 lg:p-2'}
                 `}
                 title={statusLogic.label}
               >
@@ -140,7 +140,8 @@ export const Header: React.FC<HeaderProps> = ({
                   disabled={isRefreshing} 
                   className={`p-0 focus:outline-none ${isRefreshing ? 'opacity-75 cursor-wait' : ''}`}
                 >
-                   <statusLogic.icon size={18} className={`${statusLogic.spin ? 'animate-spin' : ''}`} />
+                   {/* Icon Size: 20px on Mobile, 18px on Tablet/Desktop */}
+                   <statusLogic.icon size={20} className={`${statusLogic.spin ? 'animate-spin' : ''} md:w-[18px] md:h-[18px]`} />
                 </button>
                 
                 {statusLogic.isPartial && (
@@ -153,8 +154,12 @@ export const Header: React.FC<HeaderProps> = ({
 
            {/* Theme Toggles */}
            <div className="flex space-x-1">
-              <button onClick={() => setTheme('light')} className={`md:p-1 lg:p-2 rounded-md transition-all ${theme === 'light' ? 'bg-slate-200 text-slate-800' : 'text-slate-400 hover:bg-slate-100'}`}><Sun size={16} /></button>
-              <button onClick={() => setTheme('neon')} className={`md:p-1 lg:p-2 rounded-md transition-all ${theme === 'neon' ? 'bg-cyan-900/50 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.8)]' : 'text-slate-400 hover:bg-slate-100'}`}><Zap size={16} /></button>
+              <button onClick={() => setTheme('light')} className={`p-2 md:p-1 lg:p-2 rounded-md transition-all ${theme === 'light' ? 'bg-slate-200 text-slate-800' : 'text-slate-400 hover:bg-slate-100'}`}>
+                <Sun size={20} className="md:w-4 md:h-4" />
+              </button>
+              <button onClick={() => setTheme('neon')} className={`p-2 md:p-1 lg:p-2 rounded-md transition-all ${theme === 'neon' ? 'bg-cyan-900/50 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.8)]' : 'text-slate-400 hover:bg-slate-100'}`}>
+                <Zap size={20} className="md:w-4 md:h-4" />
+              </button>
            </div>
 
            {/* Mobile Menu Toggle (Right Side) */}

@@ -40,6 +40,10 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
   const [isActivePositionsExpanded, setIsActivePositionsExpanded] = useState(false);
   const [isClosedHistoryExpanded, setIsClosedHistoryExpanded] = useState(false);
   const [bubbleChartFilter, setBubbleChartFilter] = useState<'ALL' | 'KRYPTO' | 'IKE'>('ALL');
+  
+  // Local state for GlobalPerformanceChart toggles
+  const [showSP500, setShowSP500] = useState(false);
+  const [showWIG20, setShowWIG20] = useState(false);
 
   // Filter Bubble Chart Data based on user selection
   // Note: basic aggregation logic is handled in `useChartTransformations` (dailyChangeData),
@@ -271,12 +275,43 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
       <div className={`${styles.cardContainer} p-3 sm:p-6`}>
         <div className="flex items-center justify-between mb-0">
           <div><h3 className={`text-lg font-bold ${styles.text}`}>Efektywność Old Man Fund</h3><p className={`text-sm ${styles.textSub}`}>ROI oraz TWR w czasie</p></div>
-          <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><TrendingUp className={isNeon ? 'text-purple-400' : 'text-purple-600'} size={20} /></div>
+          
+          <div className="flex items-center space-x-2">
+            {/* Toggles moved here */}
+            <div className="flex space-x-1 sm:space-x-2">
+                <button
+                  onClick={() => setShowSP500(!showSP500)}
+                  className={`px-2 py-1 text-[10px] sm:text-xs font-medium rounded-full transition-all ${
+                    showSP500 
+                      ? 'bg-slate-700 text-white ring-2 ring-slate-700 ring-offset-1' 
+                      : `border border-slate-300 ${theme === 'neon' ? 'bg-slate-700 text-slate-200' : 'bg-white text-slate-600'} hover:opacity-80`
+                  }`}
+                >
+                  S&P 500
+                </button>
+                <button
+                  onClick={() => setShowWIG20(!showWIG20)}
+                  className={`px-2 py-1 text-[10px] sm:text-xs font-medium rounded-full transition-all ${
+                    showWIG20 
+                      ? 'bg-purple-800 text-white ring-2 ring-purple-800 ring-offset-1' 
+                      : `border border-slate-300 ${theme === 'neon' ? 'bg-slate-700 text-slate-200' : 'bg-white text-slate-600'} hover:opacity-80`
+                  }`}
+                >
+                  WIG20
+                </button>
+            </div>
+            
+            <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><TrendingUp className={isNeon ? 'text-purple-400' : 'text-purple-600'} size={20} /></div>
+          </div>
         </div>
         
         <div className="w-full">
-          {/* Removed duplicate buttons that were causing UI issues */}
-          <GlobalPerformanceChart data={globalHistory} themeMode={theme} />
+          <GlobalPerformanceChart 
+            data={globalHistory} 
+            themeMode={theme}
+            showSP500={showSP500}
+            showWIG20={showWIG20}
+          />
         </div>
       </div>
 
