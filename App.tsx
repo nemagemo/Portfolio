@@ -30,7 +30,7 @@ export const App: React.FC = () => {
   const styles = themeStyles[theme];
 
   // 1. Data Fetching Hooks
-  const { onlinePrices, historyPrices, pricingMode, isRefreshing, fetchPrices } = useMarketData();
+  const { onlinePrices, historyPrices, benchmarks, pricingMode, isRefreshing, fetchPrices } = useMarketData();
   
   // 2. Business Logic Hook
   const { 
@@ -45,7 +45,8 @@ export const App: React.FC = () => {
   } = usePortfolioData({ 
     portfolioType, 
     onlinePrices, 
-    historyPrices, 
+    historyPrices,
+    benchmarks,
     excludePPK 
   });
 

@@ -1,11 +1,8 @@
 
-
-
 import { useMemo } from 'react';
-import { GlobalHistoryRow, PortfolioType, OMFDataRow, DividendDataRow, PPKDataRow, CryptoDataRow, IKEDataRow, CashDataRow } from '../types';
+import { GlobalHistoryRow, PortfolioType, OMFDataRow, DividendDataRow, PPKDataRow, CryptoDataRow, IKEDataRow, CashDataRow, BenchmarkData } from '../types';
 import { parseCSV } from '../utils/parser';
 import { CPI_DATA } from '../constants/inflation';
-import { SP500_DATA, WIG20_DATA } from '../constants/benchmarks';
 
 // Data Sources
 import { PPK_DATA } from '../CSV/PPK';
@@ -19,6 +16,7 @@ interface UseGlobalHistoryProps {
   omfClosedAssets: OMFDataRow[];
   dividends: DividendDataRow[];
   excludePPK: boolean;
+  benchmarks: BenchmarkData | null;
 }
 
 /**
@@ -34,7 +32,7 @@ interface UseGlobalHistoryProps {
  * 3. TWR (Time-Weighted Return): Calculating geometric returns to neutralize the impact of deposits/withdrawals.
  * 4. Real Value: Adjusting the nominal portfolio value using CPI inflation data (Chain-Linking).
  */
-export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAssets, dividends, excludePPK }: UseGlobalHistoryProps) => {
+export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAssets, dividends, excludePPK, benchmarks }: UseGlobalHistoryProps) => {
   return useMemo<GlobalHistoryRow[]>(() => {
     if (portfolioType !== 'OMF') return [];
 
@@ -119,8 +117,42 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
     // Formula: RealValue_t = (RealValue_{t-1} + NominalChange) / (1 + InflationRate)
     let currentRealValue = 0;
     let lastTotalValueForReal = 0;
-    const startSP500 = sortedDates[0] ? (SP500_DATA[sortedDates[0]] || Object.values(SP500_DATA)[0]) : 0;
-    const startWIG20 = sortedDates[0] ? (WIG20_DATA[sortedDates[0]] || Object.values(WIG20_DATA)[0]) : 0;
+    
+    // --- BENCHMARKS ---
+    // Goal: Compare performance relative to Project Start (March/April 2023).
+    // Base Date: 2023-03-31 (End of March) represents the starting line (0%).
+    
+    const findPrice = (map: Record<string, number>, targetDateStr: string): number | undefined => {
+       // Exact match
+       if (map[targetDateStr]) return map[targetDateStr];
+       
+       // Fallback: look back up to 5 days to find a closing price (handle weekends/holidays)
+       const target = new Date(targetDateStr);
+       for (let i = 1; i <= 5; i++) {
+           const d = new Date(target);
+           d.setDate(d.getDate() - i);
+           const k = d.toISOString().split('T')[0];
+           if (map[k]) return map[k];
+       }
+       return undefined;
+    };
+
+    // Helper: Find the LATEST available price in a given month.
+    // This is used for the current incomplete month where End-of-Month data doesn't exist yet.
+    const findLatestInMonth = (map: Record<string, number>, year: number, monthIdx: number): number | undefined => {
+        // Start from the last possible day of the month (e.g. 31st) and scan backwards
+        const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
+        for (let d = daysInMonth; d >= 1; d--) {
+             const mStr = String(monthIdx + 1).padStart(2, '0');
+             const dStr = String(d).padStart(2, '0');
+             const key = `${year}-${mStr}-${dStr}`;
+             if (map[key]) return map[key];
+        }
+        return undefined;
+    };
+
+    const sp500Base = benchmarks?.sp500 ? findPrice(benchmarks.sp500, '2023-03-31') : undefined;
+    const wig20Base = benchmarks?.wig20 ? findPrice(benchmarks.wig20, '2023-03-31') : undefined;
 
     return sortedDates.map((date, index) => {
         // Carry forward last known values if data missing for a month
@@ -185,13 +217,44 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
         }
         lastTotalValueForReal = totalValue;
 
-        // Benchmarks (Relative Performance)
-        const [y, m, d] = date.split('-');
-        let nY = parseInt(y), nM = parseInt(m) + 1;
-        if (nM > 12) { nM = 1; nY++; }
-        const nextDateKey = `${nY}-${String(nM).padStart(2,'0')}-${d}`;
-        const sp500Ret = SP500_DATA[nextDateKey] && startSP500 ? ((SP500_DATA[nextDateKey] - startSP500)/startSP500)*100 : undefined;
-        const wig20Ret = WIG20_DATA[nextDateKey] && startWIG20 ? ((WIG20_DATA[nextDateKey] - startWIG20)/startWIG20)*100 : undefined;
+        // --- Benchmarks (Relative Performance) ---
+        // Logic: 
+        // Base Date: 2023-03-31 (End of March 2023) is 0%.
+        // For a row date 'YYYY-MM-DD' (e.g. 2023-04-01), this represents the monthly bucket for April.
+        // We compare against the benchmark closing price at the END of that same month (e.g. 2023-04-30).
+        
+        const rowDateObj = new Date(date);
+        // Get Last Day of Current Month: new Date(Year, Month + 1, 0)
+        const endOfMonth = new Date(rowDateObj.getFullYear(), rowDateObj.getMonth() + 1, 0);
+        
+        // Format to YYYY-MM-DD to match benchmark keys
+        const y = endOfMonth.getFullYear();
+        const m = endOfMonth.getMonth(); // 0-indexed month for helper
+        const benchmarkDateKey = endOfMonth.toISOString().split('T')[0];
+
+        let sp500Ret: number | undefined = undefined;
+        let wig20Ret: number | undefined = undefined;
+
+        if (benchmarks && sp500Base && wig20Base) {
+            // 1. Try finding price at End of Month (Standard)
+            let currentSP500 = findPrice(benchmarks.sp500, benchmarkDateKey);
+            let currentWIG20 = findPrice(benchmarks.wig20, benchmarkDateKey);
+
+            // 2. If not found (e.g. current month isn't finished yet), find LATEST price in that month
+            if (currentSP500 === undefined) {
+                currentSP500 = findLatestInMonth(benchmarks.sp500, y, m);
+            }
+            if (currentWIG20 === undefined) {
+                currentWIG20 = findLatestInMonth(benchmarks.wig20, y, m);
+            }
+
+            if (currentSP500) {
+                sp500Ret = ((currentSP500 - sp500Base) / sp500Base) * 100;
+            }
+            if (currentWIG20) {
+                wig20Ret = ((currentWIG20 - wig20Base) / wig20Base) * 100;
+            }
+        }
 
         // Allocation Shares
         const ppkVal = excludePPK ? 0 : (lastPPK.inv + lastPPK.profit);
@@ -218,5 +281,5 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
             totalValueNoPPK: valNoPPK
         };
     });
-  }, [portfolioType, omfActiveAssets, omfClosedAssets, excludePPK, dividends]);
+  }, [portfolioType, omfActiveAssets, omfClosedAssets, excludePPK, dividends, benchmarks]);
 };

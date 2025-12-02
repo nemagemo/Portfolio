@@ -119,6 +119,66 @@ export const useChartTransformations = ({
      }));
   }, [globalHistoryData, portfolioType]);
 
+  // --- DRAWDOWN DATA (Risk Analysis) ---
+  const drawdownHistoryData = useMemo(() => {
+    if (portfolioType !== 'OMF' || globalHistoryData.length === 0) return [];
+    
+    let maxPeakTotal = 0;
+    let maxPeakNoPPK = 0;
+    
+    return globalHistoryData.map(row => {
+        // 1. Total Drawdown
+        if (row.totalValue > maxPeakTotal) {
+            maxPeakTotal = row.totalValue;
+        }
+        const drawdownTotal = maxPeakTotal > 0 ? ((row.totalValue - maxPeakTotal) / maxPeakTotal) * 100 : 0;
+        
+        // 2. No PPK Drawdown (Active Management Risk)
+        const valNoPPK = row.totalValueNoPPK || 0;
+        if (valNoPPK > maxPeakNoPPK) {
+            maxPeakNoPPK = valNoPPK;
+        }
+        const drawdownNoPPK = maxPeakNoPPK > 0 ? ((valNoPPK - maxPeakNoPPK) / maxPeakNoPPK) * 100 : 0;
+
+        return {
+            date: row.date,
+            drawdownTotal: drawdownTotal,
+            drawdownNoPPK: drawdownNoPPK,
+            value: row.totalValue,
+            valueNoPPK: valNoPPK
+        };
+    });
+  }, [globalHistoryData, portfolioType]);
+
+  // --- SECTOR ALLOCATION DATA ---
+  const sectorAllocationData = useMemo(() => {
+    if (portfolioType !== 'OMF' || !omfActiveAssets.length) return [];
+    
+    const sectorMap: Record<string, number> = {};
+    let totalVal = 0;
+
+    omfActiveAssets.forEach(asset => {
+        if (asset.portfolio === 'Gotówka') return; // Optionally exclude cash
+
+        let sectorName = asset.sector;
+        
+        // Normalize empty sectors based on portfolio type
+        if (!sectorName) {
+            if (asset.portfolio === 'PPK') sectorName = 'Emerytalne / Zdefiniowana Data';
+            else if (asset.portfolio.toUpperCase().includes('KRYPTO')) sectorName = 'Digital Assets (Krypto)';
+            else sectorName = 'Inne / Nieokreślony';
+        }
+
+        sectorMap[sectorName] = (sectorMap[sectorName] || 0) + asset.currentValue;
+        totalVal += asset.currentValue;
+    });
+
+    return Object.entries(sectorMap)
+        .map(([name, value]) => ({ name, value }))
+        .sort((a, b) => b.value - a.value); // Sort descending by size
+
+  }, [omfActiveAssets, portfolioType]);
+
   // --- BEST CRYPTO FINDER ---
   const bestCrypto = useMemo(() => {
     if (portfolioType !== 'CRYPTO') return null;
@@ -131,6 +191,8 @@ export const useChartTransformations = ({
     omfStructureData,
     dailyChangeData,
     heatmapHistoryData,
+    drawdownHistoryData,
+    sectorAllocationData,
     bestCrypto
   };
 };

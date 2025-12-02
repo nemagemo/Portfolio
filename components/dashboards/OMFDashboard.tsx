@@ -1,12 +1,13 @@
 
 import React, { useState, useMemo } from 'react';
-import { TrendingUp, Wallet, ArrowUpRight, ArrowDownRight, ChevronDown, ChevronUp, PieChart, Snowflake, ScatterChart, LayoutTemplate, CalendarDays, Milestone } from 'lucide-react';
+import { TrendingUp, Wallet, ArrowUpRight, ArrowDownRight, ChevronDown, ChevronUp, PieChart, Snowflake, ScatterChart, LayoutTemplate, CalendarDays, Milestone, Anchor, Activity, BarChart3, Hexagon } from 'lucide-react';
 import { SummaryStats, OMFDataRow, GlobalHistoryRow } from '../../types';
 import { Theme, themeStyles } from '../../theme/styles';
-import { GlobalSummaryChart, GlobalPerformanceChart, OMFTreemapChart, SeasonalityChart, PortfolioAllocationHistoryChart, BubbleRiskChart } from '../Charts';
+import { GlobalSummaryChart, GlobalPerformanceChart, OMFTreemapChart, SeasonalityChart, PortfolioAllocationHistoryChart, BubbleRiskChart, DrawdownChart, SectorAllocationChart } from '../Charts';
 import { ReturnsHeatmap } from '../ReturnsHeatmap';
 import { HistoryTable } from '../HistoryTable';
 import { NoPPKIcon, IconCAGR, IconLTM, IconHourglass, IconPulse } from '../Icons';
+import { useChartTransformations } from '../../hooks/useChartTransformations';
 
 interface OMFDashboardProps {
   stats: SummaryStats | null;
@@ -45,9 +46,29 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
   const [showSP500, setShowSP500] = useState(false);
   const [showWIG20, setShowWIG20] = useState(false);
 
+  // Local state for Drawdown chart toggle
+  const [drawdownExcludePPK, setDrawdownExcludePPK] = useState(false);
+
+  // Local state for Sector Allocation Chart Type
+  const [sectorChartType, setSectorChartType] = useState<'bar' | 'radar'>('bar');
+
+  // Hook for chart transformations
+  const { drawdownHistoryData, sectorAllocationData } = useChartTransformations({
+    omfActiveAssets: activeAssets,
+    portfolioType: 'OMF',
+    globalHistoryData: globalHistory
+  });
+
+  // Prepare Drawdown Data based on toggle
+  const chartDrawdownData = useMemo(() => {
+    return drawdownHistoryData.map(d => ({
+        ...d,
+        // The Chart component expects the key 'drawdown'
+        drawdown: drawdownExcludePPK ? d.drawdownNoPPK : d.drawdownTotal
+    }));
+  }, [drawdownHistoryData, drawdownExcludePPK]);
+
   // Filter Bubble Chart Data based on user selection
-  // Note: basic aggregation logic is handled in `useChartTransformations` (dailyChangeData),
-  // but detailed view/filtering happens here for UI interaction.
   const filteredBubbleData = useMemo(() => {
     // 1. Initial filter based on tabs
     let baseData = activeAssets;
@@ -56,7 +77,6 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
     }
 
     // SPECIAL RULE: If user specifically filters for KRYPTO, do NOT aggregate small assets.
-    // Show them individually for detailed inspection.
     if (bubbleChartFilter === 'KRYPTO') {
         return baseData;
     }
@@ -277,8 +297,8 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
           <div><h3 className={`text-lg font-bold ${styles.text}`}>Efektywność Old Man Fund</h3><p className={`text-sm ${styles.textSub}`}>ROI oraz TWR w czasie</p></div>
           
           <div className="flex items-center space-x-2">
-            {/* Toggles moved here */}
-            <div className="flex space-x-1 sm:space-x-2">
+            {/* Toggles - Hidden on Mobile */}
+            <div className="hidden md:flex space-x-1 sm:space-x-2">
                 <button
                   onClick={() => setShowSP500(!showSP500)}
                   className={`px-2 py-1 text-[10px] sm:text-xs font-medium rounded-full transition-all ${
@@ -313,6 +333,57 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
             showWIG20={showWIG20}
           />
         </div>
+      </div>
+
+      {/* Drawdown Chart (Risk Analysis) */}
+      <div className={`${styles.cardContainer} p-6 hidden md:block`}>
+        <div className="flex items-center justify-between mb-0">
+          <div>
+            <h3 className={`text-lg font-bold ${styles.text}`}>Ryzyko i Obsunięcie (Drawdown)</h3>
+            <p className={`text-sm ${styles.textSub}`}>Procentowy spadek od najwyższego historycznego szczytu</p>
+          </div>
+          <div className="flex items-center space-x-2">
+             <div className={`flex items-center p-1 border ${isNeon ? 'bg-black/50 border-cyan-900/50 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
+                <button onClick={() => setDrawdownExcludePPK(!drawdownExcludePPK)} className={`flex items-center justify-center w-20 px-2 py-1.5 transition-all ${drawdownExcludePPK ? styles.toggleNoPPKActive : `bg-transparent ${isNeon ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`} rounded-md`} title={drawdownExcludePPK ? "Pokaż PPK" : "Ukryj PPK"}>
+                    <NoPPKIcon className="w-full h-4" />
+                </button>
+             </div>
+             <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><Activity className={isNeon ? 'text-rose-400' : 'text-rose-600'} size={20} /></div>
+          </div>
+        </div>
+        <DrawdownChart data={chartDrawdownData} themeMode={theme} />
+      </div>
+
+      {/* Allocation & Sectors Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Allocation History */}
+          <div className={`${styles.cardContainer} p-3 sm:p-6`}>
+            <div className="flex items-center justify-between mb-0">
+              <div><h3 className={`text-lg font-bold ${styles.text}`}>Historia Alokacji</h3><p className={`text-sm ${styles.textSub}`}>Udział portfeli w czasie</p></div>
+              <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><PieChart className={isNeon ? 'text-blue-400' : 'text-blue-600'} size={20} /></div>
+            </div>
+            <PortfolioAllocationHistoryChart data={globalHistory} themeMode={theme} />
+          </div>
+
+          {/* Sector Allocation */}
+          <div className={`${styles.cardContainer} p-3 sm:p-6`}>
+            <div className="flex items-center justify-between mb-0">
+              <div><h3 className={`text-lg font-bold ${styles.text}`}>Dywersyfikacja Sektorowa</h3><p className={`text-sm ${styles.textSub}`}>Ekspozycja na sektory</p></div>
+              <div className="flex items-center space-x-2">
+                 {/* Chart Type Toggle */}
+                 <div className={`flex items-center p-1 border ${isNeon ? 'bg-black/50 border-cyan-900/50 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
+                    <button onClick={() => setSectorChartType('bar')} className={`p-1.5 rounded transition-all ${sectorChartType === 'bar' ? (isNeon ? 'bg-cyan-900 text-cyan-300' : 'bg-white text-slate-800 shadow-sm') : (isNeon ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')}`} title="Wykres Słupkowy">
+                       <BarChart3 size={16} />
+                    </button>
+                    <button onClick={() => setSectorChartType('radar')} className={`p-1.5 rounded transition-all ${sectorChartType === 'radar' ? (isNeon ? 'bg-cyan-900 text-cyan-300' : 'bg-white text-slate-800 shadow-sm') : (isNeon ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')}`} title="Wykres Radarowy">
+                       <Hexagon size={16} />
+                    </button>
+                 </div>
+                 <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><Anchor className={isNeon ? 'text-amber-400' : 'text-amber-600'} size={20} /></div>
+              </div>
+            </div>
+            <SectorAllocationChart data={sectorAllocationData} themeMode={theme} chartType={sectorChartType} />
+          </div>
       </div>
 
       {/* Treemap ROI - Hidden on Mobile */}
@@ -362,15 +433,6 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
           <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><Snowflake className={isNeon ? 'text-blue-400' : 'text-blue-600'} size={20} /></div>
         </div>
         <SeasonalityChart data={heatmapHistoryData} themeMode={theme} />
-      </div>
-
-      {/* Allocation History */}
-      <div className={`${styles.cardContainer} p-3 sm:p-6`}>
-        <div className="flex items-center justify-between mb-0">
-          <div><h3 className={`text-lg font-bold ${styles.text}`}>Historia Alokacji Portfela</h3><p className={`text-sm ${styles.textSub}`}>Zmiana udziału procentowego PPK, Crypto i IKE w czasie</p></div>
-          <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><PieChart className={isNeon ? 'text-blue-400' : 'text-blue-600'} size={20} /></div>
-        </div>
-        <PortfolioAllocationHistoryChart data={globalHistory} themeMode={theme} />
       </div>
 
       {/* Active Positions Table - Hidden on Mobile */}

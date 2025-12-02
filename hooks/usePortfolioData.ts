@@ -1,6 +1,6 @@
 
 import { useMemo } from 'react';
-import { PortfolioType, SummaryStats, AnyDataRow, ValidationReport, OMFValidationReport, OMFDataRow, GlobalHistoryRow, DividendDataRow } from '../types';
+import { PortfolioType, SummaryStats, AnyDataRow, ValidationReport, OMFValidationReport, OMFDataRow, GlobalHistoryRow, DividendDataRow, BenchmarkData } from '../types';
 import { useDividends } from './useDividends';
 import { useAssetPricing } from './useAssetPricing';
 import { useGlobalHistory } from './useGlobalHistory';
@@ -10,6 +10,7 @@ interface UsePortfolioDataProps {
   portfolioType: PortfolioType;
   onlinePrices: Record<string, number> | null;
   historyPrices: Record<string, number> | null;
+  benchmarks?: BenchmarkData | null; // Added optional prop
   excludePPK?: boolean;
 }
 
@@ -28,7 +29,8 @@ interface UsePortfolioDataReturn {
 export const usePortfolioData = ({ 
   portfolioType, 
   onlinePrices, 
-  historyPrices, 
+  historyPrices,
+  benchmarks = null,
   excludePPK = false 
 }: UsePortfolioDataProps): UsePortfolioDataReturn => {
   
@@ -55,7 +57,8 @@ export const usePortfolioData = ({
     omfActiveAssets,
     omfClosedAssets,
     dividends,
-    excludePPK
+    excludePPK,
+    benchmarks
   });
 
   // 4. Calculate Summary Stats

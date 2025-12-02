@@ -9,7 +9,7 @@
 export const OMF_OPEN_DATA = `Status pozycji,Portfel,Typ,Symbol,ISIN,Sektor,Okres inwestycji,Ostatni zakup,Ilość,Obecna wartość,Wartość zakupu,Zysk/Strata,ROI
 Otwarta,PPK,PPK,PPK,,,,,"45,059700","8 204,92 zł","3 335,73 zł","4 869,19 zł","145,97%"
 Otwarta,IKE,ETF,NDIA.L,IE00BZCQB185,,416,2025-07-09,"35,794600","1 276,47 zł","1 371,84 zł","-95,37 zł","-6,95%"
-Otwarta,IKE,ETF,IUIT.L,IE00B3WJKG14,,416,2025-07-09,"10,792800","1 673,99 zł","1 372,00 zł","301,99 zł","22,01%"
+Otwarta,IKE,ETF,IUIT.L,IE00B3WJKG14,Information Technology,416,2025-07-09,"10,792800","1 673,99 zł","1 372,00 zł","301,99 zł","22,01%"
 Otwarta,IKE,ETF,NUKL.DE,IE000M7V94E1,,382,2025-07-09,"8,851500","1 769,51 zł","1 181,43 zł","588,08 zł","49,78%"
 Otwarta,IKE,ETF,ETFBS80TR,PLBSWTR00014,,416,2025-07-11,"3,674600","1 688,11 zł","1 372,02 zł","316,09 zł","23,04%"
 Otwarta,IKE,Akcje,AMZN,US0231351067,Consumer Discretionary,408,2025-07-08,"1,338500","1 150,85 zł","1 047,22 zł","103,63 zł","9,90%"

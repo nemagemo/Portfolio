@@ -120,6 +120,11 @@ export interface GlobalHistoryRow {
   projectedValue?: number;
 }
 
+export interface BenchmarkData {
+  sp500: Record<string, number>;
+  wig20: Record<string, number>;
+}
+
 // Union type for general usage in generic Tables/Charts
 export type AnyDataRow = PPKDataRow | CryptoDataRow | IKEDataRow | OMFDataRow | GlobalHistoryRow | CashDataRow | DividendDataRow;
 

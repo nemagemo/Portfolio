@@ -235,6 +235,56 @@ export const ROIChart: React.FC<ChartProps> = ({ data, showExitRoi = true, theme
   );
 };
 
+export const DrawdownChart: React.FC<{ data: any[], themeMode?: ThemeMode }> = ({ data, themeMode = 'light' }) => {
+  const t = CHART_THEMES[themeMode || 'light'];
+  const config = useChartConfig();
+
+  return (
+    <div className="h-64 w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={data} margin={config.margin}>
+          <defs>
+            <linearGradient id="colorDrawdown" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={t.barProfitNeg} stopOpacity={0.8}/>
+              <stop offset="95%" stopColor={t.barProfitNeg} stopOpacity={0}/>
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} strokeWidth={1} />
+          <XAxis 
+            dataKey="date" 
+            tickFormatter={formatDate} 
+            stroke={t.axis} 
+            fontSize={10}
+            tickMargin={config.tickMargin}
+            minTickGap={15}
+            padding={config.xAxisPadding}
+          />
+          <YAxis 
+            stroke={t.axis} 
+            fontSize={10} 
+            unit="%" 
+          />
+          <Tooltip 
+            formatter={(value: number) => [`${value.toFixed(2)}%`, 'Obsunięcie (Drawdown)']}
+            labelFormatter={formatDate}
+            contentStyle={getTooltipStyle(themeMode as ThemeMode, config.isMobile)}
+          />
+          <ReferenceLine y={0} stroke={t.axis} strokeWidth={1} />
+          <Area 
+            type="step" 
+            dataKey="drawdown" 
+            name="Drawdown" 
+            stroke={t.barProfitNeg} 
+            fillOpacity={1} 
+            fill="url(#colorDrawdown)" 
+            strokeWidth={1}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
 export const CryptoValueChart: React.FC<ChartProps> = ({ data, showTaxComparison, themeMode = 'light' }) => {
   const hasTaxedValue = useMemo(() => {
      return data.length > 0 && data.some(d => (d as any).taxedTotalValue !== undefined);
@@ -527,9 +577,9 @@ export const GlobalPerformanceChart: React.FC<GlobalPerformanceChartProps> = ({
                 type={t.lineType || "monotone"} 
                 dataKey="sp500Return" 
                 name="S&P 500" 
-                stroke={t.exit} 
+                stroke="#ef4444" 
                 strokeWidth={1.5} 
-                strokeOpacity={0.7}
+                strokeOpacity={0.8}
                 dot={false} 
               />
             )}
