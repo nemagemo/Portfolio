@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { PPKLogo } from '../../logos/PPKLogo';
 import { GAWLogo } from '../../logos/GAWLogo';
 import { AMZNLogo } from '../../logos/AMZNLogo';
@@ -171,6 +171,46 @@ export const getTooltipStyle = (theme: ThemeMode) => {
   }
   
   return style;
+};
+
+// --- RESPONSIVE CHART CONFIG HOOK ---
+export const useChartConfig = () => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  if (isMobile) {
+    return {
+      iconSize: 8,
+      margin: { top: 10, right: 0, left: -20, bottom: 0 },
+      xAxisPadding: { left: 5, right: 5 },
+      // Force centering for mobile legends
+      legendStyle: { 
+        fontSize: '9px', 
+        width: '100%', 
+        left: 0, 
+        textAlign: 'center' as const,
+        paddingTop: '0px'
+      } 
+    };
+  }
+
+  return {
+    iconSize: 14,
+    margin: { top: 10, right: 0, left: -20, bottom: 0 },
+    xAxisPadding: { left: 10, right: 10 },
+    legendStyle: { 
+      fontSize: '12px',
+      paddingTop: '0px'
+    }
+  };
 };
 
 // --- LOGO LOGIC ---

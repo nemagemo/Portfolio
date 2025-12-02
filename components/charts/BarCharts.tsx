@@ -4,12 +4,13 @@ import {
   BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, Legend,
   ResponsiveContainer, ReferenceLine, LabelList, Cell
 } from 'recharts';
-import { ChartProps, CHART_THEMES, formatDate, getTooltipStyle, ThemeMode } from './chartUtils';
+import { ChartProps, CHART_THEMES, formatDate, getTooltipStyle, ThemeMode, useChartConfig } from './chartUtils';
 import { PPKDataRow } from '../../types';
 
 export const PPKLeverageChart: React.FC<ChartProps> = ({ data, themeMode = 'light' }) => {
   if (data.length === 0 || !('employeeContribution' in data[0])) return null;
   const t = CHART_THEMES[themeMode || 'light'];
+  const config = useChartConfig();
 
   const chartData = data.map(row => {
     const r = row as PPKDataRow;
@@ -26,7 +27,7 @@ export const PPKLeverageChart: React.FC<ChartProps> = ({ data, themeMode = 'ligh
   return (
     <div className="h-80 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={chartData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+        <BarChart data={chartData} margin={config.margin}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} strokeWidth={1} />
           <XAxis 
             dataKey="date" 
@@ -35,7 +36,7 @@ export const PPKLeverageChart: React.FC<ChartProps> = ({ data, themeMode = 'ligh
             fontSize={10}
             tickMargin={10}
             minTickGap={15}
-            padding={{ left: 10, right: 10 }}
+            padding={config.xAxisPadding}
           />
           <YAxis 
             tickFormatter={(val) => `${(val/1000).toFixed(0)}k`} 
@@ -58,8 +59,8 @@ export const PPKLeverageChart: React.FC<ChartProps> = ({ data, themeMode = 'ligh
           <Legend 
             verticalAlign="top" 
             height={36} 
-            iconSize={8}
-            wrapperStyle={{ fontSize: '10px' }}
+            iconSize={config.iconSize}
+            wrapperStyle={config.legendStyle}
           />
           <Bar dataKey="own" name="Mój Wkład" stackId="a" fill={t.investment} radius={[0, 0, 4, 4]} />
           <Bar dataKey="free" name="Darmowe Środki" stackId="a" fill={t.profit} radius={[4, 4, 0, 0]} />
@@ -72,6 +73,7 @@ export const PPKLeverageChart: React.FC<ChartProps> = ({ data, themeMode = 'ligh
 export const SeasonalityChart: React.FC<{ data: any[], themeMode?: ThemeMode }> = ({ data, themeMode = 'light' }) => {
   if (data.length < 2) return null;
   const t = CHART_THEMES[themeMode || 'light'];
+  const config = useChartConfig();
 
   const sorted = [...data].sort((a, b) => a.date.localeCompare(b.date));
   const dataMap = new Map<string, any>();
@@ -137,7 +139,7 @@ export const SeasonalityChart: React.FC<{ data: any[], themeMode?: ThemeMode }> 
   return (
     <div className="h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+            <BarChart data={chartData} margin={config.margin}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={t.grid} strokeWidth={1} />
                 <XAxis dataKey="name" stroke={t.axis} fontSize={10} tickMargin={5} />
                 <YAxis stroke={t.axis} fontSize={10} unit="%" />
@@ -164,6 +166,7 @@ interface DividendChartProps {
 
 export const DividendChart: React.FC<DividendChartProps> = ({ data, themeMode = 'light' }) => {
   const t = CHART_THEMES[themeMode || 'light'];
+  const config = useChartConfig();
 
   return (
     <div className="h-80 w-full">
