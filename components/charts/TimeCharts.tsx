@@ -53,7 +53,7 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjecti
             tickFormatter={formatDate} 
             stroke={t.axis} 
             fontSize={10}
-            tickMargin={10}
+            tickMargin={config.tickMargin}
             padding={config.xAxisPadding}
           />
           <YAxis 
@@ -184,7 +184,7 @@ export const ROIChart: React.FC<ChartProps> = ({ data, showExitRoi = true, theme
             tickFormatter={formatDate} 
             stroke={t.axis} 
             fontSize={10}
-            tickMargin={10}
+            tickMargin={config.tickMargin}
             minTickGap={15}
             padding={config.xAxisPadding}
           />
@@ -263,7 +263,7 @@ export const CryptoValueChart: React.FC<ChartProps> = ({ data, showTaxComparison
             tickFormatter={formatDate} 
             stroke={t.axis} 
             fontSize={10}
-            tickMargin={10}
+            tickMargin={config.tickMargin}
             minTickGap={15}
             padding={config.xAxisPadding}
           />
@@ -363,7 +363,7 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection,
             tickFormatter={formatDate} 
             stroke={t.axis} 
             fontSize={10}
-            tickMargin={10}
+            tickMargin={config.tickMargin}
             padding={config.xAxisPadding}
           />
           <YAxis 
@@ -488,7 +488,7 @@ export const GlobalPerformanceChart: React.FC<ChartProps> = ({ data, themeMode =
               tickFormatter={formatDate} 
               stroke={t.axis} 
               fontSize={10}
-              tickMargin={10}
+              tickMargin={config.tickMargin}
               padding={config.xAxisPadding}
             />
             <YAxis 
@@ -595,7 +595,7 @@ export const PortfolioAllocationHistoryChart: React.FC<ChartProps> = ({ data, th
             tickFormatter={formatDate} 
             stroke={t.axis} 
             fontSize={10}
-            tickMargin={10}
+            tickMargin={config.tickMargin}
             padding={config.xAxisPadding}
           />
           <YAxis 

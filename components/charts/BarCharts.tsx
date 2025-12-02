@@ -34,7 +34,7 @@ export const PPKLeverageChart: React.FC<ChartProps> = ({ data, themeMode = 'ligh
             tickFormatter={formatDate} 
             stroke={t.axis} 
             fontSize={10}
-            tickMargin={10}
+            tickMargin={config.tickMargin}
             minTickGap={15}
             padding={config.xAxisPadding}
           />
@@ -177,7 +177,7 @@ export const DividendChart: React.FC<DividendChartProps> = ({ data, themeMode = 
             dataKey="label" 
             stroke={t.axis} 
             fontSize={10} 
-            tickMargin={10}
+            tickMargin={config.tickMargin}
           />
           <YAxis 
             stroke={t.axis} 

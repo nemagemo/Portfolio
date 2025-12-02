@@ -200,7 +200,7 @@ export const useChartConfig = () => {
     return {
       isMobile: true,
       iconSize: 8,
-      margin: { top: 10, right: 10, left: -20, bottom: 10 },
+      margin: { top: 10, right: 10, left: -20, bottom: 20 },
       xAxisPadding: { left: 0, right: 5 },
       legendHeight: 44,
       // Force centering for mobile legends
@@ -210,7 +210,8 @@ export const useChartConfig = () => {
         left: 0, 
         textAlign: 'center' as const,
         paddingTop: '0px'
-      } 
+      },
+      tickMargin: 5
     };
   }
 
@@ -223,7 +224,8 @@ export const useChartConfig = () => {
     legendStyle: { 
       fontSize: '12px',
       paddingTop: '0px'
-    }
+    },
+    tickMargin: 10
   };
 };
 
