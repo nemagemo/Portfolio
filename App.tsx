@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { LayoutGrid, Briefcase, Coins, PiggyBank, Sun, Palette, Zap, Wifi, WifiOff, RefreshCw, AlertCircle } from 'lucide-react';
+import { Briefcase, Coins, PiggyBank, Sun, Palette, Zap, Wifi, WifiOff, RefreshCw, AlertCircle } from 'lucide-react';
 import { PortfolioType } from './types';
 import { themeStyles, Theme } from './theme/styles';
 import { useMarketData } from './hooks/useMarketData';
@@ -11,9 +11,8 @@ import { DataStatus, OMFIntegrityStatus } from './components/StatusCards';
 import { StandardDashboard } from './components/dashboards/StandardDashboard';
 import { OMFDashboard } from './components/dashboards/OMFDashboard';
 import { OMF_LAST_UPDATED } from './CSV/OMFopen';
-import { AppLogo } from './components/logos/AppLogo';
-import { FooterLogo } from './components/logos/FooterLogo';
 import { Logo3 } from './components/logos/Logo3';
+import { Logo2 } from './components/logos/Logo2';
 
 export const App: React.FC = () => {
   const [portfolioType, setPortfolioType] = useState<PortfolioType>('OMF');
@@ -149,7 +148,9 @@ export const App: React.FC = () => {
 
           {/* CENTER: Navigation Tabs */}
           <div className={`p-1 flex space-x-1 overflow-x-auto ${theme === 'neon' ? 'bg-black border border-cyan-900/50 rounded-lg' : 'bg-slate-100 rounded-lg'}`}>
-            <button onClick={() => handlePortfolioChange('OMF')} className={`flex items-center px-3 sm:px-4 py-1.5 text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'OMF' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><LayoutGrid size={16} className="mr-2 hidden sm:block" />Σ</button>
+            <button onClick={() => handlePortfolioChange('OMF')} className={`flex items-center justify-center px-3 sm:px-4 py-1 text-2xl font-bold leading-none transition-all whitespace-nowrap ${portfolioType === 'OMF' ? styles.buttonActive : styles.buttonInactive} rounded-md`}>
+              Σ
+            </button>
             <button onClick={() => handlePortfolioChange('PPK')} className={`flex items-center px-3 sm:px-4 py-1.5 text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'PPK' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><Briefcase size={16} className="mr-2 hidden sm:block" />PPK</button>
             <button onClick={() => handlePortfolioChange('CRYPTO')} className={`flex items-center px-3 sm:px-4 py-1.5 text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'CRYPTO' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><Coins size={16} className="mr-2 hidden sm:block" />Krypto</button>
             <button onClick={() => handlePortfolioChange('IKE')} className={`flex items-center px-3 sm:px-4 py-1.5 text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'IKE' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><PiggyBank size={16} className="mr-2 hidden sm:block" />IKE</button>
@@ -228,13 +229,8 @@ export const App: React.FC = () => {
 
       <footer className={`${styles.footerBg} ${styles.footerBorder} mt-auto py-6`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <div className="flex items-center space-x-3 select-none">
-            <div className="w-8 h-8">
-              <FooterLogo className="w-full h-full" />
-            </div>
-            <span className={`text-lg font-bold tracking-tight ${theme === 'neon' ? 'text-cyan-100 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]' : 'text-slate-800'}`}>
-              Old Man Fund
-            </span>
+          <div className="flex items-center select-none">
+             <Logo2 className={`h-8 sm:h-10 w-auto ${theme === 'neon' ? 'text-cyan-400' : 'text-slate-800'}`} />
           </div>
           <div className={`text-xs font-mono ${styles.footerText}`}>
             &copy; {new Date().getFullYear()} OMF Dashboard. All rights reserved.

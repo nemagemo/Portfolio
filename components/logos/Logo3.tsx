@@ -5,9 +5,7 @@ export const Logo3: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg 
     viewBox="0 0 937 331" 
     fill="currentColor" 
-    version="1.1" 
     xmlns="http://www.w3.org/2000/svg" 
-    xmlSpace="preserve" 
     {...props}
   >
     <path 
