@@ -12,7 +12,7 @@ import { StandardDashboard } from './components/dashboards/StandardDashboard';
 import { OMFDashboard } from './components/dashboards/OMFDashboard';
 import { OMF_LAST_UPDATED } from './CSV/OMFopen';
 import { Logo3 } from './components/logos/Logo3';
-import { Logo2 } from './components/logos/Logo2';
+import { FooterLogo } from './components/logos/FooterLogo';
 
 export const App: React.FC = () => {
   const [portfolioType, setPortfolioType] = useState<PortfolioType>('OMF');
@@ -230,7 +230,7 @@ export const App: React.FC = () => {
       <footer className={`${styles.footerBg} ${styles.footerBorder} mt-auto py-6`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="flex items-center select-none">
-             <Logo2 className={`h-8 sm:h-10 w-auto ${theme === 'neon' ? 'text-cyan-400' : 'text-slate-800'}`} />
+             <FooterLogo className={`h-8 sm:h-10 w-auto ${theme === 'neon' ? 'text-cyan-400' : 'text-slate-800'}`} />
           </div>
           <div className={`text-xs font-mono ${styles.footerText}`}>
             &copy; {new Date().getFullYear()} OMF Dashboard. All rights reserved.
