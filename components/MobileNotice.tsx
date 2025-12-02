@@ -68,7 +68,7 @@ export const MobileNotice: React.FC<MobileNoticeProps> = ({ theme }) => {
             Tryb Mobilny
           </h4>
           <p className={`text-xs leading-relaxed ${isNeon ? 'text-cyan-100/80' : 'text-slate-500'}`}>
-            Widzisz uproszczoną wersję "Centrum Dowodzenia". Pełne analizy, heatmapy i szczegółowe tabele dostępne są na komputerze.
+            Widzisz uproszczoną wersję OMF. Pełne wersja dostępna tylko na komputerze.
           </p>
         </div>
 
