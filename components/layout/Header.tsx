@@ -123,7 +123,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* RIGHT: Status, Theme Toggles & Hamburger */}
         {/* Compact spacing for tablet */}
-        <div className="flex-1 flex items-center justify-end md:space-x-1 lg:space-x-3">
+        <div className="flex-1 flex items-center justify-end space-x-0.5 md:space-x-1 lg:space-x-3">
            {/* Status Indicator */}
            {isOfflineValid && (
               <div 
@@ -131,7 +131,7 @@ export const Header: React.FC<HeaderProps> = ({
                   flex items-center transition-all duration-300 overflow-hidden
                   ${statusLogic.colorClass}
                   rounded-full
-                  ${statusLogic.isPartial ? 'hover:pr-3 hover:pl-1 cursor-help group' : 'p-2 md:p-1 lg:p-2'}
+                  ${statusLogic.isPartial ? 'hover:pr-3 hover:pl-1 cursor-help group' : 'p-1.5 md:p-1 lg:p-2'}
                 `}
                 title={statusLogic.label}
               >
@@ -153,11 +153,11 @@ export const Header: React.FC<HeaderProps> = ({
            )}
 
            {/* Theme Toggles */}
-           <div className="flex space-x-1">
-              <button onClick={() => setTheme('light')} className={`p-2 md:p-1 lg:p-2 rounded-md transition-all ${theme === 'light' ? 'bg-slate-200 text-slate-800' : 'text-slate-400 hover:bg-slate-100'}`}>
+           <div className="flex space-x-0.5 md:space-x-1">
+              <button onClick={() => setTheme('light')} className={`p-1.5 md:p-1 lg:p-2 rounded-md transition-all ${theme === 'light' ? 'bg-slate-200 text-slate-800' : 'text-slate-400 hover:bg-slate-100'}`}>
                 <Sun size={20} className="md:w-4 md:h-4" />
               </button>
-              <button onClick={() => setTheme('neon')} className={`p-2 md:p-1 lg:p-2 rounded-md transition-all ${theme === 'neon' ? 'bg-cyan-900/50 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.8)]' : 'text-slate-400 hover:bg-slate-100'}`}>
+              <button onClick={() => setTheme('neon')} className={`p-1.5 md:p-1 lg:p-2 rounded-md transition-all ${theme === 'neon' ? 'bg-cyan-900/50 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.8)]' : 'text-slate-400 hover:bg-slate-100'}`}>
                 <Zap size={20} className="md:w-4 md:h-4" />
               </button>
            </div>
@@ -165,7 +165,7 @@ export const Header: React.FC<HeaderProps> = ({
            {/* Mobile Menu Toggle (Right Side) */}
            <button 
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className={`md:hidden p-2 rounded-lg transition-colors ${theme === 'neon' ? 'text-cyan-400 hover:bg-cyan-900/20' : 'text-slate-700 hover:bg-slate-100'}`}
+              className={`md:hidden p-1.5 rounded-lg transition-colors ${theme === 'neon' ? 'text-cyan-400 hover:bg-cyan-900/20' : 'text-slate-700 hover:bg-slate-100'}`}
            >
               {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
            </button>
