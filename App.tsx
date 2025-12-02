@@ -230,11 +230,11 @@ export const App: React.FC = () => {
         )}
       </main>
 
-      <footer className={`${styles.footerBg} ${styles.footerBorder} mt-auto py-8 transition-colors duration-300`}>
+      <footer className={`${styles.footerBg} ${styles.footerBorder} mt-auto py-4 transition-colors duration-300`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           {/* Top Section: Logo & Copyright */}
-          <div className="flex flex-col items-center justify-center gap-3 mb-6">
+          <div className="flex flex-col items-center justify-center gap-2 mb-3">
             <div className="flex items-center select-none opacity-90 hover:opacity-100 transition-opacity">
                <FooterLogo className={`h-8 sm:h-9 w-auto ${theme === 'neon' ? 'text-cyan-400' : 'text-slate-800'}`} />
             </div>
@@ -244,7 +244,7 @@ export const App: React.FC = () => {
           </div>
 
           {/* Divider */}
-          <div className={`w-full h-px mb-6 ${theme === 'neon' ? 'bg-cyan-900/30' : 'bg-slate-200'}`}></div>
+          <div className={`w-full h-px mb-3 ${theme === 'neon' ? 'bg-cyan-900/30' : 'bg-slate-200'}`}></div>
 
           {/* Collapsible Legal Section */}
           <div className={`flex flex-col items-center justify-center ${theme === 'neon' ? 'text-cyan-800' : 'text-slate-400'}`}>
