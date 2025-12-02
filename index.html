@@ -12,6 +12,12 @@
         font-family: 'Inter', sans-serif;
         background-color: #f8fafc;
       }
+      
+      /* Global override to remove focus outline from charts */
+      .recharts-wrapper:focus-visible,
+      .recharts-wrapper:focus {
+        outline: none !important;
+      }
     </style>
   <script type="importmap">
 {
