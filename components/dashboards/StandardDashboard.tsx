@@ -213,7 +213,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
               <div className="flex flex-col md:flex-row items-center justify-between mb-6 space-y-4 md:space-y-0">
                 <div className="flex flex-col">
                   <h3 className={`text-lg font-bold ${styles.text}`}>Historyczna Wartość Portfela</h3>
-                  <p className={`text-[10px] sm:text-xs mt-2 font-medium leading-tight max-w-2xl ${isNeon ? 'text-slate-400' : 'text-slate-400'}`}>Wartość netto = Wartość po odjęciu podatku od wpłaty Pracodawcy<br/>Wartość Exit = Wartość netto - 30% wpłat od Pracodawcy - wpłaty od Państwa - 19% podatku od zysku</p>
+                  <p className={`hidden md:block text-[10px] sm:text-xs mt-2 font-medium leading-tight max-w-2xl ${isNeon ? 'text-slate-400' : 'text-slate-400'}`}>Wartość netto = Wartość po odjęciu podatku od wpłaty Pracodawcy<br/>Wartość Exit = Wartość netto - 30% wpłat od Pracodawcy - wpłaty od Państwa - 19% podatku od zysku</p>
                 </div>
                 <div className={`hidden md:flex items-center space-x-4 p-2 border ${isNeon ? 'bg-black/50 border-cyan-900/50 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
                    <button onClick={() => setShowPPKProjection && setShowPPKProjection(!showPPKProjection)} className={`flex items-center px-3 py-1.5 text-xs font-bold transition-all ${showPPKProjection ? styles.toggleProjectionActive : `bg-transparent ${isNeon ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`} rounded-md`}>Droga do Emerytury</button>

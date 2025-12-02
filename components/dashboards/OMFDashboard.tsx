@@ -241,7 +241,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
 
       {/* Main Chart */}
       <div className={`${styles.cardContainer} p-3 sm:p-6`}>
-        <div className="flex flex-col md:flex-row items-center justify-between mb-6 space-y-4 md:space-y-0">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 space-y-4 md:space-y-0">
           <div>
             <h3 className={`text-lg font-bold ${styles.text}`}>Historia Old Man Fund</h3>
             <p className={`text-sm ${styles.textSub}`}>PPK + Krypto + IKE</p>
