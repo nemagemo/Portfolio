@@ -13,10 +13,27 @@
         background-color: #f8fafc;
       }
       
-      /* Global override to remove focus outline from charts */
-      .recharts-wrapper:focus-visible,
-      .recharts-wrapper:focus {
+      /* Aggressive chart focus removal */
+      .recharts-wrapper,
+      .recharts-responsive-container,
+      .recharts-surface,
+      .recharts-layer {
         outline: none !important;
+        border: none !important;
+      }
+      
+      .recharts-wrapper:focus,
+      .recharts-wrapper:focus-visible,
+      .recharts-responsive-container:focus,
+      .recharts-surface:focus {
+        outline: none !important;
+        box-shadow: none !important;
+      }
+
+      /* Catch-all for ANY child element inside the chart wrapper */
+      .recharts-wrapper * {
+        outline: none !important;
+        box-shadow: none !important;
       }
     </style>
   <script type="importmap">
