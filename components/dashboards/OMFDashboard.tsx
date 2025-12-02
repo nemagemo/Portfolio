@@ -241,10 +241,10 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
 
       {/* Main Chart */}
       <div className={`${styles.cardContainer} p-3 sm:p-6`}>
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 space-y-4 md:space-y-0">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-2 space-y-4 md:space-y-0">
           <div>
-            <h3 className={`text-lg font-bold ${styles.text}`}>Historia Old Man Fund</h3>
-            <p className={`text-sm ${styles.textSub}`}>PPK + Krypto + IKE</p>
+            <h3 className={`text-lg font-bold ${styles.text} text-left`}>Historia Old Man Fund</h3>
+            <p className={`text-sm ${styles.textSub} text-left`}>PPK + Krypto + IKE</p>
           </div>
           <div className={`hidden md:flex items-center space-x-3 p-2 border ${isNeon ? 'bg-black/50 border-cyan-900/50 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
               <button onClick={() => setExcludePPK(!excludePPK)} disabled={showCPI || showProjection} className={`flex items-center justify-center w-20 px-2 py-1.5 transition-all ${excludePPK ? styles.toggleNoPPKActive : `bg-transparent ${isNeon ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`} rounded-md ${showCPI || showProjection ? 'opacity-50 cursor-not-allowed' : ''}`} title={excludePPK ? "Pokaż PPK" : "Ukryj PPK"}>
@@ -269,7 +269,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
 
       {/* Performance Chart */}
       <div className={`${styles.cardContainer} p-3 sm:p-6`}>
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-2">
           <div><h3 className={`text-lg font-bold ${styles.text}`}>Efektywność Old Man Fund</h3><p className={`text-sm ${styles.textSub}`}>ROI oraz TWR w czasie</p></div>
           <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><TrendingUp className={isNeon ? 'text-purple-400' : 'text-purple-600'} size={20} /></div>
         </div>
@@ -295,7 +295,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
 
       {/* Treemap ROI - Hidden on Mobile */}
       <div className={`${styles.cardContainer} p-6 hidden md:block`}>
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-2">
           <div><h3 className={`text-lg font-bold ${styles.text}`}>Heatmap ROI</h3></div>
           <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><LayoutTemplate className={isNeon ? 'text-cyan-400' : 'text-cyan-600'} size={20} /></div>
         </div>
@@ -304,7 +304,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
 
       {/* Bubble Risk Map (Intraday) - Hidden on Mobile */}
       <div className={`${styles.cardContainer} p-6 hidden md:block`}>
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-2">
           <div>
             <h3 className={`text-lg font-bold ${styles.text}`}>Intraday</h3>
             <p className={`text-[10px] sm:text-xs mt-1 ${isNeon ? 'text-slate-500' : 'text-slate-400'}`}>
@@ -326,7 +326,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
 
       {/* Monthly Returns - Hidden on Mobile */}
       <div className={`${styles.cardContainer} p-6 overflow-x-auto hidden md:block`}>
-        <div className="flex items-center justify-between mb-6 min-w-[600px]">
+        <div className="flex items-center justify-between mb-2 min-w-[600px]">
           <div><h3 className={`text-lg font-bold ${styles.text}`}>Miesięczne Stopy Zwrotu</h3><p className={`text-sm ${styles.textSub}`}>Bez PPK</p></div>
           <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><CalendarDays className={isNeon ? 'text-emerald-400' : 'text-emerald-600'} size={20} /></div>
         </div>
@@ -335,7 +335,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
 
       {/* Seasonality - Hidden on Mobile */}
       <div className={`${styles.cardContainer} p-6 hidden md:block`}>
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-2">
           <div><h3 className={`text-lg font-bold ${styles.text}`}>Sezonowość</h3><p className={`text-sm ${styles.textSub}`}>Średnia stopa zwrotu w poszczególnych miesiącach</p></div>
           <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><Snowflake className={isNeon ? 'text-blue-400' : 'text-blue-600'} size={20} /></div>
         </div>
@@ -344,7 +344,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
 
       {/* Allocation History */}
       <div className={`${styles.cardContainer} p-3 sm:p-6`}>
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-2">
           <div><h3 className={`text-lg font-bold ${styles.text}`}>Historia Alokacji Portfela</h3><p className={`text-sm ${styles.textSub}`}>Zmiana udziału procentowego PPK, Crypto i IKE w czasie</p></div>
           <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><PieChart className={isNeon ? 'text-blue-400' : 'text-blue-600'} size={20} /></div>
         </div>
