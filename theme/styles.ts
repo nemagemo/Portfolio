@@ -24,7 +24,8 @@ export const themeStyles: Record<Theme, {
     textSub: 'text-slate-500',
     headerBg: 'bg-white',
     headerBorder: 'border-slate-200',
-    cardContainer: 'bg-white rounded-xl shadow-sm border border-slate-200',
+    // Increased shadow for better depth/contrast against the background
+    cardContainer: 'bg-white rounded-xl shadow-md border border-slate-200/60',
     cardHeaderIconBg: 'bg-slate-50 border border-slate-100',
     buttonActive: 'bg-slate-800 text-white shadow-sm',
     buttonInactive: 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200',
@@ -41,7 +42,8 @@ export const themeStyles: Record<Theme, {
     textSub: 'text-cyan-600/80 font-mono',
     headerBg: 'bg-black/80 backdrop-blur-md',
     headerBorder: 'border-cyan-900/50 border-b',
-    cardContainer: 'bg-black/40 border border-cyan-500/30 shadow-[0_0_15px_-3px_rgba(6,182,212,0.15)] backdrop-blur-sm rounded-none',
+    // Reduced border opacity to reduce visual noise (grid effect)
+    cardContainer: 'bg-[#0a0a0a]/90 border border-cyan-500/20 shadow-[0_0_20px_-5px_rgba(6,182,212,0.1)] backdrop-blur-sm rounded-none',
     cardHeaderIconBg: 'bg-cyan-950/30 border border-cyan-500/50 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.2)]',
     buttonActive: 'bg-cyan-950 text-cyan-300 border border-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.3)] font-mono',
     buttonInactive: 'bg-black text-cyan-800 border border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700 font-mono',

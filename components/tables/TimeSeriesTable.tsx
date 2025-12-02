@@ -35,17 +35,18 @@ export const TimeSeriesTable: React.FC<TimeSeriesTableProps> = ({ data, type, th
 
   const getProfitClass = (val: number) => {
     if (isNeon) {
+        // Calmer green and clearly visible rose/pink
         return val >= 0 
-            ? 'text-[#39ff14] font-mono drop-shadow-[0_0_3px_rgba(57,255,20,0.5)]' 
-            : 'text-[#ff0055] font-mono drop-shadow-[0_0_3px_rgba(255,0,85,0.5)]';
+            ? 'text-emerald-400 font-mono' 
+            : 'text-rose-400 font-mono';
     }
     return val >= 0 ? 'text-emerald-600' : 'text-rose-600';
   };
 
   const getBadgeClass = (val: number) => {
     if (isNeon) {
-        const color = val >= 0 ? 'border-[#39ff14] text-[#39ff14]' : 'border-[#ff0055] text-[#ff0055]';
-        return `px-1.5 py-0.5 md:px-2 md:py-1 rounded-none border ${color} bg-black/50 text-[10px] md:text-xs font-mono shadow-[0_0_5px_rgba(0,0,0,0.5)]`;
+        const color = val >= 0 ? 'border-emerald-500 text-emerald-400' : 'border-rose-500 text-rose-400';
+        return `px-1.5 py-0.5 md:px-2 md:py-1 rounded-none border ${color} bg-black/50 text-[10px] md:text-xs font-mono`;
     }
     return `px-1.5 py-0.5 md:px-2 md:py-1 rounded-full text-[10px] md:text-xs font-semibold ${val >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`;
   };
@@ -66,7 +67,7 @@ export const TimeSeriesTable: React.FC<TimeSeriesTableProps> = ({ data, type, th
               </>
             )}
             
-            <th className={`px-1 py-2 md:px-1 md:py-2 lg:px-6 lg:py-3 font-semibold text-right ${isNeon ? 'text-[#39ff14]' : 'text-emerald-600'}`}>Zysk</th>
+            <th className={`px-1 py-2 md:px-1 md:py-2 lg:px-6 lg:py-3 font-semibold text-right ${isNeon ? 'text-emerald-400' : 'text-emerald-600'}`}>Zysk</th>
             <th className="px-1 py-2 md:px-1 md:py-2 lg:px-6 lg:py-3 font-semibold text-right">ROI</th>
           </tr>
         </thead>

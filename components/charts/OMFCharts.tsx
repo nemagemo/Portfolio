@@ -42,8 +42,18 @@ const TreemapContent = (props: any) => {
   const showText = width > 40 && height > 30;
   const padding = 5;
 
-  const strokeColor = themeMode === 'neon' ? '#000' : '#fff';
+  const isNeon = themeMode === 'neon';
+  const strokeColor = isNeon ? '#000' : '#fff';
   const strokeWidth = themeMode === 'comic' ? 2 : 2;
+
+  // Neon-specific text styling for better contrast on colored tiles
+  const symbolColor = isNeon ? '#cffafe' : '#fff'; // Cyan-100 for neon symbol to match theme but keep high contrast
+  const roiColor = '#fff'; // Pure white for ROI value
+  
+  // Stronger text shadow/outline for Neon to ensure visibility against saturated backgrounds
+  const textShadow = isNeon 
+    ? '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 2px 2px 2px rgba(0,0,0,0.8)' 
+    : '0 2px 4px rgba(0,0,0,0.9)';
 
   return (
     <g>
@@ -63,11 +73,11 @@ const TreemapContent = (props: any) => {
           x={x + padding}
           y={y + padding + fontSizeName * 0.8} 
           textAnchor="start"
-          fill="#fff"
+          fill={symbolColor}
           fontSize={fontSizeName}
-          fontWeight="700"
+          fontWeight={isNeon ? "900" : "700"}
           style={{ 
-            textShadow: '0 2px 4px rgba(0,0,0,0.9)', 
+            textShadow: textShadow, 
             pointerEvents: 'none',
           }}
         >
@@ -80,13 +90,13 @@ const TreemapContent = (props: any) => {
           x={x + width - padding}
           y={y + height - padding} 
           textAnchor="end"
-          fill="#fff"
+          fill={roiColor}
           fontSize={fontSizeRoi}
-          fontWeight="500"
+          fontWeight={isNeon ? "900" : "500"}
           style={{ 
-            textShadow: '0 2px 4px rgba(0,0,0,0.9)', 
+            textShadow: textShadow, 
             pointerEvents: 'none', 
-            opacity: 0.95,
+            opacity: 1,
           }}
         >
           {roi > 0 ? '+' : ''}{Number(roi).toFixed(1)}%

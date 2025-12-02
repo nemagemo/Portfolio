@@ -72,9 +72,9 @@ export const CHART_THEMES: Record<ThemeMode, {
     state: '#db2777',      // Pink-600
     tax: '#dc2626',        // Red-600
     net: '#115e59',        // Teal-800
-    exit: '#eab308',       // Yellow-500
+    exit: '#ea580c',       // Orange-600 (Darker for better visibility on white)
     projection: '#d97706', // Amber-600
-    taxedAccount: '#eab308', 
+    taxedAccount: '#ea580c', 
     grid: '#e5e7eb',       
     axis: '#6b7280',       
     tooltipBg: '#ffffff',
@@ -117,10 +117,10 @@ export const CHART_THEMES: Record<ThemeMode, {
   },
   neon: {
     investment: '#22d3ee', // Cyan-400
-    profit: '#39ff14',     // Neon Green
+    profit: '#34d399',     // Emerald-400 (Calmer green for readability)
     employer: '#d946ef',   // Fuchsia-500
     state: '#f472b6',      // Pink-400
-    tax: '#ef4444',        // Red
+    tax: '#f43f5e',        // Rose-500 (Bright red/pink for better contrast on black)
     net: '#1e3a8a',        // Dark Blue
     exit: '#fbbf24',       // Amber
     projection: '#facc15', // Yellow-400
@@ -132,10 +132,10 @@ export const CHART_THEMES: Record<ThemeMode, {
     tooltipBorder: '#22d3ee',
     strokeWidth: 2,
     pieColors: ['#06b6d4', '#8b5cf6', '#10b981', '#f59e0b', '#f43f5e', '#64748b'],
-    barProfitPos: '#39ff14',
-    barProfitNeg: '#ef4444',
-    dailyPos: '#059669', 
-    dailyNeg: '#991b1b', 
+    barProfitPos: '#34d399', // Emerald-400
+    barProfitNeg: '#f43f5e', // Rose-500
+    dailyPos: '#34d399', 
+    dailyNeg: '#f43f5e', 
     dailyNeu: '#1e293b',
     dailyWarning: '#facc15',
     lineType: 'monotone'

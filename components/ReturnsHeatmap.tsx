@@ -40,11 +40,13 @@ const getColorClass = (val: number | null, themeMode: string = 'light') => {
   }
 
   if (isNeon) {
-      // Neon Logic: Dark backgrounds with Bright text and Glows
-      if (val >= 10) return 'bg-[#064e3b] text-[#39ff14] font-bold font-mono shadow-[0_0_5px_rgba(57,255,20,0.3)] border border-[#39ff14]/30';
-      if (val >= 0) return 'bg-[#064e3b]/50 text-[#39ff14] font-mono border border-[#39ff14]/20';
-      if (val <= -10) return 'bg-[#881337] text-[#ff0055] font-bold font-mono shadow-[0_0_5px_rgba(255,0,85,0.3)] border border-[#ff0055]/30';
-      return 'bg-[#881337]/50 text-[#ff0055] font-mono border border-[#ff0055]/20';
+      // Neon Logic: Revised to use Emerald/Rose palette for better text readability
+      if (val >= 10) return 'bg-[#064e3b] text-emerald-400 font-bold font-mono border border-emerald-500/30';
+      if (val >= 0) return 'bg-[#064e3b]/50 text-emerald-400 font-mono border border-emerald-500/20';
+      
+      // Negative: Use Rose/Pink for clear visibility on dark
+      if (val <= -10) return 'bg-[#881337] text-rose-400 font-bold font-mono border border-rose-500/30';
+      return 'bg-[#881337]/50 text-rose-400 font-mono border border-rose-500/20';
   }
 
   // Standard Light Logic
