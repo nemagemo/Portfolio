@@ -179,8 +179,8 @@ Aplikacja stosuje hybrydowy model wyceny w czasie rzeczywistym:
     *   Wylicz: `ROI`.
     *   Zaktualizuj datę `OMF_LAST_UPDATED`.
 4.  **Synchronizacja Historii (Weryfikacja TRIPLE CHECK wymagana):**
-    *   Na podstawie nowych wartości w `OMFopen.ts`, zsumuj wartość każdego portfela (PPK, IKE, Krypto).
-    *   Zaktualizuj wartości w **ostatnim wierszu** plików `CSV/PPK.ts`, `CSV/IKE.ts` oraz `CSV/Krypto.ts`, aby wykresy historyczne kończyły się aktualnym stanem ("Teraz").
+    *   Na podstawie nowych wartości w `OMFopen.ts`, zsumuj wartość każdego portfela (PPK, IKE, Krypto) oraz pobierz wartość Gotówki.
+    *   Zaktualizuj wartości oraz datę w **ostatnim wierszu** plików `CSV/PPK.ts`, `CSV/IKE.ts`, `CSV/Krypto.ts` **oraz `CSV/Cash.ts`**, aby wszystkie wykresy historyczne kończyły się tą samą datą i wartościami odpowiadającymi aktualnemu stanowi ("Teraz"). Zapobiegnie to rozjeżdżaniu się osi czasu na wykresach (np. "dwa razy listopad").
 
 ### Polecenie: `ZamknijMiesiac`
 **Wyzwalacz:** "Zamknij miesiąc [data]" lub po prostu "Zamknij miesiąc".
