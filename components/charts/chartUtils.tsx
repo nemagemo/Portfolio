@@ -202,6 +202,7 @@ export const useChartConfig = () => {
       iconSize: 8,
       margin: { top: 10, right: 0, left: -20, bottom: 0 },
       xAxisPadding: { left: 0, right: 5 },
+      legendHeight: 44,
       // Force centering for mobile legends
       legendStyle: { 
         fontSize: '9px', 
@@ -218,6 +219,7 @@ export const useChartConfig = () => {
     iconSize: 14,
     margin: { top: 10, right: 0, left: -20, bottom: 0 },
     xAxisPadding: { left: 0, right: 10 },
+    legendHeight: 30,
     legendStyle: { 
       fontSize: '12px',
       paddingTop: '0px'

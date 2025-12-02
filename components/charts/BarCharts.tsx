@@ -58,7 +58,7 @@ export const PPKLeverageChart: React.FC<ChartProps> = ({ data, themeMode = 'ligh
           />
           <Legend 
             verticalAlign="top" 
-            height={36} 
+            height={config.legendHeight} 
             iconSize={config.iconSize}
             wrapperStyle={config.legendStyle}
           />

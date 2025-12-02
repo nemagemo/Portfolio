@@ -210,7 +210,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
         {portfolioType === 'PPK' ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className={`${styles.cardContainer} p-3 sm:p-6 lg:col-span-2`}>
-              <div className="flex flex-col md:flex-row items-center justify-between mb-2 space-y-4 md:space-y-0">
+              <div className="flex flex-col md:flex-row items-center justify-between mb-0 space-y-4 md:space-y-0">
                 <div className="flex flex-col">
                   <h3 className={`text-lg font-bold ${styles.text}`}>Historyczna Wartość Portfela</h3>
                   <p className={`hidden md:block text-[10px] sm:text-xs mt-2 font-medium leading-tight max-w-2xl ${isNeon ? 'text-slate-400' : 'text-slate-400'}`}>Wartość netto = Wartość po odjęciu podatku od wpłaty Pracodawcy<br/>Wartość Exit = Wartość netto - 30% wpłat od Pracodawcy - wpłaty od Państwa - 19% podatku od zysku</p>
@@ -236,7 +236,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className={`${styles.cardContainer} p-3 sm:p-6 lg:col-span-2`}>
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between mb-0">
                 <h3 className={`text-lg font-bold ${styles.text}`}>{portfolioType === 'IKE' && showTaxComparison ? 'Historyczna Wartość Portfela (IKE vs Opodatkowane)' : 'Historyczna Wartość Portfela'}</h3>
                 {portfolioType === 'IKE' && (<button onClick={() => setShowTaxComparison && setShowTaxComparison(!showTaxComparison)} className={`hidden md:flex items-center px-3 py-1.5 text-xs font-bold transition-all ${showTaxComparison ? styles.toggleCPIActive : `bg-transparent ${isNeon ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`} rounded-md`} title="Pokaż porównanie z kontem opodatkowanym"><TaxToggleIcon className="w-4 h-4 mr-2" />Belka</button>)}
               </div>
@@ -250,7 +250,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
 
             {portfolioType === 'IKE' && (
               <div className={`${styles.cardContainer} p-3 sm:p-6 lg:col-span-2 hidden md:block`}>
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-0">
                   <div>
                     <h3 className={`text-lg font-bold ${styles.text}`}>Otrzymane Dywidendy</h3>
                     <p className={`text-sm ${styles.textSub}`}>Suma: {totalDividends.toLocaleString('pl-PL')} zł</p>

@@ -82,7 +82,7 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjecti
           />
           <Legend 
             verticalAlign="top" 
-            height={36} 
+            height={config.legendHeight} 
             iconSize={config.iconSize}
             wrapperStyle={config.legendStyle}
           />
@@ -203,7 +203,7 @@ export const ROIChart: React.FC<ChartProps> = ({ data, showExitRoi = true, theme
           />
           <Legend 
             verticalAlign="top" 
-            height={36} 
+            height={config.legendHeight} 
             iconSize={config.iconSize}
             wrapperStyle={config.legendStyle}
           />
@@ -295,7 +295,7 @@ export const CryptoValueChart: React.FC<ChartProps> = ({ data, showTaxComparison
           />
           <Legend 
             verticalAlign="top" 
-            height={36} 
+            height={config.legendHeight} 
             iconSize={config.iconSize}
             wrapperStyle={config.legendStyle}
           />
@@ -386,7 +386,7 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection,
           />
           <Legend 
             verticalAlign="top" 
-            height={36} 
+            height={config.legendHeight} 
             iconSize={config.iconSize}
             wrapperStyle={config.legendStyle}
           />
@@ -456,10 +456,10 @@ export const GlobalPerformanceChart: React.FC<ChartProps> = ({ data, themeMode =
 
   return (
     <div className="w-full">
-      <div className="flex justify-end space-x-3 mb-2 px-2">
+      <div className="flex justify-end space-x-2 md:space-x-3 mb-2 px-1 md:px-2">
         <button
           onClick={() => setShowSP500(!showSP500)}
-          className={`px-3 py-1 text-xs font-medium rounded-full transition-all ${
+          className={`px-2 py-0.5 md:px-3 md:py-1 text-[10px] md:text-xs font-medium rounded-full transition-all ${
             showSP500 
               ? 'bg-slate-700 text-white ring-2 ring-slate-700 ring-offset-1' 
               : `border border-slate-300 ${themeMode === 'neon' ? 'bg-slate-700 text-slate-200' : 'bg-white text-slate-600'} hover:opacity-80`
@@ -469,7 +469,7 @@ export const GlobalPerformanceChart: React.FC<ChartProps> = ({ data, themeMode =
         </button>
         <button
           onClick={() => setShowWIG20(!showWIG20)}
-          className={`px-3 py-1 text-xs font-medium rounded-full transition-all ${
+          className={`px-2 py-0.5 md:px-3 md:py-1 text-[10px] md:text-xs font-medium rounded-full transition-all ${
             showWIG20 
               ? 'bg-purple-800 text-white ring-2 ring-purple-800 ring-offset-1' 
               : `border border-slate-300 ${themeMode === 'neon' ? 'bg-slate-700 text-slate-200' : 'bg-white text-slate-600'} hover:opacity-80`
@@ -512,7 +512,7 @@ export const GlobalPerformanceChart: React.FC<ChartProps> = ({ data, themeMode =
             />
             <Legend 
               verticalAlign="top" 
-              height={36} 
+              height={config.legendHeight} 
               iconSize={config.iconSize}
               wrapperStyle={config.legendStyle}
             />
@@ -610,7 +610,7 @@ export const PortfolioAllocationHistoryChart: React.FC<ChartProps> = ({ data, th
           />
           <Legend 
             verticalAlign="top" 
-            height={36} 
+            height={config.legendHeight} 
             iconSize={config.iconSize}
             wrapperStyle={config.legendStyle}
           />

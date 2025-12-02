@@ -22,7 +22,7 @@ export const Footer: React.FC<FooterProps> = ({ theme }) => {
           <div className="flex items-center select-none opacity-90 hover:opacity-100 transition-opacity">
              <FooterLogo className={`h-8 sm:h-9 w-auto ${isNeon ? 'text-cyan-400' : 'text-slate-800'}`} />
           </div>
-          <div className={`text-[10px] font-mono ${styles.footerText} text-center`}>
+          <div className={`text-[9px] font-mono ${styles.footerText} text-center`}>
             &copy; {new Date().getFullYear()} Old Man Fund. Wszelkie prawa zastrzeżone.
           </div>
         </div>
