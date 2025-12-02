@@ -54,7 +54,7 @@ export const PPKLeverageChart: React.FC<ChartProps> = ({ data, themeMode = 'ligh
                return [`${value.toLocaleString('pl-PL')} zł (${percent.toFixed(1)}%)`, labels[name] || name];
             }}
             labelFormatter={formatDate}
-            contentStyle={getTooltipStyle(themeMode as ThemeMode)}
+            contentStyle={getTooltipStyle(themeMode as ThemeMode, config.isMobile)}
           />
           <Legend 
             verticalAlign="top" 
@@ -145,7 +145,7 @@ export const SeasonalityChart: React.FC<{ data: any[], themeMode?: ThemeMode }> 
                 <YAxis stroke={t.axis} fontSize={10} unit="%" />
                 <Tooltip 
                     formatter={(value: number) => [`${value.toFixed(2)}%`, 'Średnia stopa zwrotu']}
-                    contentStyle={getTooltipStyle(themeMode as ThemeMode)}
+                    contentStyle={getTooltipStyle(themeMode as ThemeMode, config.isMobile)}
                 />
                 <ReferenceLine y={0} stroke={t.axis} strokeWidth={2} />
                 <Bar dataKey="value" name="Średnia Stopa Zwrotu" strokeWidth={0}>

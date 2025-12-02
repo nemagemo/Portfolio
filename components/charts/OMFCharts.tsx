@@ -5,7 +5,7 @@ import {
   ScatterChart, CartesianGrid, XAxis, YAxis, ZAxis, ReferenceLine, Scatter, LabelList
 } from 'recharts';
 import { OMFDataRow } from '../../types';
-import { ThemeMode, CHART_THEMES, getTooltipStyle, formatCurrency, AssetLogo } from './chartUtils';
+import { ThemeMode, CHART_THEMES, getTooltipStyle, formatCurrency, AssetLogo, useChartConfig } from './chartUtils';
 
 // --- OMF Specific Charts ---
 
@@ -102,6 +102,8 @@ interface OMFTreemapChartProps {
 }
 
 export const OMFTreemapChart: React.FC<OMFTreemapChartProps> = ({ data, themeMode = 'light' }) => {
+  const config = useChartConfig();
+  
   return (
     <div className="h-[400px] w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -118,9 +120,9 @@ export const OMFTreemapChart: React.FC<OMFTreemapChartProps> = ({ data, themeMod
             content={({ active, payload }) => {
               if (active && payload && payload.length) {
                 const data = payload[0].payload;
-                const style = getTooltipStyle(themeMode as ThemeMode);
+                const style = getTooltipStyle(themeMode as ThemeMode, config.isMobile);
                 return (
-                  <div className="p-3 shadow-lg" style={style}>
+                  <div className={config.isMobile ? "p-2 shadow-lg text-[10px]" : "p-3 shadow-lg"} style={style}>
                     <p className="font-bold">{data.name}</p>
                     <p className="text-sm opacity-80">
                       Wartość: <span className="font-semibold">{formatCurrency(data.value)}</span>
@@ -151,6 +153,7 @@ interface BubbleRiskChartProps {
 
 export const BubbleRiskChart: React.FC<BubbleRiskChartProps> = ({ data, themeMode = 'light' }) => {
   const t = CHART_THEMES[themeMode || 'light'];
+  const config = useChartConfig();
   
   // Transform data for ScatterChart
   const chartData = useMemo(() => {
@@ -198,7 +201,7 @@ export const BubbleRiskChart: React.FC<BubbleRiskChartProps> = ({ data, themeMod
               if (active && payload && payload.length) {
                 const d = payload[0].payload;
                 return (
-                  <div style={getTooltipStyle(themeMode as ThemeMode)} className="p-2 shadow-md text-xs">
+                  <div style={getTooltipStyle(themeMode as ThemeMode, config.isMobile)} className={config.isMobile ? "p-1.5 shadow-md text-xs" : "p-2 shadow-md text-xs"}>
                     <p className="font-bold mb-1 text-sm">{d.name}</p>
                     <p>Wartość: {formatCurrency(d.z)}</p>
                     {d.isLive ? (

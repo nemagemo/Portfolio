@@ -169,7 +169,7 @@ export const Header: React.FC<HeaderProps> = ({
       {isMobileMenuOpen && (
         <div className={`md:hidden absolute top-16 left-0 w-full z-40 p-4 shadow-xl ${mobileMenuClass} animate-in slide-in-from-top-2 duration-200`}>
            <div className="grid grid-cols-1 gap-2">
-              <button onClick={() => handlePortfolioChange('OMF')} className={`flex items-center justify-between px-4 py-3 text-lg font-bold rounded-lg ${portfolioType === 'OMF' ? styles.buttonActive : 'opacity-80 hover:opacity-100'}`}>
+              <button onClick={() => handlePortfolioChange('OMF')} className={`flex items-center justify-between px-4 py-3 text-lg font-bold rounded-lg ${portfolioType === 'OMF' ? styles.buttonActive : styles.buttonInactive}`}>
                  <span>Portfel Główny</span>
                  <span className="text-2xl font-black leading-none">Σ</span>
               </button>

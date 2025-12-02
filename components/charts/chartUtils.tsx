@@ -149,14 +149,16 @@ export const formatDate = (dateStr: string) => {
   return date.toLocaleDateString('pl-PL', { month: 'short', year: '2-digit' });
 };
 
-// Helper to get tooltip content style based on theme
-export const getTooltipStyle = (theme: ThemeMode) => {
+// Helper to get tooltip content style based on theme and mobile status
+export const getTooltipStyle = (theme: ThemeMode, isMobile: boolean = false) => {
   const t = CHART_THEMES[theme];
   const style: any = { 
     backgroundColor: t.tooltipBg, 
     color: t.tooltipText, 
     border: `1px solid ${t.tooltipBorder}`,
-    borderRadius: '8px'
+    borderRadius: '8px',
+    fontSize: isMobile ? '10px' : '12px',
+    padding: isMobile ? '4px 8px' : '8px 12px',
   };
   
   if (theme === 'comic') {
@@ -196,6 +198,7 @@ export const useChartConfig = () => {
 
   if (isMobile) {
     return {
+      isMobile: true,
       iconSize: 8,
       margin: { top: 10, right: 0, left: -20, bottom: 0 },
       xAxisPadding: { left: 0, right: 5 },
@@ -211,6 +214,7 @@ export const useChartConfig = () => {
   }
 
   return {
+    isMobile: false,
     iconSize: 14,
     margin: { top: 10, right: 0, left: -20, bottom: 0 },
     xAxisPadding: { left: 0, right: 10 },

@@ -78,7 +78,7 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjecti
               return [`${value.toLocaleString('pl-PL')} zł`, nameMap[name] || name];
             }}
             labelFormatter={formatDate}
-            contentStyle={getTooltipStyle(themeMode as ThemeMode)}
+            contentStyle={getTooltipStyle(themeMode as ThemeMode, config.isMobile)}
           />
           <Legend 
             verticalAlign="top" 
@@ -199,7 +199,7 @@ export const ROIChart: React.FC<ChartProps> = ({ data, showExitRoi = true, theme
               name === 'exitRoi' ? 'Exit ROI' : 'ROI'
             ]}
             labelFormatter={formatDate}
-            contentStyle={getTooltipStyle(themeMode as ThemeMode)}
+            contentStyle={getTooltipStyle(themeMode as ThemeMode, config.isMobile)}
           />
           <Legend 
             verticalAlign="top" 
@@ -291,7 +291,7 @@ export const CryptoValueChart: React.FC<ChartProps> = ({ data, showTaxComparison
                return [`${value.toLocaleString('pl-PL')} zł`, labels[name] || name];
             }}
             labelFormatter={formatDate}
-            contentStyle={getTooltipStyle(themeMode as ThemeMode)}
+            contentStyle={getTooltipStyle(themeMode as ThemeMode, config.isMobile)}
           />
           <Legend 
             verticalAlign="top" 
@@ -382,7 +382,7 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection,
                 return [`${value.toLocaleString('pl-PL')} zł`, labels[name] || name];
             }}
             labelFormatter={formatDate}
-            contentStyle={getTooltipStyle(themeMode as ThemeMode)}
+            contentStyle={getTooltipStyle(themeMode as ThemeMode, config.isMobile)}
           />
           <Legend 
             verticalAlign="top" 
@@ -508,7 +508,7 @@ export const GlobalPerformanceChart: React.FC<ChartProps> = ({ data, themeMode =
                  return [`${value.toFixed(2)}%`, labels[name] || name];
               }}
               labelFormatter={formatDate}
-              contentStyle={getTooltipStyle(themeMode as ThemeMode)}
+              contentStyle={getTooltipStyle(themeMode as ThemeMode, config.isMobile)}
             />
             <Legend 
               verticalAlign="top" 
@@ -606,7 +606,7 @@ export const PortfolioAllocationHistoryChart: React.FC<ChartProps> = ({ data, th
           <Tooltip 
             formatter={(value: number) => [`${value.toFixed(2)}%`]} 
             labelFormatter={formatDate}
-            contentStyle={getTooltipStyle(themeMode as ThemeMode)}
+            contentStyle={getTooltipStyle(themeMode as ThemeMode, config.isMobile)}
           />
           <Legend 
             verticalAlign="top" 
