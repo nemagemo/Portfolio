@@ -86,8 +86,8 @@ export const AssetsTable: React.FC<AssetsTableProps> = ({ data, variant = 'activ
   const isNeon = themeMode === 'neon';
   
   const getHeaderClass = () => {
-    if (isNeon) return "text-xs font-mono text-cyan-400 uppercase bg-black/80 border-b border-cyan-900/50 tracking-wider";
-    return "text-xs text-slate-700 uppercase bg-slate-50 border-b border-slate-200";
+    if (isNeon) return "text-[10px] md:text-xs font-mono text-cyan-400 uppercase bg-black/80 border-b border-cyan-900/50 tracking-wider";
+    return "text-[10px] md:text-xs text-slate-700 uppercase bg-slate-50 border-b border-slate-200";
   };
 
   const getRowClass = (index: number) => {
@@ -114,9 +114,9 @@ export const AssetsTable: React.FC<AssetsTableProps> = ({ data, variant = 'activ
   const getBadgeClass = (val: number) => {
     if (isNeon) {
         const color = val >= 0 ? 'border-[#39ff14] text-[#39ff14]' : 'border-[#ff0055] text-[#ff0055]';
-        return `px-2 py-1 rounded-none border ${color} bg-black/50 text-xs font-mono shadow-[0_0_5px_rgba(0,0,0,0.5)]`;
+        return `px-1.5 py-0.5 md:px-2 md:py-1 rounded-none border ${color} bg-black/50 text-[10px] md:text-xs font-mono shadow-[0_0_5px_rgba(0,0,0,0.5)]`;
     }
-    return `px-2 py-1 rounded-full text-xs font-semibold ${val >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`;
+    return `px-1.5 py-0.5 md:px-2 md:py-1 rounded-full text-[10px] md:text-xs font-semibold ${val >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`;
   };
 
   // Helper to render sortable table header
@@ -124,7 +124,7 @@ export const AssetsTable: React.FC<AssetsTableProps> = ({ data, variant = 'activ
     const isActive = sortConfig.key === sortKey;
     return (
       <th 
-        className={`px-4 py-3 font-semibold cursor-pointer group select-none text-${align} transition-colors ${isActive ? (isNeon ? 'text-cyan-200' : 'text-slate-900') : 'hover:text-slate-500'}`}
+        className={`px-1 py-2 md:px-1 md:py-2 lg:px-4 lg:py-3 font-semibold cursor-pointer group select-none text-${align} transition-colors ${isActive ? (isNeon ? 'text-cyan-200' : 'text-slate-900') : 'hover:text-slate-500'}`}
         onClick={() => requestSort(sortKey)}
       >
         <div className={`flex items-center ${align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : 'justify-start'}`}>
@@ -145,8 +145,8 @@ export const AssetsTable: React.FC<AssetsTableProps> = ({ data, variant = 'activ
     <div>
       {/* Internal Header with Dynamic Count */}
       {title && (
-        <div className={`px-6 py-4 border-b flex justify-between items-center ${isNeon ? 'bg-black/40 border-cyan-900/30' : 'bg-slate-50 border-slate-200'}`}>
-          <h3 className={`text-lg font-bold ${isNeon ? 'text-cyan-400 font-mono' : 'text-slate-800'}`}>{title}</h3>
+        <div className={`px-4 md:px-6 py-3 md:py-4 border-b flex justify-between items-center ${isNeon ? 'bg-black/40 border-cyan-900/30' : 'bg-slate-50 border-slate-200'}`}>
+          <h3 className={`text-base md:text-lg font-bold ${isNeon ? 'text-cyan-400 font-mono' : 'text-slate-800'}`}>{title}</h3>
           <span className={`text-xs font-medium px-2 py-1 transition-all duration-300 ${isNeon ? 'rounded-full bg-cyan-900/30 text-cyan-300 border border-cyan-500/50 font-mono' : 'rounded-full bg-emerald-100 text-emerald-700'}`}>
             {displayData.length} pozycji
           </span>
@@ -154,15 +154,15 @@ export const AssetsTable: React.FC<AssetsTableProps> = ({ data, variant = 'activ
       )}
 
       {/* Filter Bar */}
-      <div className={`px-6 py-3 flex items-center space-x-3 border-b ${isNeon ? 'bg-black/60 border-cyan-900/30' : 'bg-slate-50 border-slate-100'}`}>
-        <div className={`flex items-center text-sm ${isNeon ? 'text-cyan-600 font-mono' : 'text-slate-500'}`}>
-          <Filter size={16} className="mr-2" />
-          <span>Filtruj wg portfela:</span>
+      <div className={`px-4 md:px-6 py-2 md:py-3 flex items-center space-x-3 border-b overflow-x-auto ${isNeon ? 'bg-black/60 border-cyan-900/30' : 'bg-slate-50 border-slate-100'}`}>
+        <div className={`flex items-center text-xs md:text-sm ${isNeon ? 'text-cyan-600 font-mono' : 'text-slate-500'}`}>
+          <Filter size={14} className="mr-2" />
+          <span className="whitespace-nowrap">Filtruj wg portfela:</span>
         </div>
         <div className="flex space-x-2">
           <button
             onClick={() => setSelectedPortfolio('ALL')}
-            className={`px-3 py-1 text-xs font-medium transition-colors ${
+            className={`px-2 py-1 md:px-3 text-[10px] md:text-xs font-medium transition-colors whitespace-nowrap ${
               selectedPortfolio === 'ALL' 
                 ? (isNeon ? 'rounded-full bg-cyan-600 text-black shadow-[0_0_10px_rgba(8,145,178,0.5)] font-bold' : 'rounded-full bg-slate-800 text-white')
                 : (isNeon ? 'rounded-full bg-black border border-cyan-900/50 text-cyan-600 hover:text-cyan-300 hover:border-cyan-500' : 'rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-100')
@@ -174,7 +174,7 @@ export const AssetsTable: React.FC<AssetsTableProps> = ({ data, variant = 'activ
             <button
               key={p}
               onClick={() => setSelectedPortfolio(p)}
-              className={`px-3 py-1 text-xs font-medium transition-colors ${
+              className={`px-2 py-1 md:px-3 text-[10px] md:text-xs font-medium transition-colors whitespace-nowrap ${
                 selectedPortfolio === p 
                   ? (isNeon ? 'rounded-full bg-cyan-600 text-black shadow-[0_0_10px_rgba(8,145,178,0.5)] font-bold' : 'rounded-full bg-slate-800 text-white')
                   : (isNeon ? 'rounded-full bg-black border border-cyan-900/50 text-cyan-600 hover:text-cyan-300 hover:border-cyan-500' : 'rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-100')
@@ -187,21 +187,21 @@ export const AssetsTable: React.FC<AssetsTableProps> = ({ data, variant = 'activ
       </div>
 
       <div className="overflow-x-auto">
-        <table className={`min-w-full text-sm text-left ${isNeon ? 'text-cyan-300 font-mono' : 'text-slate-600'}`}>
+        <table className={`min-w-full text-[10px] md:text-[11px] lg:text-sm text-left ${isNeon ? 'text-cyan-300 font-mono' : 'text-slate-600'}`}>
           <thead className={getHeaderClass()}>
             <tr>
               <SortableHeader label="Symbol" sortKey="symbol" />
-              <SortableHeader label={variant === 'closed' ? 'Data Sprzedaży' : 'Ostatni Zakup'} sortKey="lastPurchaseDate" />
-              <SortableHeader label="Okres (dni)" sortKey="investmentPeriod" align="center" />
+              <SortableHeader label={variant === 'closed' ? 'Data' : 'Zakup'} sortKey="lastPurchaseDate" />
+              <SortableHeader label="Dni" sortKey="investmentPeriod" align="center" />
               
               {variant !== 'closed' && (
                 <SortableHeader label="Ilość" sortKey="quantity" align="right" />
               )}
               
-              <SortableHeader label="Wartość Zakupu" sortKey="purchaseValue" align="right" />
+              <SortableHeader label="Koszt" sortKey="purchaseValue" align="right" />
               
               <SortableHeader 
-                label={variant === 'closed' ? 'Wartość Sprzedaży' : 'Obecna Wartość'} 
+                label={variant === 'closed' ? 'Sprzedaż' : 'Wartość'} 
                 sortKey="currentValue" 
                 align="right" 
               />
@@ -224,29 +224,31 @@ export const AssetsTable: React.FC<AssetsTableProps> = ({ data, variant = 'activ
 
               return (
                 <tr key={`${r.symbol}-${index}`} className={getRowClass(index)}>
-                  <td className={`px-4 py-3 ${getTextClass(true)}`}>{r.symbol}</td>
-                  <td className={`px-4 py-3 ${isNeon ? 'text-cyan-600' : 'text-slate-500'}`}>{r.lastPurchaseDate}</td>
-                  <td className={`px-4 py-3 text-center ${isNeon ? 'text-cyan-600' : 'text-slate-500'}`}>{r.investmentPeriod}</td>
+                  <td className={`px-1 py-1.5 md:px-1 md:py-2 lg:px-4 lg:py-3 ${getTextClass(true)}`}>{r.symbol}</td>
+                  <td className={`px-1 py-1.5 md:px-1 md:py-2 lg:px-4 lg:py-3 ${isNeon ? 'text-cyan-600' : 'text-slate-500'}`}>{r.lastPurchaseDate}</td>
+                  <td className={`px-1 py-1.5 md:px-1 md:py-2 lg:px-4 lg:py-3 text-center ${isNeon ? 'text-cyan-600' : 'text-slate-500'}`}>{r.investmentPeriod}</td>
                   
                   {variant !== 'closed' && (
-                    <td className={`px-4 py-3 text-right ${isNeon ? 'text-cyan-200 font-mono' : 'font-mono'}`}>{(r.quantity || 0) > 0 ? (r.quantity || 0).toFixed(4) : '-'}</td>
+                    <td className={`px-1 py-1.5 md:px-1 md:py-2 lg:px-4 lg:py-3 text-right ${isNeon ? 'text-cyan-200 font-mono' : 'font-mono'}`}>{(r.quantity || 0) > 0 ? (r.quantity || 0).toFixed(4) : '-'}</td>
                   )}
-                  <td className={`px-4 py-3 text-right ${isNeon ? 'text-cyan-600' : ''}`}>{(r.purchaseValue || 0).toLocaleString('pl-PL')} zł</td>
+                  <td className={`px-1 py-1.5 md:px-1 md:py-2 lg:px-4 lg:py-3 text-right ${isNeon ? 'text-cyan-600' : ''}`}>{(r.purchaseValue || 0).toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</td>
                   
                   {/* Current Value with Fallback Indicator */}
-                  <td className={`px-4 py-3 text-right ${valueClass} flex items-center justify-end`}>
-                    {isFallback && (
-                      <span title="Cena offline (nieaktualna)" className="mr-1.5 flex items-center">
-                        <AlertCircle size={12} className="text-amber-500" />
-                      </span>
-                    )}
-                    {(r.currentValue || 0).toLocaleString('pl-PL')} zł
+                  <td className={`px-1 py-1.5 md:px-1 md:py-2 lg:px-4 lg:py-3 text-right ${valueClass}`}>
+                    <div className="flex items-center justify-end">
+                      {isFallback && (
+                        <span title="Cena offline (nieaktualna)" className="mr-1 flex items-center">
+                          <AlertCircle size={10} className="text-amber-500" />
+                        </span>
+                      )}
+                      {(r.currentValue || 0).toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł
+                    </div>
                   </td>
                   
-                  <td className={`px-4 py-3 text-right font-medium ${getProfitClass(r.profit || 0)}`}>
-                    {(r.profit || 0).toLocaleString('pl-PL')} zł
+                  <td className={`px-1 py-1.5 md:px-1 md:py-2 lg:px-4 lg:py-3 text-right font-medium ${getProfitClass(r.profit || 0)}`}>
+                    {(r.profit || 0).toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-1 py-1.5 md:px-1 md:py-2 lg:px-4 lg:py-3 text-right">
                     <span className={getBadgeClass(r.roi || 0)}>
                       {r.roi}%
                     </span>
@@ -254,8 +256,8 @@ export const AssetsTable: React.FC<AssetsTableProps> = ({ data, variant = 'activ
                   
                   {/* 24h Change: Only show if valid/live, else show '-' */}
                   {variant !== 'closed' && (
-                    <td className={`px-4 py-3 text-right font-medium ${r.change24h !== undefined ? getProfitClass(r.change24h) : (isNeon ? 'text-slate-700' : 'text-slate-300')}`}>
-                      {r.change24h !== undefined ? `${r.change24h > 0 ? '+' : ''}${r.change24h.toFixed(2)}%` : '-'}
+                    <td className={`px-1 py-1.5 md:px-1 md:py-2 lg:px-4 lg:py-3 text-right font-medium ${r.change24h !== undefined ? getProfitClass(r.change24h) : (isNeon ? 'text-slate-700' : 'text-slate-300')}`}>
+                      {r.change24h !== undefined ? `${r.change24h > 0 ? '+' : ''}${r.change24h.toFixed(1)}%` : '-'}
                     </td>
                   )}
                 </tr>

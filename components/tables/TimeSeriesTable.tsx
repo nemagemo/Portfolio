@@ -17,8 +17,8 @@ export const TimeSeriesTable: React.FC<TimeSeriesTableProps> = ({ data, type, th
   const isNeon = themeMode === 'neon';
   
   const getHeaderClass = () => {
-    if (isNeon) return "text-xs font-mono text-cyan-400 uppercase bg-black/80 border-b border-cyan-900/50 tracking-wider";
-    return "text-xs text-slate-700 uppercase bg-slate-50 border-b border-slate-200";
+    if (isNeon) return "text-[10px] md:text-xs font-mono text-cyan-400 uppercase bg-black/80 border-b border-cyan-900/50 tracking-wider";
+    return "text-[10px] md:text-xs text-slate-700 uppercase bg-slate-50 border-b border-slate-200";
   };
 
   const getRowClass = (index: number) => {
@@ -45,29 +45,29 @@ export const TimeSeriesTable: React.FC<TimeSeriesTableProps> = ({ data, type, th
   const getBadgeClass = (val: number) => {
     if (isNeon) {
         const color = val >= 0 ? 'border-[#39ff14] text-[#39ff14]' : 'border-[#ff0055] text-[#ff0055]';
-        return `px-2 py-1 rounded-none border ${color} bg-black/50 text-xs font-mono shadow-[0_0_5px_rgba(0,0,0,0.5)]`;
+        return `px-1.5 py-0.5 md:px-2 md:py-1 rounded-none border ${color} bg-black/50 text-[10px] md:text-xs font-mono shadow-[0_0_5px_rgba(0,0,0,0.5)]`;
     }
-    return `px-2 py-1 rounded-full text-xs font-semibold ${val >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`;
+    return `px-1.5 py-0.5 md:px-2 md:py-1 rounded-full text-[10px] md:text-xs font-semibold ${val >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`;
   };
 
   return (
     <div className="overflow-x-auto">
-      <table className={`min-w-full text-sm text-left ${isNeon ? 'text-cyan-300 font-mono' : 'text-slate-600'}`}>
+      <table className={`min-w-full text-[10px] md:text-[11px] lg:text-sm text-left ${isNeon ? 'text-cyan-300 font-mono' : 'text-slate-600'}`}>
         <thead className={getHeaderClass()}>
           <tr>
-            <th className="px-6 py-3 font-semibold">Data</th>
-            <th className="px-6 py-3 font-semibold text-right">Wartość Całkowita</th>
-            <th className={`px-6 py-3 font-semibold text-right ${isNeon ? 'text-blue-400' : 'text-blue-600'}`}>Wkład Własny</th>
+            <th className="px-1 py-2 md:px-1 md:py-2 lg:px-6 lg:py-3 font-semibold">Data</th>
+            <th className="px-1 py-2 md:px-1 md:py-2 lg:px-6 lg:py-3 font-semibold text-right">Wartość</th>
+            <th className={`px-1 py-2 md:px-1 md:py-2 lg:px-6 lg:py-3 font-semibold text-right ${isNeon ? 'text-blue-400' : 'text-blue-600'}`}>Wkład</th>
             
             {type === 'PPK' && (
               <>
-                <th className="px-6 py-3 font-semibold text-right">Pracodawca</th>
-                <th className="px-6 py-3 font-semibold text-right">Państwo</th>
+                <th className="px-1 py-2 md:px-1 md:py-2 lg:px-6 lg:py-3 font-semibold text-right">Pracodawca</th>
+                <th className="px-1 py-2 md:px-1 md:py-2 lg:px-6 lg:py-3 font-semibold text-right">Państwo</th>
               </>
             )}
             
-            <th className={`px-6 py-3 font-semibold text-right ${isNeon ? 'text-[#39ff14]' : 'text-emerald-600'}`}>Zysk</th>
-            <th className="px-6 py-3 font-semibold text-right">ROI</th>
+            <th className={`px-1 py-2 md:px-1 md:py-2 lg:px-6 lg:py-3 font-semibold text-right ${isNeon ? 'text-[#39ff14]' : 'text-emerald-600'}`}>Zysk</th>
+            <th className="px-1 py-2 md:px-1 md:py-2 lg:px-6 lg:py-3 font-semibold text-right">ROI</th>
           </tr>
         </thead>
         <tbody>
@@ -86,31 +86,31 @@ export const TimeSeriesTable: React.FC<TimeSeriesTableProps> = ({ data, type, th
 
             return (
               <tr key={row.date} className={getRowClass(index)}>
-                <td className={`px-6 py-4 font-medium whitespace-nowrap ${getTextClass(false)}`}>
+                <td className={`px-1 py-1.5 md:px-1 md:py-2 lg:px-6 lg:py-4 font-medium whitespace-nowrap ${getTextClass(false)}`}>
                   {row.date}
                 </td>
-                <td className={`px-6 py-4 text-right ${getTextClass(true)}`}>
-                  {(row.totalValue || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2 })} zł
+                <td className={`px-1 py-1.5 md:px-1 md:py-2 lg:px-6 lg:py-4 text-right ${getTextClass(true)}`}>
+                  {(row.totalValue || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł
                 </td>
-                <td className={`px-6 py-4 text-right ${isNeon ? 'text-blue-300' : ''}`}>
-                  {(investment || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2 })} zł
+                <td className={`px-1 py-1.5 md:px-1 md:py-2 lg:px-6 lg:py-4 text-right ${isNeon ? 'text-blue-300' : ''}`}>
+                  {(investment || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł
                 </td>
                 
                 {isPPK && ppkRow && (
                   <>
-                    <td className="px-6 py-4 text-right">
-                      {(ppkRow.employerContribution || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2 })} zł
+                    <td className="px-1 py-1.5 md:px-1 md:py-2 lg:px-6 lg:py-4 text-right">
+                      {(ppkRow.employerContribution || 0).toLocaleString('pl-PL', { minimumFractionDigits: 0 })} zł
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      {(ppkRow.stateContribution || 0) > 0 ? `${(ppkRow.stateContribution || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2 })} zł` : '-'}
+                    <td className="px-1 py-1.5 md:px-1 md:py-2 lg:px-6 lg:py-4 text-right">
+                      {(ppkRow.stateContribution || 0) > 0 ? `${(ppkRow.stateContribution || 0).toLocaleString('pl-PL', { minimumFractionDigits: 0 })} zł` : '-'}
                     </td>
                   </>
                 )}
 
-                <td className={`px-6 py-4 text-right font-medium ${getProfitClass(row.profit || 0)}`}>
+                <td className={`px-1 py-1.5 md:px-1 md:py-2 lg:px-6 lg:py-4 text-right font-medium ${getProfitClass(row.profit || 0)}`}>
                   {(row.profit || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2 })} zł
                 </td>
-                <td className="px-6 py-4 text-right">
+                <td className="px-1 py-1.5 md:px-1 md:py-2 lg:px-6 lg:py-4 text-right">
                   <span className={getBadgeClass(row.roi || 0)}>
                     {row.roi}%
                   </span>

@@ -104,24 +104,26 @@ export const Header: React.FC<HeaderProps> = ({
         
         {/* LEFT: Logo - Flex-1 to push center */}
         <div className="flex-1 flex items-center justify-start">
-           {/* Desktop Logo */}
-           <HeaderLogo className={`hidden md:block h-6 sm:h-8 w-auto ${theme === 'neon' ? 'text-cyan-400' : 'text-slate-800'}`} />
+           {/* Desktop/Tablet Logo - Compact on md (h-5), larger on lg (h-8) */}
+           <HeaderLogo className={`hidden md:block md:h-5 lg:h-8 w-auto ${theme === 'neon' ? 'text-cyan-400' : 'text-slate-800'}`} />
            {/* Mobile Logo */}
            <HeaderMobile className={`md:hidden h-8 w-auto ${theme === 'neon' ? 'text-cyan-400' : 'text-slate-800'}`} />
         </div>
 
-        {/* CENTER: Navigation Tabs (Desktop only) */}
+        {/* CENTER: Navigation Tabs (Desktop/Tablet) */}
+        {/* Compact padding and text for tablet (md) */}
         <div className={`hidden md:flex p-1 space-x-1 overflow-x-auto shrink-0 ${theme === 'neon' ? 'bg-black border border-cyan-900/50 rounded-lg' : 'bg-slate-100 rounded-lg'}`}>
-          <button onClick={() => handlePortfolioChange('OMF')} className={`flex items-center justify-center px-3 sm:px-4 py-1 text-2xl font-bold leading-none transition-all whitespace-nowrap ${portfolioType === 'OMF' ? styles.buttonActive : styles.buttonInactive} rounded-md`}>
+          <button onClick={() => handlePortfolioChange('OMF')} className={`flex items-center justify-center md:px-2 md:py-1 md:text-lg lg:px-4 lg:text-2xl font-bold leading-none transition-all whitespace-nowrap ${portfolioType === 'OMF' ? styles.buttonActive : styles.buttonInactive} rounded-md`}>
             Σ
           </button>
-          <button onClick={() => handlePortfolioChange('PPK')} className={`flex items-center px-3 sm:px-4 py-1.5 text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'PPK' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><Briefcase size={16} className="mr-2 hidden sm:block" />PPK</button>
-          <button onClick={() => handlePortfolioChange('CRYPTO')} className={`flex items-center px-3 sm:px-4 py-1.5 text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'CRYPTO' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><Coins size={16} className="mr-2 hidden sm:block" />Krypto</button>
-          <button onClick={() => handlePortfolioChange('IKE')} className={`flex items-center px-3 sm:px-4 py-1.5 text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'IKE' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><PiggyBank size={16} className="mr-2 hidden sm:block" />IKE</button>
+          <button onClick={() => handlePortfolioChange('PPK')} className={`flex items-center md:px-2 md:py-1 md:text-[10px] lg:px-4 lg:py-1.5 lg:text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'PPK' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><Briefcase size={16} className="md:mr-1 lg:mr-2 hidden sm:block" />PPK</button>
+          <button onClick={() => handlePortfolioChange('CRYPTO')} className={`flex items-center md:px-2 md:py-1 md:text-[10px] lg:px-4 lg:py-1.5 lg:text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'CRYPTO' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><Coins size={16} className="md:mr-1 lg:mr-2 hidden sm:block" />Krypto</button>
+          <button onClick={() => handlePortfolioChange('IKE')} className={`flex items-center md:px-2 md:py-1 md:text-[10px] lg:px-4 lg:py-1.5 lg:text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'IKE' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><PiggyBank size={16} className="md:mr-1 lg:mr-2 hidden sm:block" />IKE</button>
         </div>
 
         {/* RIGHT: Status, Theme Toggles & Hamburger */}
-        <div className="flex-1 flex items-center justify-end space-x-3">
+        {/* Compact spacing for tablet */}
+        <div className="flex-1 flex items-center justify-end md:space-x-1 lg:space-x-3">
            {/* Status Indicator */}
            {isOfflineValid && (
               <div 
@@ -129,7 +131,7 @@ export const Header: React.FC<HeaderProps> = ({
                   flex items-center transition-all duration-300 overflow-hidden
                   ${statusLogic.colorClass}
                   rounded-full
-                  ${statusLogic.isPartial ? 'hover:pr-3 hover:pl-1 cursor-help group' : 'p-2'}
+                  ${statusLogic.isPartial ? 'hover:pr-3 hover:pl-1 cursor-help group' : 'md:p-1 lg:p-2'}
                 `}
                 title={statusLogic.label}
               >
@@ -151,8 +153,8 @@ export const Header: React.FC<HeaderProps> = ({
 
            {/* Theme Toggles */}
            <div className="flex space-x-1">
-              <button onClick={() => setTheme('light')} className={`p-2 rounded-md transition-all ${theme === 'light' ? 'bg-slate-200 text-slate-800' : 'text-slate-400 hover:bg-slate-100'}`}><Sun size={16} /></button>
-              <button onClick={() => setTheme('neon')} className={`p-2 rounded-md transition-all ${theme === 'neon' ? 'bg-cyan-900/50 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.8)]' : 'text-slate-400 hover:bg-slate-100'}`}><Zap size={16} /></button>
+              <button onClick={() => setTheme('light')} className={`md:p-1 lg:p-2 rounded-md transition-all ${theme === 'light' ? 'bg-slate-200 text-slate-800' : 'text-slate-400 hover:bg-slate-100'}`}><Sun size={16} /></button>
+              <button onClick={() => setTheme('neon')} className={`md:p-1 lg:p-2 rounded-md transition-all ${theme === 'neon' ? 'bg-cyan-900/50 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.8)]' : 'text-slate-400 hover:bg-slate-100'}`}><Zap size={16} /></button>
            </div>
 
            {/* Mobile Menu Toggle (Right Side) */}
