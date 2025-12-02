@@ -11,7 +11,7 @@ import { DataStatus, OMFIntegrityStatus } from './components/StatusCards';
 import { StandardDashboard } from './components/dashboards/StandardDashboard';
 import { OMFDashboard } from './components/dashboards/OMFDashboard';
 import { OMF_LAST_UPDATED } from './CSV/OMFopen';
-import { Logo3 } from './components/logos/Logo3';
+import { HeaderLogo } from './components/logos/HeaderLogo';
 import { FooterLogo } from './components/logos/FooterLogo';
 
 export const App: React.FC = () => {
@@ -143,7 +143,7 @@ export const App: React.FC = () => {
           
           {/* LEFT: Logo */}
           <div className="flex items-center">
-             <Logo3 className={`h-10 sm:h-12 w-auto ${theme === 'neon' ? 'text-cyan-400' : 'text-slate-800'}`} />
+             <HeaderLogo className={`h-8 sm:h-10 w-auto ${theme === 'neon' ? 'text-cyan-400' : 'text-slate-800'}`} />
           </div>
 
           {/* CENTER: Navigation Tabs */}
