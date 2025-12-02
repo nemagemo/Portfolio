@@ -11,6 +11,9 @@ import { DataStatus, OMFIntegrityStatus } from './components/StatusCards';
 import { StandardDashboard } from './components/dashboards/StandardDashboard';
 import { OMFDashboard } from './components/dashboards/OMFDashboard';
 import { OMF_LAST_UPDATED } from './CSV/OMFopen';
+import { AppLogo } from './components/logos/AppLogo';
+import { FooterLogo } from './components/logos/FooterLogo';
+import { Logo3 } from './components/logos/Logo3';
 
 export const App: React.FC = () => {
   const [portfolioType, setPortfolioType] = useState<PortfolioType>('OMF');
@@ -135,12 +138,26 @@ export const App: React.FC = () => {
   }, [pricingMode, isRefreshing, theme, onlinePrices, omfActiveAssets, portfolioType]);
 
   return (
-    <div className={`min-h-screen ${styles.appBg} ${styles.text} pb-12 transition-colors duration-300`}>
-      <header className={`${styles.headerBg} ${styles.headerBorder} border-b sticky top-0 z-50 transition-colors duration-300`}>
+    <div className={`flex flex-col min-h-screen ${styles.appBg} ${styles.text} transition-colors duration-300`}>
+      <header className={`${styles.headerBg} ${styles.headerBorder} sticky top-0 z-50 transition-colors duration-300`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           
-          {/* LEFT: Status Indicator */}
+          {/* LEFT: Logo */}
           <div className="w-24 flex items-center">
+             <Logo3 className={`h-8 w-auto ${theme === 'neon' ? 'text-cyan-400' : 'text-slate-800'}`} />
+          </div>
+
+          {/* CENTER: Navigation Tabs */}
+          <div className={`p-1 flex space-x-1 overflow-x-auto ${theme === 'neon' ? 'bg-black border border-cyan-900/50 rounded-lg' : 'bg-slate-100 rounded-lg'}`}>
+            <button onClick={() => handlePortfolioChange('OMF')} className={`flex items-center px-3 sm:px-4 py-1.5 text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'OMF' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><LayoutGrid size={16} className="mr-2 hidden sm:block" />OMF</button>
+            <button onClick={() => handlePortfolioChange('PPK')} className={`flex items-center px-3 sm:px-4 py-1.5 text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'PPK' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><Briefcase size={16} className="mr-2 hidden sm:block" />PPK</button>
+            <button onClick={() => handlePortfolioChange('CRYPTO')} className={`flex items-center px-3 sm:px-4 py-1.5 text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'CRYPTO' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><Coins size={16} className="mr-2 hidden sm:block" />Krypto</button>
+            <button onClick={() => handlePortfolioChange('IKE')} className={`flex items-center px-3 sm:px-4 py-1.5 text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'IKE' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><PiggyBank size={16} className="mr-2 hidden sm:block" />IKE</button>
+          </div>
+
+          {/* RIGHT: Status & Theme Toggles */}
+          <div className="flex items-center justify-end space-x-3">
+             {/* Status Indicator (Moved from Left) */}
              {isOfflineValid && (
                 <div 
                   className={`
@@ -166,26 +183,18 @@ export const App: React.FC = () => {
                   )}
                 </div>
              )}
-          </div>
 
-          {/* CENTER: Navigation Tabs */}
-          <div className={`p-1 flex space-x-1 overflow-x-auto ${theme === 'neon' ? 'bg-black border border-cyan-900/50 rounded-lg' : 'bg-slate-100 rounded-lg'}`}>
-            <button onClick={() => handlePortfolioChange('OMF')} className={`flex items-center px-3 sm:px-4 py-1.5 text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'OMF' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><LayoutGrid size={16} className="mr-2 hidden sm:block" />OMF</button>
-            <button onClick={() => handlePortfolioChange('PPK')} className={`flex items-center px-3 sm:px-4 py-1.5 text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'PPK' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><Briefcase size={16} className="mr-2 hidden sm:block" />PPK</button>
-            <button onClick={() => handlePortfolioChange('CRYPTO')} className={`flex items-center px-3 sm:px-4 py-1.5 text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'CRYPTO' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><Coins size={16} className="mr-2 hidden sm:block" />Krypto</button>
-            <button onClick={() => handlePortfolioChange('IKE')} className={`flex items-center px-3 sm:px-4 py-1.5 text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'IKE' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><PiggyBank size={16} className="mr-2 hidden sm:block" />IKE</button>
-          </div>
-
-          {/* RIGHT: Theme Toggles */}
-          <div className="w-28 flex justify-end space-x-2">
-             <button onClick={() => setTheme('light')} className={`p-2 rounded-md transition-all ${theme === 'light' ? 'bg-slate-200 text-slate-800' : 'text-slate-400 hover:bg-slate-100'}`}><Sun size={16} /></button>
-             <button onClick={() => setTheme('comic')} className={`p-2 rounded-md transition-all ${theme === 'comic' ? 'bg-yellow-300 border-2 border-black text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-slate-400 hover:bg-slate-100'}`}><Palette size={16} /></button>
-             <button onClick={() => setTheme('neon')} className={`p-2 rounded-md transition-all ${theme === 'neon' ? 'bg-cyan-900/50 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.8)]' : 'text-slate-400 hover:bg-slate-100'}`}><Zap size={16} /></button>
+             {/* Theme Toggles */}
+             <div className="flex space-x-1">
+                <button onClick={() => setTheme('light')} className={`p-2 rounded-md transition-all ${theme === 'light' ? 'bg-slate-200 text-slate-800' : 'text-slate-400 hover:bg-slate-100'}`}><Sun size={16} /></button>
+                <button onClick={() => setTheme('comic')} className={`p-2 rounded-md transition-all ${theme === 'comic' ? 'bg-yellow-300 border-2 border-black text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-slate-400 hover:bg-slate-100'}`}><Palette size={16} /></button>
+                <button onClick={() => setTheme('neon')} className={`p-2 rounded-md transition-all ${theme === 'neon' ? 'bg-cyan-900/50 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.8)]' : 'text-slate-400 hover:bg-slate-100'}`}><Zap size={16} /></button>
+             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
         {!isOfflineValid && (
            <>
              {portfolioType === 'OMF' && omfReport && <OMFIntegrityStatus report={omfReport} theme={theme} />}
@@ -216,6 +225,22 @@ export const App: React.FC = () => {
           />
         )}
       </main>
+
+      <footer className={`${styles.footerBg} ${styles.footerBorder} mt-auto py-6`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="flex items-center space-x-3 select-none">
+            <div className="w-8 h-8">
+              <FooterLogo className="w-full h-full" />
+            </div>
+            <span className={`text-lg font-bold tracking-tight ${theme === 'neon' ? 'text-cyan-100 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]' : 'text-slate-800'}`}>
+              Old Man Fund
+            </span>
+          </div>
+          <div className={`text-xs font-mono ${styles.footerText}`}>
+            &copy; {new Date().getFullYear()} OMF Dashboard. All rights reserved.
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };

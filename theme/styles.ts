@@ -14,6 +14,9 @@ export const themeStyles: Record<Theme, {
   toggleProjectionActive: string;
   toggleCPIActive: string;
   toggleNoPPKActive: string;
+  footerBg: string;
+  footerBorder: string;
+  footerText: string;
 }> = {
   light: {
     appBg: 'bg-slate-50',
@@ -28,6 +31,9 @@ export const themeStyles: Record<Theme, {
     toggleProjectionActive: 'bg-amber-50 text-amber-700 border-amber-200 ring-1 ring-amber-200',
     toggleCPIActive: 'bg-rose-50 text-rose-700 border-rose-200 ring-1 ring-rose-200',
     toggleNoPPKActive: 'bg-slate-100 text-slate-800 border-slate-300 ring-1 ring-slate-300',
+    footerBg: 'bg-white',
+    footerBorder: 'border-t border-slate-200',
+    footerText: 'text-slate-400',
   },
   comic: {
     appBg: 'bg-yellow-50',
@@ -42,6 +48,9 @@ export const themeStyles: Record<Theme, {
     toggleProjectionActive: 'bg-orange-400 text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]',
     toggleCPIActive: 'bg-pink-400 text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]',
     toggleNoPPKActive: 'bg-gray-300 text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]',
+    footerBg: 'bg-white',
+    footerBorder: 'border-t-4 border-black',
+    footerText: 'text-black font-bold',
   },
   neon: {
     appBg: 'bg-[#050505] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-[#050505] to-black',
@@ -56,5 +65,8 @@ export const themeStyles: Record<Theme, {
     toggleProjectionActive: 'bg-yellow-900/30 text-yellow-400 border-yellow-500/50 shadow-[0_0_10px_rgba(250,204,21,0.3)]',
     toggleCPIActive: 'bg-pink-900/30 text-pink-400 border-pink-500/50 shadow-[0_0_10px_rgba(244,114,182,0.3)]',
     toggleNoPPKActive: 'bg-slate-800 text-slate-300 border-slate-500',
+    footerBg: 'bg-black/80 backdrop-blur-sm',
+    footerBorder: 'border-t border-cyan-900/30',
+    footerText: 'text-cyan-700',
   }
 };
