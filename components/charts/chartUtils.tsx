@@ -200,7 +200,7 @@ export const useChartConfig = () => {
     return {
       isMobile: true,
       iconSize: 8,
-      margin: { top: 10, right: 0, left: -20, bottom: 0 },
+      margin: { top: 10, right: 5, left: -20, bottom: 15 },
       xAxisPadding: { left: 0, right: 5 },
       legendHeight: 44,
       // Force centering for mobile legends
@@ -217,7 +217,7 @@ export const useChartConfig = () => {
   return {
     isMobile: false,
     iconSize: 14,
-    margin: { top: 10, right: 0, left: -20, bottom: 0 },
+    margin: { top: 10, right: 5, left: -20, bottom: 15 },
     xAxisPadding: { left: 0, right: 10 },
     legendHeight: 30,
     legendStyle: { 
