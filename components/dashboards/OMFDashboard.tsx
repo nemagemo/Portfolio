@@ -246,7 +246,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
             <h3 className={`text-lg font-bold ${styles.text}`}>Historia Old Man Fund</h3>
             <p className={`text-sm ${styles.textSub}`}>PPK + Krypto + IKE</p>
           </div>
-          <div className={`flex items-center space-x-3 p-2 border ${isNeon ? 'bg-black/50 border-cyan-900/50 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
+          <div className={`hidden md:flex items-center space-x-3 p-2 border ${isNeon ? 'bg-black/50 border-cyan-900/50 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
               <button onClick={() => setExcludePPK(!excludePPK)} disabled={showCPI || showProjection} className={`flex items-center justify-center w-20 px-2 py-1.5 transition-all ${excludePPK ? styles.toggleNoPPKActive : `bg-transparent ${isNeon ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`} rounded-md ${showCPI || showProjection ? 'opacity-50 cursor-not-allowed' : ''}`} title={excludePPK ? "Pokaż PPK" : "Ukryj PPK"}>
                 <NoPPKIcon className="w-full h-4" />
               </button>
@@ -273,7 +273,24 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
           <div><h3 className={`text-lg font-bold ${styles.text}`}>Efektywność Old Man Fund</h3><p className={`text-sm ${styles.textSub}`}>ROI oraz TWR w czasie</p></div>
           <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><TrendingUp className={isNeon ? 'text-purple-400' : 'text-purple-600'} size={20} /></div>
         </div>
-        <GlobalPerformanceChart data={globalHistory} themeMode={theme} />
+        
+        <div className="w-full">
+          <div className="hidden md:flex justify-end space-x-3 mb-2 px-2">
+            <button
+              className={`px-3 py-1 text-xs font-medium rounded-full transition-all border border-slate-300 ${theme === 'neon' ? 'bg-slate-700 text-slate-200' : 'bg-white text-slate-600'} opacity-50 cursor-not-allowed`}
+              disabled
+            >
+              S&P 500
+            </button>
+            <button
+              className={`px-3 py-1 text-xs font-medium rounded-full transition-all border border-slate-300 ${theme === 'neon' ? 'bg-slate-700 text-slate-200' : 'bg-white text-slate-600'} opacity-50 cursor-not-allowed`}
+              disabled
+            >
+              WIG20
+            </button>
+          </div>
+          <GlobalPerformanceChart data={globalHistory} themeMode={theme} />
+        </div>
       </div>
 
       {/* Treemap ROI - Hidden on Mobile */}
