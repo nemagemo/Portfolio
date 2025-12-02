@@ -249,7 +249,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
             </div>
 
             {portfolioType === 'IKE' && (
-              <div className={`${styles.cardContainer} p-6 lg:col-span-2`}>
+              <div className={`${styles.cardContainer} p-6 lg:col-span-2 hidden md:block`}>
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <h3 className={`text-lg font-bold ${styles.text}`}>Otrzymane Dywidendy</h3>

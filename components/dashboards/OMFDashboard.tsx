@@ -276,8 +276,8 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
         <GlobalPerformanceChart data={globalHistory} themeMode={theme} />
       </div>
 
-      {/* Treemap ROI */}
-      <div className={`${styles.cardContainer} p-6`}>
+      {/* Treemap ROI - Hidden on Mobile */}
+      <div className={`${styles.cardContainer} p-6 hidden md:block`}>
         <div className="flex items-center justify-between mb-6">
           <div><h3 className={`text-lg font-bold ${styles.text}`}>Heatmap ROI</h3></div>
           <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><LayoutTemplate className={isNeon ? 'text-cyan-400' : 'text-cyan-600'} size={20} /></div>
@@ -285,8 +285,8 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
         <OMFTreemapChart data={omfStructureData} themeMode={theme} />
       </div>
 
-      {/* Bubble Risk Map (Intraday) */}
-      <div className={`${styles.cardContainer} p-6`}>
+      {/* Bubble Risk Map (Intraday) - Hidden on Mobile */}
+      <div className={`${styles.cardContainer} p-6 hidden md:block`}>
         <div className="flex items-center justify-between mb-6">
           <div>
             <h3 className={`text-lg font-bold ${styles.text}`}>Intraday</h3>
@@ -307,8 +307,8 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
         <BubbleRiskChart data={filteredBubbleData} themeMode={theme} />
       </div>
 
-      {/* Monthly Returns */}
-      <div className={`${styles.cardContainer} p-6 overflow-x-auto`}>
+      {/* Monthly Returns - Hidden on Mobile */}
+      <div className={`${styles.cardContainer} p-6 overflow-x-auto hidden md:block`}>
         <div className="flex items-center justify-between mb-6 min-w-[600px]">
           <div><h3 className={`text-lg font-bold ${styles.text}`}>Miesięczne Stopy Zwrotu</h3><p className={`text-sm ${styles.textSub}`}>Bez PPK</p></div>
           <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><CalendarDays className={isNeon ? 'text-emerald-400' : 'text-emerald-600'} size={20} /></div>
@@ -316,8 +316,8 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
         <ReturnsHeatmap data={heatmapHistoryData} themeMode={theme} />
       </div>
 
-      {/* Seasonality */}
-      <div className={`${styles.cardContainer} p-6`}>
+      {/* Seasonality - Hidden on Mobile */}
+      <div className={`${styles.cardContainer} p-6 hidden md:block`}>
         <div className="flex items-center justify-between mb-6">
           <div><h3 className={`text-lg font-bold ${styles.text}`}>Sezonowość</h3><p className={`text-sm ${styles.textSub}`}>Średnia stopa zwrotu w poszczególnych miesiącach</p></div>
           <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><Snowflake className={isNeon ? 'text-blue-400' : 'text-blue-600'} size={20} /></div>
@@ -334,8 +334,8 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
         <PortfolioAllocationHistoryChart data={globalHistory} themeMode={theme} />
       </div>
 
-      {/* Active Positions Table */}
-      <div className={`${styles.cardContainer} overflow-hidden`}>
+      {/* Active Positions Table - Hidden on Mobile */}
+      <div className={`${styles.cardContainer} overflow-hidden hidden md:block`}>
         <div 
           className={`px-6 py-4 border-b flex justify-between items-center cursor-pointer transition-colors ${isNeon ? 'bg-black/20 border-cyan-900/30 hover:bg-cyan-950/10' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`} 
           onClick={() => setIsActivePositionsExpanded(!isActivePositionsExpanded)}
@@ -353,8 +353,8 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
         )}
       </div>
 
-      {/* Closed Positions Table */}
-      <div className={`${styles.cardContainer} overflow-hidden`}>
+      {/* Closed Positions Table - Hidden on Mobile */}
+      <div className={`${styles.cardContainer} overflow-hidden hidden md:block`}>
         <div className={`px-6 py-4 border-b flex justify-between items-center cursor-pointer transition-colors ${isNeon ? 'bg-black/20 border-cyan-900/30 hover:bg-cyan-950/10' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`} onClick={() => setIsClosedHistoryExpanded(!isClosedHistoryExpanded)}>
           <div className="flex items-center space-x-2"><h3 className={`text-lg font-bold ${styles.text}`}>Zamknięte Pozycje</h3>{isClosedHistoryExpanded ? <ChevronUp size={20} className={isNeon ? 'text-cyan-600' : 'text-slate-400'}/> : <ChevronDown size={20} className={isNeon ? 'text-cyan-600' : 'text-slate-400'}/>}</div>
           <span className={`text-xs font-medium px-2 py-1 transition-all ${isNeon ? 'rounded-full bg-slate-800 text-slate-400 border border-slate-700' : 'rounded-full bg-slate-200 text-slate-600'}`}>{closedAssets.length} pozycji</span>

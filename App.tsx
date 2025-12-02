@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Briefcase, Coins, PiggyBank, Sun, Palette, Zap, Wifi, WifiOff, RefreshCw, AlertCircle, ChevronDown, ChevronUp, Scale } from 'lucide-react';
+import { Briefcase, Coins, PiggyBank, Sun, Zap, Wifi, WifiOff, RefreshCw, AlertCircle, ChevronDown, ChevronUp, Scale, Menu, X, Milestone } from 'lucide-react';
 import { PortfolioType } from './types';
 import { themeStyles, Theme } from './theme/styles';
 import { useMarketData } from './hooks/useMarketData';
@@ -12,11 +12,13 @@ import { StandardDashboard } from './components/dashboards/StandardDashboard';
 import { OMFDashboard } from './components/dashboards/OMFDashboard';
 import { OMF_LAST_UPDATED } from './CSV/OMFopen';
 import { HeaderLogo } from './components/logos/HeaderLogo';
+import { HeaderMobile } from './components/logos/HeaderMobile';
 import { FooterLogo } from './components/logos/FooterLogo';
 
 export const App: React.FC = () => {
   const [portfolioType, setPortfolioType] = useState<PortfolioType>('OMF');
   const [theme, setTheme] = useState<Theme>('light');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Local UI State for OMF Dashboard
   const [showProjection, setShowProjection] = useState(false);
@@ -83,6 +85,7 @@ export const App: React.FC = () => {
   const handlePortfolioChange = (type: PortfolioType) => {
     setPortfolioType(type);
     setShowTaxComparison(false);
+    setIsMobileMenuOpen(false); // Close mobile menu on selection
   };
 
   const isOfflineValid = (portfolioType === 'OMF' && omfReport?.isConsistent) || (portfolioType !== 'OMF' && report?.isValid);
@@ -139,6 +142,11 @@ export const App: React.FC = () => {
       };
   }, [pricingMode, isRefreshing, theme, onlinePrices, omfActiveAssets, portfolioType]);
 
+  // Styles for Mobile Menu Overlay
+  const mobileMenuClass = theme === 'neon' 
+    ? 'bg-black/95 border-b border-cyan-900/50 text-cyan-50' 
+    : 'bg-white border-b border-slate-200 text-slate-800';
+
   return (
     <div className={`flex flex-col min-h-screen ${styles.appBg} ${styles.text} transition-colors duration-300`}>
       <header className={`${styles.headerBg} ${styles.headerBorder} sticky top-0 z-50 transition-colors duration-300`}>
@@ -146,11 +154,14 @@ export const App: React.FC = () => {
           
           {/* LEFT: Logo - Flex-1 to push center */}
           <div className="flex-1 flex items-center justify-start">
-             <HeaderLogo className={`h-6 sm:h-8 w-auto ${theme === 'neon' ? 'text-cyan-400' : 'text-slate-800'}`} />
+             {/* Desktop Logo */}
+             <HeaderLogo className={`hidden md:block h-6 sm:h-8 w-auto ${theme === 'neon' ? 'text-cyan-400' : 'text-slate-800'}`} />
+             {/* Mobile Logo */}
+             <HeaderMobile className={`md:hidden h-8 w-auto ${theme === 'neon' ? 'text-cyan-400' : 'text-slate-800'}`} />
           </div>
 
-          {/* CENTER: Navigation Tabs */}
-          <div className={`p-1 flex space-x-1 overflow-x-auto shrink-0 ${theme === 'neon' ? 'bg-black border border-cyan-900/50 rounded-lg' : 'bg-slate-100 rounded-lg'}`}>
+          {/* CENTER: Navigation Tabs (Desktop only) */}
+          <div className={`hidden md:flex p-1 space-x-1 overflow-x-auto shrink-0 ${theme === 'neon' ? 'bg-black border border-cyan-900/50 rounded-lg' : 'bg-slate-100 rounded-lg'}`}>
             <button onClick={() => handlePortfolioChange('OMF')} className={`flex items-center justify-center px-3 sm:px-4 py-1 text-2xl font-bold leading-none transition-all whitespace-nowrap ${portfolioType === 'OMF' ? styles.buttonActive : styles.buttonInactive} rounded-md`}>
               Σ
             </button>
@@ -159,9 +170,9 @@ export const App: React.FC = () => {
             <button onClick={() => handlePortfolioChange('IKE')} className={`flex items-center px-3 sm:px-4 py-1.5 text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'IKE' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><PiggyBank size={16} className="mr-2 hidden sm:block" />IKE</button>
           </div>
 
-          {/* RIGHT: Status & Theme Toggles - Flex-1 to push center */}
+          {/* RIGHT: Status, Theme Toggles & Hamburger */}
           <div className="flex-1 flex items-center justify-end space-x-3">
-             {/* Status Indicator (Moved from Left) */}
+             {/* Status Indicator */}
              {isOfflineValid && (
                 <div 
                   className={`
@@ -191,11 +202,41 @@ export const App: React.FC = () => {
              {/* Theme Toggles */}
              <div className="flex space-x-1">
                 <button onClick={() => setTheme('light')} className={`p-2 rounded-md transition-all ${theme === 'light' ? 'bg-slate-200 text-slate-800' : 'text-slate-400 hover:bg-slate-100'}`}><Sun size={16} /></button>
-                <button onClick={() => setTheme('comic')} className={`p-2 rounded-md transition-all ${theme === 'comic' ? 'bg-yellow-300 border-2 border-black text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-slate-400 hover:bg-slate-100'}`}><Palette size={16} /></button>
                 <button onClick={() => setTheme('neon')} className={`p-2 rounded-md transition-all ${theme === 'neon' ? 'bg-cyan-900/50 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.8)]' : 'text-slate-400 hover:bg-slate-100'}`}><Zap size={16} /></button>
              </div>
+
+             {/* Mobile Menu Toggle (Right Side) */}
+             <button 
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className={`md:hidden p-2 rounded-lg transition-colors ${theme === 'neon' ? 'text-cyan-400 hover:bg-cyan-900/20' : 'text-slate-700 hover:bg-slate-100'}`}
+             >
+                {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+             </button>
           </div>
         </div>
+
+        {/* MOBILE MENU DROPDOWN */}
+        {isMobileMenuOpen && (
+          <div className={`md:hidden absolute top-16 left-0 w-full z-40 p-4 shadow-xl ${mobileMenuClass} animate-in slide-in-from-top-2 duration-200`}>
+             <div className="grid grid-cols-1 gap-2">
+                <button onClick={() => handlePortfolioChange('OMF')} className={`flex items-center justify-between px-4 py-3 text-lg font-bold rounded-lg ${portfolioType === 'OMF' ? styles.buttonActive : 'opacity-80 hover:opacity-100'}`}>
+                   <span>Portfel Główny</span>
+                   <span className="text-2xl font-black leading-none">Σ</span>
+                </button>
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                   <button onClick={() => handlePortfolioChange('PPK')} className={`flex flex-col items-center justify-center p-3 rounded-lg text-sm font-medium ${portfolioType === 'PPK' ? styles.buttonActive : styles.buttonInactive}`}>
+                      <Briefcase size={20} className="mb-1" /> PPK
+                   </button>
+                   <button onClick={() => handlePortfolioChange('CRYPTO')} className={`flex flex-col items-center justify-center p-3 rounded-lg text-sm font-medium ${portfolioType === 'CRYPTO' ? styles.buttonActive : styles.buttonInactive}`}>
+                      <Coins size={20} className="mb-1" /> Krypto
+                   </button>
+                   <button onClick={() => handlePortfolioChange('IKE')} className={`flex flex-col items-center justify-center p-3 rounded-lg text-sm font-medium ${portfolioType === 'IKE' ? styles.buttonActive : styles.buttonInactive}`}>
+                      <PiggyBank size={20} className="mb-1" /> IKE
+                   </button>
+                </div>
+             </div>
+          </div>
+        )}
       </header>
 
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">

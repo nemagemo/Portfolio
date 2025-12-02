@@ -1,5 +1,5 @@
 
-export type Theme = 'light' | 'comic' | 'neon';
+export type Theme = 'light' | 'neon';
 
 export const themeStyles: Record<Theme, {
   appBg: string;
@@ -34,23 +34,6 @@ export const themeStyles: Record<Theme, {
     footerBg: 'bg-white',
     footerBorder: 'border-t border-slate-200',
     footerText: 'text-slate-400',
-  },
-  comic: {
-    appBg: 'bg-yellow-50',
-    text: 'text-black font-bold',
-    textSub: 'text-black opacity-80 font-medium',
-    headerBg: 'bg-white',
-    headerBorder: 'border-black border-b-4',
-    cardContainer: 'bg-white rounded-none border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]',
-    cardHeaderIconBg: 'bg-yellow-300 border-2 border-black',
-    buttonActive: 'bg-cyan-400 text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-black',
-    buttonInactive: 'bg-white text-black border-2 border-black hover:bg-gray-100 font-bold',
-    toggleProjectionActive: 'bg-orange-400 text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]',
-    toggleCPIActive: 'bg-pink-400 text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]',
-    toggleNoPPKActive: 'bg-gray-300 text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]',
-    footerBg: 'bg-white',
-    footerBorder: 'border-t-4 border-black',
-    footerText: 'text-black font-bold',
   },
   neon: {
     appBg: 'bg-[#050505] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-[#050505] to-black',
