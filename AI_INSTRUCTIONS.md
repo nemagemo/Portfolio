@@ -40,8 +40,37 @@ W projekcie przeprowadzono refaktoryzację (podział "God Hooka" i "God Componen
     *   Obsługuje metody LTM i CAGR.
 
 6.  **Komponenty Wykresów (`components/charts/*`):**
-    *   Podzielone tematycznie: `OMFCharts`, `TimeCharts` (liniowe), `BarCharts`.
-    *   Wspólne style i logotypy w `chartUtils.tsx`.
+    *   Podzielone tematycznie: `OMFCharts` (Treemap, Bubble), `TimeCharts` (Liniowe/Obszarowe), `BarCharts` (Słupkowe).
+    *   Wspólne style, konfiguracja responsywności i logotypy znajdują się w `chartUtils.tsx`.
+
+---
+
+## Architektura Wykresów i Responsywność
+
+### Struktura Plików
+Wykresy zostały wydzielone z głównego pliku `Charts.tsx` do dedykowanego katalogu `components/charts/`:
+*   `chartUtils.tsx`: Zawiera definicje motywów (`CHART_THEMES`), hook `useChartConfig` oraz komponent `AssetLogo`.
+*   `TimeCharts.tsx`: Wykresy oparte na osi czasu (XAxis = data).
+*   `OMFCharts.tsx`: Wykresy specyficzne dla OMF (Treemap, Bubble).
+*   `BarCharts.tsx`: Wykresy słupkowe (Dźwignia, Sezonowość).
+
+### Strategia Responsywności (Mobile View)
+Aplikacja stosuje podejście adaptacyjne:
+1.  **Mobile (< 768px):** "Centrum Dowodzenia". Widoczne są tylko kluczowe metryki i proste wykresy liniowe. Złożone wizualizacje (Heatmapy, Treemapy, Bubble Chart, Tabele szczegółowe) są ukrywane klasą `hidden md:block`.
+2.  **Desktop:** "Centrum Analiz". Pełny dostęp do wszystkich narzędzi.
+
+### Hook `useChartConfig`
+Wszystkie wykresy używają hooka `useChartConfig` (z `chartUtils.tsx`), który dynamicznie dostosowuje parametry biblioteki Recharts:
+*   **Marginesy:** Na mobile marginesy są ujemne (`left: -20`), aby wykres zajmował całą szerokość karty.
+*   **Legendy:** Na mobile czcionka jest mniejsza (9-10px), a legenda jest centrowana, aby nie wychodziła poza ekran.
+*   **Padding Osi:** Na mobile `padding.left` wynosi 0, aby wykres zaczynał się od samej krawędzi.
+
+### Zarządzanie Logotypami
+System logotypów opiera się na plikach SVG w folderze `logos/` oraz mapowaniu w `chartUtils.tsx`.
+*   **Aby dodać nowe logo:**
+    1. Utwórz komponent `NameLogo.tsx` w folderze `logos/`.
+    2. Zaimportuj go w `components/charts/chartUtils.tsx`.
+    3. Dodaj wpis do obiektu `LOGO_MAP` (klucz musi odpowiadać `symbol` aktywa w CSV).
 
 ---
 
