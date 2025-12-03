@@ -22,8 +22,13 @@ export const Footer: React.FC<FooterProps> = ({ theme }) => {
           <div className="flex items-center select-none opacity-90 hover:opacity-100 transition-opacity">
              <FooterLogo className={`h-8 sm:h-9 w-auto ${isNeon ? 'text-cyan-400' : 'text-slate-800'}`} />
           </div>
-          <div className={`text-[9px] font-mono ${styles.footerText} text-center`}>
-            &copy; {new Date().getFullYear()} Old Man Fund. Wszelkie prawa zastrzeżone.
+          <div className={`text-center font-mono ${styles.footerText}`}>
+            <div className="text-[9px]">
+              &copy; {new Date().getFullYear()} Old Man Fund. Wszelkie prawa zastrzeżone.
+            </div>
+            <div className="text-[8px] opacity-50 mt-0.5">
+              v1.0
+            </div>
           </div>
         </div>
 
