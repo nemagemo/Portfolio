@@ -1,9 +1,9 @@
 
 import React, { useMemo, useState } from 'react';
-import { Wallet, TrendingUp } from 'lucide-react';
-import { SummaryStats, PortfolioType, AnyDataRow, DividendDataRow } from '../../types';
+import { Wallet, TrendingUp, Anchor, PieChart } from 'lucide-react';
+import { SummaryStats, PortfolioType, AnyDataRow, DividendDataRow, OMFDataRow } from '../../types';
 import { Theme, themeStyles } from '../../theme/styles';
-import { ValueCompositionChart, ROIChart, PPKLeverageChart, CryptoValueChart, DividendChart } from '../Charts';
+import { ValueCompositionChart, ROIChart, PPKLeverageChart, CryptoValueChart, DividendChart, SectorAllocationChart } from '../Charts';
 import { TaxToggleIcon, IconEmployer, IconState, IconExit, IconHourglass, IconTaxShield, IconDividends, IconTrophy } from '../Icons';
 import { useDividendGrouping } from '../../hooks/useChartTransformations';
 
@@ -20,6 +20,7 @@ interface StandardDashboardProps {
   ppkRateDisplay?: { cagr: number };
   ppkChartDataWithProjection?: AnyDataRow[];
   bestCrypto?: any;
+  activeAssets?: OMFDataRow[];
 }
 
 export const StandardDashboard: React.FC<StandardDashboardProps> = ({
@@ -27,7 +28,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
   showPPKProjection, setShowPPKProjection,
   showTaxComparison, setShowTaxComparison,
   ppkRateDisplay, ppkChartDataWithProjection,
-  bestCrypto
+  bestCrypto, activeAssets
 }) => {
   const styles = themeStyles[theme];
   const [dividendViewMode, setDividendViewMode] = useState<'Yearly' | 'Quarterly'>('Yearly');
@@ -52,6 +53,35 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
   const totalDividends = useMemo(() => {
       return dividendChartData.reduce((acc, curr) => acc + curr.value, 0);
   }, [dividendChartData]);
+
+  // Calculate Sector Allocation specific for IKE
+  const sectorAllocationData = useMemo(() => {
+    if (portfolioType !== 'IKE' || !activeAssets) return [];
+    
+    const sectorMap: Record<string, number> = {};
+    const otherSymbols: string[] = []; // Accumulate symbols without a sector
+    
+    const ikeAssets = activeAssets.filter(a => a.portfolio === 'IKE' && a.status === 'Otwarta' && a.type !== 'Gotówka');
+
+    ikeAssets.forEach(asset => {
+        let sectorName = asset.sector;
+        if (!sectorName) {
+            sectorName = 'Inne'; // Temporary key for aggregation
+            otherSymbols.push(asset.symbol);
+        }
+        sectorMap[sectorName] = (sectorMap[sectorName] || 0) + asset.currentValue;
+    });
+
+    return Object.entries(sectorMap)
+        .map(([name, value]) => {
+            // If this is the "Inne" category and we have symbols, rename it
+            if (name === 'Inne' && otherSymbols.length > 0) {
+                return { name: otherSymbols.join(', '), value };
+            }
+            return { name, value };
+        })
+        .sort((a, b) => b.value - a.value);
+  }, [portfolioType, activeAssets]);
 
   if (!stats) return null;
 
@@ -123,159 +153,216 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
              </div>
           </div>
 
-          {/* RIGHT: Specific Metrics Grid (4 cols) */}
+          {/* RIGHT: Detailed Stats Breakdown (4 cols) */}
           <div className="lg:col-span-4 grid grid-cols-2 gap-2">
-             {/* PPK SPECIFIC METRICS */}
+             {/* STAT BLOCK 1 */}
+             <div className={`p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
+                <div className="flex justify-between items-start mb-0.5">
+                  <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-purple-400' : 'text-slate-400'}`}>
+                    {portfolioType === 'PPK' ? 'Pracodawca' : (portfolioType === 'IKE' ? 'Dywidendy' : 'ROI')}
+                  </div>
+                  {portfolioType === 'PPK' ? <IconEmployer className={`w-4 h-4 ${isNeon ? 'text-purple-500/80' : 'text-purple-400/60'}`} /> : 
+                   portfolioType === 'IKE' ? <IconDividends className={`w-4 h-4 ${isNeon ? 'text-purple-500/80' : 'text-purple-400/60'}`} /> :
+                   <IconTrophy className={`w-4 h-4 ${isNeon ? 'text-purple-500/80' : 'text-purple-400/60'}`} />}
+                </div>
+                <div className={`text-sm sm:text-base font-bold ${isNeon ? 'text-purple-300' : 'text-slate-700'}`}>
+                   {portfolioType === 'PPK' ? `${stats.totalEmployer?.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł` : 
+                    portfolioType === 'IKE' ? `${totalDividends.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł` :
+                    `${currentRoi.toFixed(1)}%`}
+                </div>
+                <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-purple-500/60' : 'text-slate-400'}`}>
+                   {portfolioType === 'PPK' ? 'Dopłata' : (portfolioType === 'IKE' ? 'Otrzymane' : 'Zwrot')}
+                </div>
+             </div>
+
+             {/* STAT BLOCK 2 */}
+             <div className={`p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
+                <div className="flex justify-between items-start mb-0.5">
+                  <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-amber-400' : 'text-slate-400'}`}>
+                    {portfolioType === 'PPK' ? 'Państwo' : (portfolioType === 'IKE' ? 'Tarcza Podatkowa' : 'Zysk')}
+                  </div>
+                  {portfolioType === 'PPK' ? <IconState className={`w-4 h-4 ${isNeon ? 'text-amber-500/80' : 'text-amber-400/60'}`} /> :
+                   portfolioType === 'IKE' ? <IconTaxShield className={`w-4 h-4 ${isNeon ? 'text-amber-500/80' : 'text-amber-400/60'}`} /> :
+                   <Anchor className={`w-4 h-4 ${isNeon ? 'text-amber-500/80' : 'text-amber-400/60'}`} />}
+                </div>
+                <div className={`text-sm sm:text-base font-bold ${isNeon ? 'text-amber-300' : 'text-slate-700'}`}>
+                   {portfolioType === 'PPK' ? `${stats.totalState?.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł` :
+                    portfolioType === 'IKE' ? `${(stats.taxSaved || 0).toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł` :
+                    `${profitValue.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł`}
+                </div>
+                <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-amber-500/60' : 'text-slate-400'}`}>
+                   {portfolioType === 'PPK' ? 'Bonus' : (portfolioType === 'IKE' ? 'Zaoszczędzone' : 'Nominalny')}
+                </div>
+             </div>
+
+             {/* STAT BLOCK 3 (PPK Exit / Crypto Best) */}
              {portfolioType === 'PPK' && (
-               <>
-                 <div className={`p-2.5 border relative ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-                    <div className="flex justify-between items-start mb-0.5">
-                      <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-purple-400' : 'text-slate-400'}`}>Pracodawca</div>
-                      <IconEmployer className={`w-4 h-4 ${isNeon ? 'text-purple-500/80' : 'text-purple-400/60'}`} />
-                    </div>
-                    <div className={`text-lg sm:text-xl font-bold ${isNeon ? 'text-purple-300' : 'text-slate-700'}`}>{stats.totalEmployer?.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</div>
-                    <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-purple-500/60' : 'text-slate-400'}`}>Dopłaty</div>
-                 </div>
-                 <div className={`p-2.5 border relative ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-                    <div className="flex justify-between items-start mb-0.5">
-                      <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-pink-400' : 'text-slate-400'}`}>Państwo</div>
-                      <IconState className={`w-4 h-4 ${isNeon ? 'text-pink-500/80' : 'text-pink-400/60'}`} />
-                    </div>
-                    <div className={`text-lg sm:text-xl font-bold ${isNeon ? 'text-pink-300' : 'text-slate-700'}`}>{stats.totalState?.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</div>
-                    <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-pink-500/60' : 'text-slate-400'}`}>Bonusy</div>
-                 </div>
-                 <div className={`p-2.5 border relative ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-                    <div className="flex justify-between items-start mb-0.5">
-                      <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-amber-400' : 'text-slate-400'}`}>Exit Value</div>
-                      <IconExit className={`w-4 h-4 ${isNeon ? 'text-amber-500/80' : 'text-amber-400/60'}`} />
-                    </div>
-                    <div className={`text-lg sm:text-xl font-bold ${isNeon ? 'text-amber-300' : 'text-slate-700'}`}>{((stats as any).customExitValue || 0).toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</div>
-                    <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-amber-500/60' : 'text-slate-400'}`}>Wypłata teraz</div>
-                 </div>
-                 <div className={`p-2.5 border relative ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-                    <div className="flex justify-between items-start mb-0.5">
-                      <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-blue-400' : 'text-slate-400'}`}>Czas</div>
-                      <IconHourglass className={`w-4 h-4 ${isNeon ? 'text-blue-500/80' : 'text-blue-400/60'}`} />
-                    </div>
-                    <div className={`text-lg sm:text-xl font-bold ${isNeon ? 'text-blue-300' : 'text-slate-700'}`}>{monthsToPayout} msc</div>
-                    <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-blue-500/60' : 'text-slate-400'}`}>Do 60 r.ż.</div>
-                 </div>
-               </>
+               <div className={`p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
+                  <div className="flex justify-between items-start mb-0.5">
+                    <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-rose-400' : 'text-slate-400'}`}>Exit ROI</div>
+                    <IconExit className={`w-4 h-4 ${isNeon ? 'text-rose-500/80' : 'text-rose-400/60'}`} />
+                  </div>
+                  <div className={`text-sm sm:text-base font-bold ${isNeon ? 'text-rose-300' : 'text-slate-700'}`}>
+                     {stats.currentExitRoi?.toFixed(2)}%
+                  </div>
+                  <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-rose-500/60' : 'text-slate-400'}`}>Przy wypłacie</div>
+               </div>
              )}
 
-             {/* IKE SPECIFIC METRICS */}
-             {portfolioType === 'IKE' && (
-               <>
-                 <div className={`p-2.5 border relative ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-                    <div className="flex justify-between items-start mb-0.5">
-                      <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-cyan-400' : 'text-slate-400'}`}>Tarcza</div>
-                      <IconTaxShield className={`w-4 h-4 ${isNeon ? 'text-cyan-500/80' : 'text-cyan-400/60'}`} />
-                    </div>
-                    <div className={`text-lg sm:text-xl font-bold ${isNeon ? 'text-cyan-300' : 'text-slate-700'}`}>{stats.taxSaved?.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</div>
-                    <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-cyan-500/60' : 'text-slate-400'}`}>Oszczędność</div>
-                 </div>
-                 <div className={`p-2.5 border relative ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-                    <div className="flex justify-between items-start mb-0.5">
-                      <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-emerald-400' : 'text-slate-400'}`}>Dywidendy</div>
-                      <IconDividends className={`w-4 h-4 ${isNeon ? 'text-emerald-500/80' : 'text-emerald-400/60'}`} />
-                    </div>
-                    <div className={`text-lg sm:text-xl font-bold ${isNeon ? 'text-emerald-300' : 'text-slate-700'}`}>{totalDividends.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</div>
-                    <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-emerald-500/60' : 'text-slate-400'}`}>Suma</div>
-                 </div>
-               </>
-             )}
-
-             {/* CRYPTO SPECIFIC METRICS */}
              {portfolioType === 'CRYPTO' && bestCrypto && (
-               <>
-                 <div className={`col-span-2 p-2.5 border relative ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-                    <div className="flex justify-between items-start mb-0.5">
-                      <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-yellow-400' : 'text-slate-400'}`}>Najlepsze Aktywo</div>
-                      <IconTrophy className={`w-4 h-4 ${isNeon ? 'text-yellow-500/80' : 'text-yellow-400/60'}`} />
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <div className={`text-lg sm:text-xl font-bold ${isNeon ? 'text-yellow-300' : 'text-slate-700'}`}>{bestCrypto.symbol}</div>
-                        <div className={`text-sm font-bold ${isNeon ? 'text-yellow-300' : 'text-yellow-600'}`}>+{bestCrypto.roi}%</div>
-                    </div>
-                    <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-yellow-500/60' : 'text-slate-400'}`}>Zysk: {bestCrypto.profit.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</div>
-                 </div>
-               </>
+               <div className={`p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
+                  <div className="flex justify-between items-start mb-0.5">
+                    <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-blue-400' : 'text-slate-400'}`}>Top Asset</div>
+                    <IconTrophy className={`w-4 h-4 ${isNeon ? 'text-blue-500/80' : 'text-blue-400/60'}`} />
+                  </div>
+                  <div className={`text-sm sm:text-base font-bold ${isNeon ? 'text-blue-300' : 'text-slate-700'}`}>
+                     {bestCrypto.symbol}
+                  </div>
+                  <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-blue-500/60' : 'text-slate-400'}`}>
+                     +{bestCrypto.roi.toFixed(0)}% ROI
+                  </div>
+               </div>
              )}
+
+             {/* STAT BLOCK 4 (Time) */}
+             <div className={`p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
+                <div className="flex justify-between items-start mb-0.5">
+                  <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-cyan-400' : 'text-slate-400'}`}>Czas</div>
+                  <IconHourglass className={`w-4 h-4 ${isNeon ? 'text-cyan-500/80' : 'text-cyan-400/60'}`} />
+                </div>
+                <div className={`text-sm sm:text-base font-bold ${isNeon ? 'text-cyan-300' : 'text-slate-700'}`}>
+                   {portfolioType === 'PPK' ? `${monthsToPayout}` : '∞'} <span className="text-[10px] font-normal">msc</span>
+                </div>
+                <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-cyan-500/60' : 'text-slate-400'}`}>
+                   {portfolioType === 'PPK' ? 'do wypłaty' : 'Horyzont'}
+                </div>
+             </div>
           </div>
 
         </div>
       </div>
 
-      <div className="space-y-8">
+      {/* CHARTS SECTION */}
+      
+      {/* 1. Value Composition */}
+      <div className={`mb-6 p-6 ${styles.cardContainer}`}>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className={`text-lg font-bold ${styles.text}`}>
+            {portfolioType === 'PPK' ? "Struktura Kapitału" : "Wartość Portfela"}
+          </h3>
+          
+          <div className="flex items-center space-x-2">
+             {/* Projection Toggle for PPK */}
+             {portfolioType === 'PPK' && setShowPPKProjection && (
+                <button
+                  onClick={() => setShowPPKProjection(!showPPKProjection)}
+                  className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all border ${showPPKProjection ? styles.toggleProjectionActive : `bg-transparent ${isNeon ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'}`}`}
+                >
+                  <Anchor size={14} className="mr-2" /> Emerytura (+{ppkRateDisplay?.cagr}%)
+                </button>
+             )}
+             
+             {/* Tax Toggle for Crypto/IKE */}
+             {portfolioType === 'IKE' && setShowTaxComparison && (
+                <button 
+                  onClick={() => setShowTaxComparison(!showTaxComparison)}
+                  className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all border ${showTaxComparison ? (isNeon ? 'bg-amber-900/30 text-amber-400 border-amber-500/50' : 'bg-amber-50 text-amber-700 border-amber-200') : `bg-transparent ${isNeon ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'}`}`}
+                  title="Porównaj z kontem opodatkowanym (19% Belki)"
+                >
+                  <TaxToggleIcon className="w-4 h-4 mr-2" />
+                  Podatek
+                </button>
+             )}
+
+             <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}>
+               <TrendingUp size={20} className={isNeon ? 'text-blue-400' : 'text-blue-600'} />
+             </div>
+          </div>
+        </div>
+
         {portfolioType === 'PPK' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className={`${styles.cardContainer} p-3 sm:p-6 lg:col-span-2`}>
-              <div className="flex flex-col md:flex-row items-center justify-between mb-0 space-y-4 md:space-y-0">
-                <div className="flex flex-col">
-                  <h3 className={`text-lg font-bold ${styles.text}`}>Historyczna Wartość Portfela</h3>
-                  <p className={`hidden md:block text-[10px] sm:text-xs mt-2 font-medium leading-tight max-w-2xl ${isNeon ? 'text-slate-400' : 'text-slate-400'}`}>Wartość netto = Wartość po odjęciu podatku od wpłaty Pracodawcy<br/>Wartość Exit = Wartość netto - 30% wpłat od Pracodawcy - wpłaty od Państwa - 19% podatku od zysku</p>
-                </div>
-                <div className={`hidden md:flex items-center space-x-4 p-2 border ${isNeon ? 'bg-black/50 border-cyan-900/50 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-                   <button onClick={() => setShowPPKProjection && setShowPPKProjection(!showPPKProjection)} className={`flex items-center px-3 py-1.5 text-xs font-bold transition-all ${showPPKProjection ? styles.toggleProjectionActive : `bg-transparent ${isNeon ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`} rounded-md`}>Droga do Emerytury</button>
-                   {showPPKProjection && ppkRateDisplay && (<span className={`text-[10px] font-mono ${styles.textSub} animate-in fade-in slide-in-from-right-4 duration-300`}>+{ppkRateDisplay.cagr.toFixed(2)}% m/m (CAGR)</span>)}
-                </div>
-              </div>
-              <ValueCompositionChart data={ppkChartDataWithProjection || data} showProjection={showPPKProjection} themeMode={theme} />
-            </div>
-            
-            <div className={`${styles.cardContainer} p-3 sm:p-6 lg:col-span-2`}>
-              <h3 className={`text-lg font-bold ${styles.text} mb-2`}>ROI w czasie</h3>
-              <ROIChart data={data} themeMode={theme} showExitRoi={true} />
-            </div>
-
-            <div className={`${styles.cardContainer} p-3 sm:p-6 lg:col-span-2`}>
-              <h3 className={`text-lg font-bold ${styles.text} mb-2`}>Ja vs Reszta</h3>
-              <PPKLeverageChart data={data} themeMode={theme} />
-            </div>
-          </div>
+          <ValueCompositionChart 
+            data={showPPKProjection ? (ppkChartDataWithProjection || []) : data} 
+            showProjection={showPPKProjection}
+            themeMode={theme}
+          />
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className={`${styles.cardContainer} p-3 sm:p-6 lg:col-span-2`}>
-              <div className="flex items-center justify-between mb-0">
-                <h3 className={`text-lg font-bold ${styles.text}`}>{portfolioType === 'IKE' && showTaxComparison ? 'Historyczna Wartość Portfela (IKE vs Opodatkowane)' : 'Historyczna Wartość Portfela'}</h3>
-                {portfolioType === 'IKE' && (<button onClick={() => setShowTaxComparison && setShowTaxComparison(!showTaxComparison)} className={`hidden md:flex items-center px-3 py-1.5 text-xs font-bold transition-all ${showTaxComparison ? styles.toggleCPIActive : `bg-transparent ${isNeon ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`} rounded-md`} title="Pokaż porównanie z kontem opodatkowanym"><TaxToggleIcon className="w-4 h-4 mr-2" />Belka</button>)}
-              </div>
-              <CryptoValueChart data={data} showTaxComparison={showTaxComparison} themeMode={theme} />
-            </div>
-            
-            <div className={`${styles.cardContainer} p-3 sm:p-6 lg:col-span-2`}>
-              <h3 className={`text-lg font-bold ${styles.text} mb-2`}>ROI w czasie</h3>
-              <ROIChart data={data} themeMode={theme} />
-            </div>
-
-            {portfolioType === 'IKE' && (
-              <div className={`${styles.cardContainer} p-3 sm:p-6 lg:col-span-2 hidden md:block`}>
-                <div className="flex items-center justify-between mb-0">
-                  <div>
-                    <h3 className={`text-lg font-bold ${styles.text}`}>Otrzymane Dywidendy</h3>
-                    <p className={`text-sm ${styles.textSub}`}>Suma: {totalDividends.toLocaleString('pl-PL')} zł</p>
-                  </div>
-                  <div className={`flex items-center space-x-2 p-1 border ${isNeon ? 'bg-black/50 border-cyan-900/50 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-                    <button 
-                      onClick={() => setDividendViewMode('Yearly')} 
-                      className={`px-3 py-1.5 text-xs font-bold transition-all ${dividendViewMode === 'Yearly' ? (isNeon ? 'bg-cyan-900 text-cyan-300' : 'bg-white text-slate-800 shadow-sm') : (isNeon ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')} rounded-md`}
-                    >
-                      Rocznie
-                    </button>
-                    <button 
-                      onClick={() => setDividendViewMode('Quarterly')} 
-                      className={`px-3 py-1.5 text-xs font-bold transition-all ${dividendViewMode === 'Quarterly' ? (isNeon ? 'bg-cyan-900 text-cyan-300' : 'bg-white text-slate-800 shadow-sm') : (isNeon ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')} rounded-md`}
-                    >
-                      Kwartalnie
-                    </button>
-                  </div>
-                </div>
-                <DividendChart data={dividendChartData} themeMode={theme} />
-              </div>
-            )}
-          </div>
+          <CryptoValueChart 
+            data={data} 
+            showTaxComparison={showTaxComparison} 
+            themeMode={theme} 
+          />
         )}
       </div>
+
+      {/* 2. ROI Analysis */}
+      <div className={`mb-6 p-6 ${styles.cardContainer}`}>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className={`text-lg font-bold ${styles.text}`}>Rentowność (ROI)</h3>
+            {portfolioType === 'PPK' && <p className={`text-sm ${styles.textSub}`}>Nominalna vs Exit (po potrąceniach)</p>}
+          </div>
+          <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}>
+            <Wallet size={20} className={isNeon ? 'text-purple-400' : 'text-purple-600'} />
+          </div>
+        </div>
+        <ROIChart data={data} showExitRoi={portfolioType === 'PPK'} themeMode={theme} />
+      </div>
+
+      {/* 3. Conditional Charts */}
+      {portfolioType === 'PPK' && (
+        <div className={`mb-6 p-6 ${styles.cardContainer}`}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className={`text-lg font-bold ${styles.text}`}>Dźwignia Finansowa</h3>
+            <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}>
+              <Anchor size={20} className={isNeon ? 'text-emerald-400' : 'text-emerald-600'} />
+            </div>
+          </div>
+          <PPKLeverageChart data={data} themeMode={theme} />
+        </div>
+      )}
+
+      {/* IKE Specific: Dividends & Sector Allocation */}
+      {portfolioType === 'IKE' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            
+            {/* Left: Dividend History */}
+            <div className={`${styles.cardContainer} p-6`}>
+                <div className="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 className={`text-lg font-bold ${styles.text}`}>Dywidendy</h3>
+                        <p className={`text-sm ${styles.textSub}`}>Suma: {totalDividends.toLocaleString('pl-PL')} zł</p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <div className={`flex border p-0.5 ${isNeon ? 'bg-black border-cyan-900/50 rounded-md' : 'bg-white border-slate-200 rounded-md'}`}>
+                            <button onClick={() => setDividendViewMode('Yearly')} className={`px-2 py-1 text-[10px] font-medium rounded ${dividendViewMode === 'Yearly' ? (isNeon ? 'bg-cyan-900 text-cyan-300' : 'bg-slate-800 text-white') : (isNeon ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')}`}>Rok</button>
+                            <button onClick={() => setDividendViewMode('Quarterly')} className={`px-2 py-1 text-[10px] font-medium rounded ${dividendViewMode === 'Quarterly' ? (isNeon ? 'bg-cyan-900 text-cyan-300' : 'bg-slate-800 text-white') : (isNeon ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')}`}>Kwartał</button>
+                        </div>
+                        <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}>
+                            <IconDividends className={`w-5 h-5 ${isNeon ? 'text-emerald-400' : 'text-emerald-600'}`} />
+                        </div>
+                    </div>
+                </div>
+                <DividendChart data={dividendChartData} themeMode={theme} />
+            </div>
+
+            {/* Right: Sector Allocation */}
+            <div className={`${styles.cardContainer} p-6`}>
+                <div className="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 className={`text-lg font-bold ${styles.text}`}>Dywersyfikacja Sektorowa</h3>
+                        <p className={`text-sm ${styles.textSub}`}>Alokacja aktywów IKE</p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}>
+                            <PieChart size={20} className={isNeon ? 'text-amber-400' : 'text-amber-600'} />
+                        </div>
+                    </div>
+                </div>
+                <SectorAllocationChart data={sectorAllocationData} themeMode={theme} />
+            </div>
+        </div>
+      )}
     </>
   );
 };

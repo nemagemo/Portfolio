@@ -127,6 +127,7 @@ export const App: React.FC = () => {
             showTaxComparison={showTaxComparison} setShowTaxComparison={setShowTaxComparison}
             ppkRateDisplay={{ cagr: 12 }} ppkChartDataWithProjection={ppkProjectionData}
             bestCrypto={bestCrypto}
+            activeAssets={omfActiveAssets}
           />
         )}
       </main>

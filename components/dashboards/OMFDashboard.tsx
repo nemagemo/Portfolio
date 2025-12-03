@@ -1,9 +1,9 @@
 
 import React, { useState, useMemo } from 'react';
-import { TrendingUp, Wallet, ArrowUpRight, ArrowDownRight, ChevronDown, ChevronUp, PieChart, Snowflake, ScatterChart, LayoutTemplate, CalendarDays, Milestone, Anchor, Activity, BarChart3, Hexagon } from 'lucide-react';
+import { TrendingUp, Wallet, ArrowUpRight, ArrowDownRight, ChevronDown, ChevronUp, PieChart, Snowflake, ScatterChart, LayoutTemplate, CalendarDays, Milestone, Activity } from 'lucide-react';
 import { SummaryStats, OMFDataRow, GlobalHistoryRow } from '../../types';
 import { Theme, themeStyles } from '../../theme/styles';
-import { GlobalSummaryChart, GlobalPerformanceChart, OMFTreemapChart, SeasonalityChart, PortfolioAllocationHistoryChart, BubbleRiskChart, DrawdownChart, SectorAllocationChart } from '../Charts';
+import { GlobalSummaryChart, GlobalPerformanceChart, OMFTreemapChart, SeasonalityChart, PortfolioAllocationHistoryChart, BubbleRiskChart, DrawdownChart } from '../Charts';
 import { ReturnsHeatmap } from '../ReturnsHeatmap';
 import { HistoryTable } from '../HistoryTable';
 import { NoPPKIcon, IconCAGR, IconLTM, IconHourglass, IconPulse } from '../Icons';
@@ -49,11 +49,8 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
   // Local state for Drawdown chart toggle
   const [drawdownExcludePPK, setDrawdownExcludePPK] = useState(false);
 
-  // Local state for Sector Allocation Chart Type
-  const [sectorChartType, setSectorChartType] = useState<'bar' | 'radar'>('bar');
-
   // Hook for chart transformations
-  const { drawdownHistoryData, sectorAllocationData } = useChartTransformations({
+  const { drawdownHistoryData } = useChartTransformations({
     omfActiveAssets: activeAssets,
     portfolioType: 'OMF',
     globalHistoryData: globalHistory
@@ -354,36 +351,13 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
         <DrawdownChart data={chartDrawdownData} themeMode={theme} />
       </div>
 
-      {/* Allocation & Sectors Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Allocation History */}
-          <div className={`${styles.cardContainer} p-3 sm:p-6`}>
-            <div className="flex items-center justify-between mb-0">
-              <div><h3 className={`text-lg font-bold ${styles.text}`}>Historia Alokacji</h3><p className={`text-sm ${styles.textSub}`}>Udział portfeli w czasie</p></div>
-              <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><PieChart className={isNeon ? 'text-blue-400' : 'text-blue-600'} size={20} /></div>
-            </div>
-            <PortfolioAllocationHistoryChart data={globalHistory} themeMode={theme} />
-          </div>
-
-          {/* Sector Allocation */}
-          <div className={`${styles.cardContainer} p-3 sm:p-6`}>
-            <div className="flex items-center justify-between mb-0">
-              <div><h3 className={`text-lg font-bold ${styles.text}`}>Dywersyfikacja Sektorowa</h3><p className={`text-sm ${styles.textSub}`}>Ekspozycja na sektory</p></div>
-              <div className="flex items-center space-x-2">
-                 {/* Chart Type Toggle */}
-                 <div className={`flex items-center p-1 border ${isNeon ? 'bg-black/50 border-cyan-900/50 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-                    <button onClick={() => setSectorChartType('bar')} className={`p-1.5 rounded transition-all ${sectorChartType === 'bar' ? (isNeon ? 'bg-cyan-900 text-cyan-300' : 'bg-white text-slate-800 shadow-sm') : (isNeon ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')}`} title="Wykres Słupkowy">
-                       <BarChart3 size={16} />
-                    </button>
-                    <button onClick={() => setSectorChartType('radar')} className={`p-1.5 rounded transition-all ${sectorChartType === 'radar' ? (isNeon ? 'bg-cyan-900 text-cyan-300' : 'bg-white text-slate-800 shadow-sm') : (isNeon ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')}`} title="Wykres Radarowy">
-                       <Hexagon size={16} />
-                    </button>
-                 </div>
-                 <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><Anchor className={isNeon ? 'text-amber-400' : 'text-amber-600'} size={20} /></div>
-              </div>
-            </div>
-            <SectorAllocationChart data={sectorAllocationData} themeMode={theme} chartType={sectorChartType} />
-          </div>
+      {/* Allocation History - Full Width */}
+      <div className={`${styles.cardContainer} p-3 sm:p-6 lg:col-span-2`}>
+        <div className="flex items-center justify-between mb-0">
+          <div><h3 className={`text-lg font-bold ${styles.text}`}>Historia Alokacji</h3><p className={`text-sm ${styles.textSub}`}>Udział portfeli w czasie</p></div>
+          <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><PieChart className={isNeon ? 'text-blue-400' : 'text-blue-600'} size={20} /></div>
+        </div>
+        <PortfolioAllocationHistoryChart data={globalHistory} themeMode={theme} />
       </div>
 
       {/* Treemap ROI - Hidden on Mobile */}

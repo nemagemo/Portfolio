@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import {
   Cell, ResponsiveContainer, Tooltip, Treemap,
   ScatterChart, CartesianGrid, XAxis, YAxis, ZAxis, ReferenceLine, Scatter, LabelList, 
-  PieChart, Pie, Legend, BarChart, Bar, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis
+  Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis
 } from 'recharts';
 import { OMFDataRow } from '../../types';
 import { ThemeMode, CHART_THEMES, getTooltipStyle, formatCurrency, AssetLogo, useChartConfig } from './chartUtils';
@@ -274,95 +274,52 @@ export const BubbleRiskChart: React.FC<BubbleRiskChartProps> = ({ data, themeMod
 export const SectorAllocationChart: React.FC<{ data: any[], themeMode?: ThemeMode, chartType?: 'bar' | 'radar' }> = ({ 
   data, 
   themeMode = 'light',
-  chartType = 'bar'
+  // chartType prop removed from usage but kept in signature for compatibility if needed, though unused
 }) => {
   const t = CHART_THEMES[themeMode || 'light'];
   const config = useChartConfig();
-  const colors = t.pieColors;
-  const isNeon = themeMode === 'neon';
 
-  // Calculate percentages for Bar Chart labels
+  // Calculate percentages for chart logic
   const totalValue = useMemo(() => data.reduce((acc, curr) => acc + curr.value, 0), [data]);
 
-  if (chartType === 'radar') {
-    return (
-      <div className="h-80 w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <RadarChart cx="50%" cy="50%" outerRadius="75%" data={data} margin={config.margin}>
-            <PolarGrid stroke={t.grid} strokeOpacity={0.5} />
-            <PolarAngleAxis 
-              dataKey="name" 
-              tick={{ fill: t.axis, fontSize: config.isMobile ? 9 : 11 }} 
-            />
-            <PolarRadiusAxis 
-              angle={30} 
-              domain={[0, 'auto']} 
-              tick={{ fill: t.axis, fontSize: 10 }}
-              tickFormatter={(val) => `${(val/1000).toFixed(0)}k`}
-            />
-            <Radar
-              name="Sektory"
-              dataKey="value"
-              stroke={t.employer}
-              strokeWidth={2}
-              fill={t.employer}
-              fillOpacity={0.4}
-            />
-            <Tooltip 
-              formatter={(value: number) => [`${formatCurrency(value)}`, 'Wartość']}
-              contentStyle={getTooltipStyle(themeMode as ThemeMode, config.isMobile)}
-            />
-          </RadarChart>
-        </ResponsiveContainer>
-      </div>
-    );
-  }
+  // Process data to include percentage for the Radar
+  const radarData = data.map(d => ({
+      ...d,
+      percentage: totalValue > 0 ? (d.value / totalValue) * 100 : 0,
+      fullValue: d.value // Keep original value for tooltip
+  }));
 
-  // Default: Horizontal Bar Chart
   return (
     <div className="h-80 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart
-          layout="vertical"
-          data={data}
-          margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke={t.grid} strokeWidth={1} strokeOpacity={0.3} />
-          <XAxis type="number" hide />
-          <YAxis 
-            type="category" 
+        <RadarChart cx="50%" cy="50%" outerRadius="75%" data={radarData} margin={config.margin}>
+          <PolarGrid stroke={t.grid} strokeOpacity={0.5} />
+          <PolarAngleAxis 
             dataKey="name" 
-            width={config.isMobile ? 100 : 150}
-            tick={{ fill: t.axis, fontSize: config.isMobile ? 10 : 12 }}
-            interval={0}
+            tick={{ fill: t.axis, fontSize: config.isMobile ? 9 : 11 }} 
+          />
+          <PolarRadiusAxis 
+            angle={30} 
+            domain={[0, 'auto']} 
+            tick={{ fill: t.axis, fontSize: 10 }}
+            tickFormatter={(val) => `${val.toFixed(0)}%`}
+          />
+          <Radar
+            name="Sektory"
+            dataKey="percentage"
+            stroke={t.employer}
+            strokeWidth={2}
+            fill={t.employer}
+            fillOpacity={0.4}
           />
           <Tooltip 
-            cursor={{ fill: isNeon ? '#ffffff10' : '#00000005' }}
-            formatter={(value: number, name: string, item: any) => {
-               const percent = totalValue > 0 ? ((value / totalValue) * 100).toFixed(1) : 0;
-               return [`${formatCurrency(value)} (${percent}%)`, item.payload.name];
+            formatter={(value: number, name: string, props: any) => {
+                const fullVal = props.payload.fullValue;
+                return [`${value.toFixed(2)}% (${formatCurrency(fullVal)})`, 'Udział'];
             }}
             contentStyle={getTooltipStyle(themeMode as ThemeMode, config.isMobile)}
           />
-          <Bar 
-            dataKey="value" 
-            radius={[0, 4, 4, 0]} 
-            barSize={config.isMobile ? 15 : 20}
-          >
-            {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={colors[index % colors.length]} stroke={isNeon ? colors[index % colors.length] : undefined} fillOpacity={isNeon ? 0.8 : 1} />
-            ))}
-            <LabelList 
-              dataKey="value" 
-              position="right" 
-              formatter={(val: number) => {
-                 const percent = totalValue > 0 ? ((val / totalValue) * 100).toFixed(0) : 0;
-                 return `${percent}%`;
-              }}
-              style={{ fill: t.axis, fontSize: 11, fontWeight: 'bold' }} 
-            />
-          </Bar>
-        </BarChart>
+        </RadarChart>
       </ResponsiveContainer>
     </div>
   );
