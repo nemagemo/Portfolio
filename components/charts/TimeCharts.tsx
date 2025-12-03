@@ -54,6 +54,7 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjecti
             stroke={t.axis} 
             fontSize={10}
             tickMargin={config.tickMargin}
+            minTickGap={30}
             padding={config.xAxisPadding}
           />
           <YAxis 
@@ -414,6 +415,7 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection,
             stroke={t.axis} 
             fontSize={10}
             tickMargin={config.tickMargin}
+            minTickGap={30}
             padding={config.xAxisPadding}
           />
           <YAxis 
@@ -524,6 +526,7 @@ export const GlobalPerformanceChart: React.FC<GlobalPerformanceChartProps> = ({
               stroke={t.axis} 
               fontSize={10}
               tickMargin={config.tickMargin}
+              minTickGap={30}
               padding={config.xAxisPadding}
             />
             <YAxis 
@@ -631,6 +634,7 @@ export const PortfolioAllocationHistoryChart: React.FC<ChartProps> = ({ data, th
             stroke={t.axis} 
             fontSize={10}
             tickMargin={config.tickMargin}
+            minTickGap={30}
             padding={config.xAxisPadding}
           />
           <YAxis 
