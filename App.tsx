@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { PortfolioType } from './types';
-import { themeStyles, Theme } from './theme/styles';
+import { themeStyles } from './theme/styles';
 import { useMarketData } from './hooks/useMarketData';
 import { usePortfolioData } from './hooks/usePortfolioData';
 import { useProjections } from './hooks/useProjections';
@@ -15,7 +15,7 @@ import { MobileNotice } from './components/MobileNotice';
 
 export const App: React.FC = () => {
   const [portfolioType, setPortfolioType] = useState<PortfolioType>('OMF');
-  const [theme, setTheme] = useState<Theme>('light');
+  const theme = 'light';
   
   // Local UI State for OMF Dashboard
   const [showProjection, setShowProjection] = useState(false);
@@ -89,7 +89,6 @@ export const App: React.FC = () => {
       
       <Header 
         theme={theme}
-        setTheme={setTheme}
         portfolioType={portfolioType}
         setPortfolioType={handlePortfolioChange}
         pricingMode={pricingMode}

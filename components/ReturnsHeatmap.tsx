@@ -10,7 +10,7 @@ interface HistoryRow {
 
 interface HeatmapProps {
   data: HistoryRow[];
-  themeMode?: 'light' | 'comic' | 'neon';
+  themeMode?: 'light' | 'comic' | 'neon' | 'dark';
 }
 
 const formatPercent = (val: number | null) => {
@@ -32,11 +32,14 @@ const calculateMonthlyReturn = (startVal: number, endVal: number, netFlow: numbe
 
 const getColorClass = (val: number | null, themeMode: string = 'light') => {
   const isNeon = themeMode === 'neon';
+  const isComic = themeMode === 'comic';
+  const isDark = themeMode === 'dark';
 
   if (val === null || val === undefined) {
-      return isNeon 
-        ? 'bg-[#111] text-[#333] font-mono' 
-        : 'bg-slate-50 text-slate-300';
+      if (isNeon) return 'bg-[#111] text-[#333] font-mono';
+      if (isComic) return 'bg-black text-zinc-700 font-bold';
+      if (isDark) return 'bg-slate-800 text-slate-700';
+      return 'bg-slate-50 text-slate-300';
   }
 
   if (isNeon) {
@@ -47,6 +50,20 @@ const getColorClass = (val: number | null, themeMode: string = 'light') => {
       // Negative: Use Rose/Pink for clear visibility on dark
       if (val <= -10) return 'bg-[#881337] text-rose-400 font-bold font-mono border border-rose-500/30';
       return 'bg-[#881337]/50 text-rose-400 font-mono border border-rose-500/20';
+  }
+
+  if (isComic) {
+      if (val >= 10) return 'bg-green-600 text-black font-black border-2 border-black';
+      if (val >= 0) return 'bg-green-800 text-white font-bold border border-white/20';
+      if (val <= -10) return 'bg-red-600 text-white font-black border-2 border-white';
+      return 'bg-red-900 text-white font-bold border border-white/20';
+  }
+
+  if (isDark) {
+      if (val >= 10) return 'bg-emerald-900 text-emerald-100 font-bold border border-emerald-800';
+      if (val >= 0) return 'bg-emerald-900/40 text-emerald-200 font-medium';
+      if (val <= -10) return 'bg-rose-900 text-rose-100 font-bold border border-rose-800';
+      return 'bg-rose-900/40 text-rose-200 font-medium';
   }
 
   // Standard Light Logic
@@ -157,30 +174,70 @@ export const ReturnsHeatmap: React.FC<HeatmapProps> = ({ data, themeMode = 'ligh
   }, [data]);
 
   const isNeon = themeMode === 'neon';
-  const headerClass = isNeon ? "text-cyan-400 font-mono tracking-wider" : "text-slate-500 font-semibold";
-  const rowYearClass = isNeon ? "text-cyan-100 font-bold font-mono" : "text-slate-900 font-bold";
-  const bgClass = isNeon ? "bg-black/40 border-cyan-900/30" : "bg-white border-slate-100";
+  const isComic = themeMode === 'comic';
+  const isDark = themeMode === 'dark';
+
+  let headerClass = "text-slate-500 font-semibold";
+  if (isNeon) headerClass = "text-cyan-400 font-mono tracking-wider";
+  if (isComic) headerClass = "text-white font-black uppercase";
+  if (isDark) headerClass = "text-slate-400 font-medium";
+
+  let rowYearClass = "text-slate-900 font-bold";
+  if (isNeon) rowYearClass = "text-cyan-100 font-bold font-mono";
+  if (isComic) rowYearClass = "text-white font-black";
+  if (isDark) rowYearClass = "text-slate-200 font-bold";
+
+  let borderClass = "border-b border-slate-200";
+  if (isNeon) borderClass = "border-b border-cyan-900/30";
+  if (isComic) borderClass = "border-b-2 border-white";
+  if (isDark) borderClass = "border-b border-slate-700";
+
+  let bgClass = "bg-white border-slate-100";
+  if (isNeon) bgClass = "bg-black/40 border-cyan-900/30";
+  if (isComic) bgClass = "bg-black border-2 border-white";
+  if (isDark) bgClass = "bg-slate-800 border-slate-700";
+
+  const getQuarterHeaderClass = () => {
+      if (isNeon) return 'text-purple-400 font-mono';
+      if (isComic) return 'text-yellow-400 font-black bg-black border border-white';
+      if (isDark) return 'text-slate-300 font-bold bg-slate-800';
+      return 'text-slate-500 font-bold bg-slate-50';
+  }
+
+  const getYearHeaderClass = () => {
+      if (isNeon) return 'text-yellow-400 font-bold font-mono';
+      if (isComic) return 'text-white font-black bg-red-600 border border-white';
+      if (isDark) return 'text-slate-100 font-bold bg-slate-800';
+      return 'text-slate-900 font-bold bg-slate-100';
+  }
+
+  const getYearCellClass = () => {
+      if (isNeon) return 'border-yellow-500/30';
+      if (isComic) return 'border-2 border-white';
+      if (isDark) return 'border-slate-600';
+      return 'border-slate-300';
+  }
 
   return (
     <div className={`overflow-x-auto ${isNeon ? 'bg-black/20' : ''}`}>
       <table className="w-full border-collapse text-center">
         <thead>
-          <tr className={`text-[9px] md:text-[10px] lg:text-xs ${isNeon ? 'border-b border-cyan-900/30' : 'border-b border-slate-200'}`}>
+          <tr className={`text-[9px] md:text-[10px] lg:text-xs ${borderClass}`}>
             <th className={`p-1 md:py-1 lg:py-2 text-left ${headerClass}`}>Rok</th>
             {['Sty', 'Lut', 'Mar', 'Kwi', 'Maj', 'Cze', 'Lip', 'Sie', 'Wrz', 'Paź', 'Lis', 'Gru'].map(m => (
               <th key={m} className={`p-1 md:py-1 lg:py-2 ${headerClass}`}>{m}</th>
             ))}
             <th className="p-1 md:py-1 lg:py-2 w-2"></th>
             {['1Q', '2Q', '3Q', '4Q'].map(q => (
-                <th key={q} className={`p-1 md:py-1 lg:py-2 ${isNeon ? 'text-purple-400 font-mono' : 'text-slate-500 font-bold bg-slate-50'}`}>{q}</th>
+                <th key={q} className={`p-1 md:py-1 lg:py-2 ${getQuarterHeaderClass()}`}>{q}</th>
             ))}
             <th className="p-1 md:py-1 lg:py-2 w-2"></th>
-            <th className={`p-1 md:py-1 lg:py-2 ${isNeon ? 'text-yellow-400 font-bold font-mono' : 'text-slate-900 font-bold bg-slate-100'}`}>Y</th>
+            <th className={`p-1 md:py-1 lg:py-2 ${getYearHeaderClass()}`}>Y</th>
           </tr>
         </thead>
         <tbody className={`text-[8px] md:text-[8px] lg:text-[10px]`}>
           {years.map(({ year, months, quarters, yRet }) => (
-            <tr key={year} className={`h-6 lg:h-8 ${isNeon ? 'border-b border-cyan-900/10' : 'border-b border-slate-50'}`}>
+            <tr key={year} className={`h-6 lg:h-8 ${isNeon ? 'border-b border-cyan-900/10' : (isComic ? 'border-b border-white/20' : (isDark ? 'border-b border-slate-800' : 'border-b border-slate-50'))}`}>
               <td className={`text-left p-1 ${rowYearClass}`}>{year}</td>
               
               {months.map((m, i) => (
@@ -204,7 +261,7 @@ export const ReturnsHeatmap: React.FC<HeatmapProps> = ({ data, themeMode = 'ligh
               <td></td>
 
               <td className="p-0.5 lg:p-1">
-                 <div className={`w-full h-full flex items-center justify-center rounded py-0.5 font-black border ${isNeon ? 'border-yellow-500/30' : 'border-slate-300'} ${getColorClass(yRet, themeMode)}`}>
+                 <div className={`w-full h-full flex items-center justify-center rounded py-0.5 font-black border ${getYearCellClass()} ${getColorClass(yRet, themeMode)}`}>
                     {formatPercent(yRet)}
                  </div>
               </td>

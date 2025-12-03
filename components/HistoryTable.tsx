@@ -9,7 +9,7 @@ interface HistoryTableProps {
   type: PortfolioType;
   omfVariant?: 'active' | 'closed';
   title?: string;
-  themeMode?: 'light' | 'comic' | 'neon';
+  themeMode?: 'light' | 'comic' | 'neon' | 'dark';
 }
 
 /**

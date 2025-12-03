@@ -38,7 +38,7 @@ export const MobileNotice: React.FC<MobileNoticeProps> = ({ theme }) => {
 
   if (!shouldRender) return null;
 
-  const isNeon = theme === 'neon';
+  const isNeon = (theme as string) === 'neon';
 
   return (
     <div 

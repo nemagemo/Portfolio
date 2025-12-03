@@ -135,7 +135,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
     return others;
   }, [activeAssets, bubbleChartFilter]);
 
-  const isNeon = theme === 'neon';
+  const isNeon = (theme as string) === 'neon';
 
   if (!stats) return null;
 
@@ -301,7 +301,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
                   className={`px-2 py-1 text-[10px] sm:text-xs font-medium rounded-md transition-all ${
                     showSP500 
                       ? 'bg-slate-700 text-white ring-2 ring-slate-700 ring-offset-1' 
-                      : `border border-slate-300 ${theme === 'neon' ? 'bg-slate-700 text-slate-200' : 'bg-white text-slate-600'} hover:opacity-80`
+                      : `border border-slate-300 ${(theme as string) === 'neon' ? 'bg-slate-700 text-slate-200' : 'bg-white text-slate-600'} hover:opacity-80`
                   }`}
                 >
                   S&P 500
@@ -311,7 +311,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
                   className={`px-2 py-1 text-[10px] sm:text-xs font-medium rounded-md transition-all ${
                     showWIG20 
                       ? 'bg-purple-800 text-white ring-2 ring-purple-800 ring-offset-1' 
-                      : `border border-slate-300 ${theme === 'neon' ? 'bg-slate-700 text-slate-200' : 'bg-white text-slate-600'} hover:opacity-80`
+                      : `border border-slate-300 ${(theme as string) === 'neon' ? 'bg-slate-700 text-slate-200' : 'bg-white text-slate-600'} hover:opacity-80`
                   }`}
                 >
                   WIG20

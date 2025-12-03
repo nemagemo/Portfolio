@@ -123,7 +123,7 @@ export const OMFTreemapChart: React.FC<OMFTreemapChartProps> = ({ data, themeMod
           dataKey="value"
           nameKey="name"
           aspectRatio={4 / 3}
-          stroke={themeMode === 'neon' ? '#000' : "#fff"}
+          stroke={(themeMode as string) === 'neon' ? '#000' : "#fff"}
           fill="#8884d8"
           content={(props) => <TreemapContent {...props} themeMode={themeMode as ThemeMode} />}
         >
@@ -248,7 +248,7 @@ export const BubbleRiskChart: React.FC<BubbleRiskChartProps> = ({ data, themeMod
                   key={`cell-${index}`} 
                   fill={fill} 
                   fillOpacity={0.7}
-                  stroke={themeMode === 'neon' ? '#fff' : '#fff'}
+                  stroke={(themeMode as string) === 'neon' ? '#fff' : '#fff'}
                   strokeWidth={1}
                 />
               );
@@ -259,7 +259,7 @@ export const BubbleRiskChart: React.FC<BubbleRiskChartProps> = ({ data, themeMod
                 offset={5}
                 style={{ 
                     fontSize: '10px', 
-                    fill: themeMode === 'neon' ? '#a5f3fc' : '#1e293b',
+                    fill: (themeMode as string) === 'neon' ? '#a5f3fc' : '#1e293b',
                     fontWeight: 'bold',
                     pointerEvents: 'none'
                 }} 

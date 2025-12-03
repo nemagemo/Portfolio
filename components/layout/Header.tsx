@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Briefcase, Coins, PiggyBank, Sun, Zap, Menu, X, RefreshCw, Wifi, WifiOff, AlertCircle } from 'lucide-react';
+import { Briefcase, Coins, PiggyBank, Menu, X, RefreshCw, Wifi, WifiOff, AlertCircle } from 'lucide-react';
 import { PortfolioType, OMFDataRow } from '../../types';
 import { Theme, themeStyles } from '../../theme/styles';
 import { HeaderLogo } from '../logos/HeaderLogo';
@@ -9,7 +9,6 @@ import { OMF_LAST_UPDATED } from '../../CSV/OMFopen';
 
 interface HeaderProps {
   theme: Theme;
-  setTheme: (t: Theme) => void;
   portfolioType: PortfolioType;
   setPortfolioType: (t: PortfolioType) => void;
   pricingMode: 'Offline' | 'Online';
@@ -21,7 +20,6 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   theme,
-  setTheme,
   portfolioType,
   setPortfolioType,
   pricingMode,
@@ -47,7 +45,7 @@ export const Header: React.FC<HeaderProps> = ({
     if (pricingMode === 'Offline') return { 
         label: `Tryb Offline - Kliknij aby odświeżyć${dateInfo}`, 
         icon: WifiOff, 
-        colorClass: theme === 'neon' ? 'bg-slate-800/80 text-slate-400 border-slate-600/50' : 'bg-slate-100 text-slate-500 border-slate-200',
+        colorClass: 'bg-slate-100 text-slate-500 border-slate-200',
         spin: false,
         percent: 0,
         isPartial: false
@@ -73,7 +71,7 @@ export const Header: React.FC<HeaderProps> = ({
         return { 
             label: tooltipLabel, 
             icon: AlertCircle, 
-            colorClass: theme === 'neon' ? 'bg-yellow-900/80 text-yellow-300 border-yellow-600/50' : 'bg-amber-50 text-amber-600 border-amber-200',
+            colorClass: 'bg-amber-50 text-amber-600 border-amber-200',
             spin: false,
             percent,
             isPartial: true
@@ -83,7 +81,7 @@ export const Header: React.FC<HeaderProps> = ({
     return { 
         label: tooltipLabel, 
         icon: Wifi, 
-        colorClass: theme === 'neon' ? 'bg-blue-900/80 text-blue-300 border-blue-600/50' : 'bg-blue-50 text-blue-600 border-blue-200',
+        colorClass: 'bg-blue-50 text-blue-600 border-blue-200',
         spin: false,
         percent: 100,
         isPartial: false
@@ -91,12 +89,10 @@ export const Header: React.FC<HeaderProps> = ({
   }, [pricingMode, isRefreshing, theme, onlinePrices, omfActiveAssets, portfolioType]);
 
   // Styles for Mobile Menu Overlay
-  const mobileMenuClass = theme === 'neon' 
-    ? 'bg-black/95 border-b border-cyan-900/50 text-cyan-50' 
-    : 'bg-white border-b border-slate-200 text-slate-800';
+  const mobileMenuClass = 'bg-white border-b border-slate-200 text-slate-800';
 
   // Check if current setup allows refresh (Offline is valid if explicit or fallback)
-  const isOfflineValid = true; // Simplified for UI display, actual logic handles data
+  const isOfflineValid = true; 
 
   return (
     <header className={`${styles.headerBg} ${styles.headerBorder} sticky top-0 z-50 transition-colors duration-300`}>
@@ -104,15 +100,14 @@ export const Header: React.FC<HeaderProps> = ({
         
         {/* LEFT: Logo - Flex-1 to push center */}
         <div className="flex-1 flex items-center justify-start">
-           {/* Desktop/Tablet Logo - Compact on md (h-5), larger on lg (h-8) */}
-           <HeaderLogo className={`hidden md:block md:h-5 lg:h-8 w-auto ${theme === 'neon' ? 'text-cyan-400' : 'text-slate-800'}`} />
+           {/* Desktop/Tablet Logo */}
+           <HeaderLogo className="hidden md:block md:h-5 lg:h-8 w-auto text-slate-800" />
            {/* Mobile Logo */}
-           <HeaderMobile className={`md:hidden h-8 w-auto ${theme === 'neon' ? 'text-cyan-400' : 'text-slate-800'}`} />
+           <HeaderMobile className="md:hidden h-8 w-auto text-slate-800" />
         </div>
 
         {/* CENTER: Navigation Tabs (Desktop/Tablet) */}
-        {/* Compact padding and text for tablet (md) */}
-        <div className={`hidden md:flex p-1 space-x-1 overflow-x-auto shrink-0 ${theme === 'neon' ? 'bg-black border border-cyan-900/50 rounded-lg' : 'bg-slate-100 rounded-lg'}`}>
+        <div className="hidden md:flex p-1 space-x-1 overflow-x-auto shrink-0 bg-slate-100 rounded-lg">
           <button onClick={() => handlePortfolioChange('OMF')} className={`flex items-center justify-center md:px-2 md:py-1 md:text-lg lg:px-4 lg:text-2xl font-bold leading-none transition-all whitespace-nowrap ${portfolioType === 'OMF' ? styles.buttonActive : styles.buttonInactive} rounded-md`}>
             Σ
           </button>
@@ -121,8 +116,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button onClick={() => handlePortfolioChange('IKE')} className={`flex items-center md:px-2 md:py-1 md:text-[10px] lg:px-4 lg:py-1.5 lg:text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'IKE' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><PiggyBank size={16} className="md:mr-1 lg:mr-2 hidden sm:block" />IKE</button>
         </div>
 
-        {/* RIGHT: Status, Theme Toggles & Hamburger */}
-        {/* Compact spacing for tablet */}
+        {/* RIGHT: Status & Hamburger */}
         <div className="flex-1 flex items-center justify-end space-x-0.5 md:space-x-1 lg:space-x-3">
            {/* Status Indicator */}
            {isOfflineValid && (
@@ -152,20 +146,10 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
            )}
 
-           {/* Theme Toggles */}
-           <div className="flex space-x-0.5 md:space-x-1">
-              <button onClick={() => setTheme('light')} className={`p-1.5 md:p-1 lg:p-2 rounded-md transition-all ${theme === 'light' ? 'bg-slate-200 text-slate-800' : 'text-slate-400 hover:bg-slate-100'}`}>
-                <Sun size={20} className="md:w-4 md:h-4" />
-              </button>
-              <button onClick={() => setTheme('neon')} className={`p-1.5 md:p-1 lg:p-2 rounded-md transition-all ${theme === 'neon' ? 'bg-cyan-900/50 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.8)]' : 'text-slate-400 hover:bg-slate-100'}`}>
-                <Zap size={20} className="md:w-4 md:h-4" />
-              </button>
-           </div>
-
            {/* Mobile Menu Toggle (Right Side) */}
            <button 
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className={`md:hidden p-1.5 rounded-lg transition-colors ${theme === 'neon' ? 'text-cyan-400 hover:bg-cyan-900/20' : 'text-slate-700 hover:bg-slate-100'}`}
+              className="md:hidden p-1.5 rounded-lg transition-colors text-slate-700 hover:bg-slate-100"
            >
               {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
            </button>

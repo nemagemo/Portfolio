@@ -11,7 +11,7 @@ interface FooterProps {
 export const Footer: React.FC<FooterProps> = ({ theme }) => {
   const [isLegalExpanded, setIsLegalExpanded] = useState(false);
   const styles = themeStyles[theme];
-  const isNeon = theme === 'neon';
+  const isNeon = (theme as string) === 'neon';
 
   return (
     <footer className={`${styles.footerBg} ${styles.footerBorder} mt-auto py-4 transition-colors duration-300`}>

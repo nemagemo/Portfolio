@@ -32,7 +32,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
 }) => {
   const styles = themeStyles[theme];
   const [dividendViewMode, setDividendViewMode] = useState<'Yearly' | 'Quarterly'>('Yearly');
-  const isNeon = theme === 'neon';
+  const isNeon = (theme as string) === 'neon';
 
   const monthsToPayout = useMemo(() => {
     if (portfolioType !== 'PPK') return 0;

@@ -27,7 +27,7 @@ import { ETFBS80TRLogo } from '../../logos/ETFBS80TRLogo';
 import { ETHLogo } from '../../logos/ETHLogo';
 import { AnyDataRow } from '../../types';
 
-export type ThemeMode = 'light' | 'comic' | 'neon';
+export type ThemeMode = 'light';
 
 export interface ChartProps {
   data: AnyDataRow[];
@@ -72,7 +72,7 @@ export const CHART_THEMES: Record<ThemeMode, {
     state: '#db2777',      // Pink-600
     tax: '#dc2626',        // Red-600
     net: '#115e59',        // Teal-800
-    exit: '#ffd43b',       
+    exit: '#ca8a04',       // Dark Yellow/Gold for visibility on white
     projection: '#d97706', // Amber-600
     taxedAccount: '#ea580c', 
     grid: '#e5e7eb',       
@@ -88,56 +88,6 @@ export const CHART_THEMES: Record<ThemeMode, {
     dailyNeg: '#dc2626', 
     dailyNeu: '#94a3b8',  
     dailyWarning: '#fbbf24',
-    lineType: 'monotone'
-  },
-  comic: {
-    investment: '#0ea5e9', // Cyan
-    profit: '#22c55e',     // Bright Green
-    employer: '#a855f7',   // Purple
-    state: '#ec4899',      // Pink
-    tax: '#ef4444',        // Red
-    net: '#000000',        // Black
-    exit: '#facc15',       // Yellow-400
-    projection: '#f97316', // Bright Orange
-    taxedAccount: '#facc15',
-    grid: '#000000',       
-    axis: '#000000',       
-    tooltipBg: '#ffffff',
-    tooltipText: '#000000',
-    tooltipBorder: '#000000',
-    strokeWidth: 3,        
-    pieColors: ['#0ea5e9', '#a855f7', '#22c55e', '#f59e0b', '#f43f5e', '#64748b'],
-    barProfitPos: '#22c55e',
-    barProfitNeg: '#ef4444',
-    dailyPos: '#22c55e', 
-    dailyNeg: '#ef4444', 
-    dailyNeu: '#cbd5e1',
-    dailyWarning: '#facc15',
-    lineType: 'monotone'
-  },
-  neon: {
-    investment: '#22d3ee', // Cyan-400
-    profit: '#34d399',     // Emerald-400 (Calmer green for readability)
-    employer: '#d946ef',   // Fuchsia-500
-    state: '#f472b6',      // Pink-400
-    tax: '#f43f5e',        // Rose-500 (Bright red/pink for better contrast on black)
-    net: '#1e3a8a',        // Dark Blue
-    exit: '#fbbf24',       // Amber
-    projection: '#facc15', // Yellow-400
-    taxedAccount: '#fef08a',
-    grid: '#1e293b',       
-    axis: '#67e8f9',       
-    tooltipBg: '#000000',
-    tooltipText: '#22d3ee',
-    tooltipBorder: '#22d3ee',
-    strokeWidth: 2,
-    pieColors: ['#06b6d4', '#8b5cf6', '#10b981', '#f59e0b', '#f43f5e', '#64748b'],
-    barProfitPos: '#34d399', // Emerald-400
-    barProfitNeg: '#f43f5e', // Rose-500
-    dailyPos: '#34d399', 
-    dailyNeg: '#f43f5e', 
-    dailyNeu: '#1e293b',
-    dailyWarning: '#facc15',
     lineType: 'monotone'
   }
 };
@@ -160,18 +110,6 @@ export const getTooltipStyle = (theme: ThemeMode, isMobile: boolean = false) => 
     fontSize: isMobile ? '10px' : '12px',
     padding: isMobile ? '4px 8px' : '8px 12px',
   };
-  
-  if (theme === 'comic') {
-    style.borderRadius = '0px';
-    style.border = '2px solid #000000';
-    style.boxShadow = '4px 4px 0px 0px #000000';
-  }
-
-  if (theme === 'neon') {
-    style.borderRadius = '0px';
-    style.boxShadow = '0 0 10px rgba(34, 211, 238, 0.3)';
-  }
-  
   return style;
 };
 
