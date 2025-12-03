@@ -332,6 +332,36 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
         </div>
       </div>
 
+      {/* Treemap ROI - Full Width */}
+      <div className={`${styles.cardContainer} p-6 hidden md:block`}>
+        <div className="flex items-center justify-between mb-0">
+          <div><h3 className={`text-lg font-bold ${styles.text}`}>Heatmap ROI</h3></div>
+          <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><LayoutTemplate className={isNeon ? 'text-cyan-400' : 'text-cyan-600'} size={20} /></div>
+        </div>
+        <OMFTreemapChart data={omfStructureData} themeMode={theme} />
+      </div>
+
+      {/* Bubble Risk Map (Intraday) - Full Width */}
+      <div className={`${styles.cardContainer} p-6 hidden md:block`}>
+        <div className="flex items-center justify-between mb-0">
+          <div>
+            <h3 className={`text-lg font-bold ${styles.text}`}>Intraday</h3>
+            <p className={`text-[10px] sm:text-xs mt-1 ${isNeon ? 'text-slate-500' : 'text-slate-400'}`}>
+              Gdy zmiana wynosi 0 lub jest bardzo duża, może to wskazywać na błąd synchronizacji danych.
+            </p>
+          </div>
+          <div className="flex space-x-2 items-center">
+            <div className={`flex items-center space-x-1 p-1 border ${isNeon ? 'bg-black/50 border-cyan-900/50 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
+                <button onClick={() => setBubbleChartFilter('ALL')} className={`px-3 py-1 text-xs font-bold transition-all ${bubbleChartFilter === 'ALL' ? (isNeon ? 'bg-cyan-900 text-cyan-300' : 'bg-white text-slate-800 shadow-sm') : (isNeon ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')} rounded-md`}>Wszystkie</button>
+                <button onClick={() => setBubbleChartFilter('KRYPTO')} className={`px-3 py-1 text-xs font-bold transition-all ${bubbleChartFilter === 'KRYPTO' ? (isNeon ? 'bg-cyan-900 text-cyan-300' : 'bg-white text-slate-800 shadow-sm') : (isNeon ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')} rounded-md`}>Krypto</button>
+                <button onClick={() => setBubbleChartFilter('IKE')} className={`px-3 py-1 text-xs font-bold transition-all ${bubbleChartFilter === 'IKE' ? (isNeon ? 'bg-cyan-900 text-cyan-300' : 'bg-white text-slate-800 shadow-sm') : (isNeon ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')} rounded-md`}>IKE</button>
+            </div>
+            <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><ScatterChart className={isNeon ? 'text-amber-400' : 'text-amber-600'} size={20} /></div>
+          </div>
+        </div>
+        <BubbleRiskChart data={filteredBubbleData} themeMode={theme} />
+      </div>
+
       {/* Drawdown Chart (Risk Analysis) */}
       <div className={`${styles.cardContainer} p-6 hidden md:block`}>
         <div className="flex items-center justify-between mb-0">
@@ -358,37 +388,6 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
           <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><PieChart className={isNeon ? 'text-blue-400' : 'text-blue-600'} size={20} /></div>
         </div>
         <PortfolioAllocationHistoryChart data={globalHistory} themeMode={theme} />
-      </div>
-
-      {/* Treemap ROI - Hidden on Mobile */}
-      <div className={`${styles.cardContainer} p-6 hidden md:block`}>
-        <div className="flex items-center justify-between mb-0">
-          <div><h3 className={`text-lg font-bold ${styles.text}`}>Heatmap ROI</h3></div>
-          <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><LayoutTemplate className={isNeon ? 'text-cyan-400' : 'text-cyan-600'} size={20} /></div>
-        </div>
-        <OMFTreemapChart data={omfStructureData} themeMode={theme} />
-      </div>
-
-      {/* Bubble Risk Map (Intraday) - Hidden on Mobile */}
-      <div className={`${styles.cardContainer} p-6 hidden md:block`}>
-        <div className="flex items-center justify-between mb-0">
-          <div>
-            <h3 className={`text-lg font-bold ${styles.text}`}>Intraday</h3>
-            <p className={`text-[10px] sm:text-xs mt-1 ${isNeon ? 'text-slate-500' : 'text-slate-400'}`}>
-              Gdy zmiana wynosi 0 lub jest bardzo duża, może to wskazywać na błąd synchronizacji danych. <br/>
-              Elementy oznaczone na żółto nie mają aktualnej ceny (Offline).
-            </p>
-          </div>
-          <div className="flex space-x-2 items-center">
-             <div className={`flex items-center space-x-1 p-1 border ${isNeon ? 'bg-black/50 border-cyan-900/50 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-                <button onClick={() => setBubbleChartFilter('ALL')} className={`px-3 py-1 text-xs font-bold transition-all ${bubbleChartFilter === 'ALL' ? (isNeon ? 'bg-cyan-900 text-cyan-300' : 'bg-white text-slate-800 shadow-sm') : (isNeon ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')} rounded-md`}>Wszystkie</button>
-                <button onClick={() => setBubbleChartFilter('KRYPTO')} className={`px-3 py-1 text-xs font-bold transition-all ${bubbleChartFilter === 'KRYPTO' ? (isNeon ? 'bg-cyan-900 text-cyan-300' : 'bg-white text-slate-800 shadow-sm') : (isNeon ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')} rounded-md`}>Krypto</button>
-                <button onClick={() => setBubbleChartFilter('IKE')} className={`px-3 py-1 text-xs font-bold transition-all ${bubbleChartFilter === 'IKE' ? (isNeon ? 'bg-cyan-900 text-cyan-300' : 'bg-white text-slate-800 shadow-sm') : (isNeon ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')} rounded-md`}>IKE</button>
-             </div>
-             <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><ScatterChart className={isNeon ? 'text-amber-400' : 'text-amber-600'} size={20} /></div>
-          </div>
-        </div>
-        <BubbleRiskChart data={filteredBubbleData} themeMode={theme} />
       </div>
 
       {/* Monthly Returns - Hidden on Mobile */}

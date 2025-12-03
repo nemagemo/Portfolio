@@ -3,7 +3,7 @@ import React, { useMemo, useState } from 'react';
 import { Wallet, TrendingUp, Anchor, PieChart } from 'lucide-react';
 import { SummaryStats, PortfolioType, AnyDataRow, DividendDataRow, OMFDataRow } from '../../types';
 import { Theme, themeStyles } from '../../theme/styles';
-import { ValueCompositionChart, ROIChart, PPKLeverageChart, CryptoValueChart, DividendChart, SectorAllocationChart } from '../Charts';
+import { ValueCompositionChart, ROIChart, CryptoValueChart, DividendChart, SectorAllocationChart } from '../Charts';
 import { TaxToggleIcon, IconEmployer, IconState, IconExit, IconHourglass, IconTaxShield, IconDividends, IconTrophy } from '../Icons';
 import { useDividendGrouping } from '../../hooks/useChartTransformations';
 
@@ -102,7 +102,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 relative z-10">
           
-          {/* LEFT: Main Capital Stats (5 cols) */}
+          {/* LEFT: Main Capital Stats */}
           <div className="lg:col-span-5 flex flex-col justify-center">
             <h2 className={`text-[10px] uppercase tracking-widest font-bold mb-1 flex items-center ${isNeon ? 'text-cyan-600' : 'text-slate-400'}`}>
               <Wallet size={12} className="mr-1.5" /> {portfolioType === 'PPK' ? "Wartość Całkowita" : "Wartość Portfela"}
@@ -132,7 +132,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
             </div>
           </div>
 
-          {/* MIDDLE: Performance Stats (3 cols) */}
+          {/* MIDDLE: Performance Stats */}
           <div className={`lg:col-span-3 flex flex-col justify-center lg:border-l lg:border-r ${isNeon ? 'lg:border-cyan-900/30' : 'lg:border-slate-100'} lg:px-4`}>
              <h2 className={`text-[10px] uppercase tracking-widest font-bold mb-1 ${isNeon ? 'text-cyan-600' : 'text-slate-400'}`}>
                Wynik
@@ -155,45 +155,49 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
 
           {/* RIGHT: Detailed Stats Breakdown (4 cols) */}
           <div className="lg:col-span-4 grid grid-cols-2 gap-2">
-             {/* STAT BLOCK 1 */}
-             <div className={`p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-                <div className="flex justify-between items-start mb-0.5">
-                  <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-purple-400' : 'text-slate-400'}`}>
-                    {portfolioType === 'PPK' ? 'Pracodawca' : (portfolioType === 'IKE' ? 'Dywidendy' : 'ROI')}
+             {/* STAT BLOCK 1 - Hidden for Crypto */}
+             {portfolioType !== 'CRYPTO' && (
+               <div className={`p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
+                  <div className="flex justify-between items-start mb-0.5">
+                    <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-purple-400' : 'text-slate-400'}`}>
+                      {portfolioType === 'PPK' ? 'Pracodawca' : (portfolioType === 'IKE' ? 'Dywidendy' : 'ROI')}
+                    </div>
+                    {portfolioType === 'PPK' ? <IconEmployer className={`w-4 h-4 ${isNeon ? 'text-purple-500/80' : 'text-purple-400/60'}`} /> : 
+                     portfolioType === 'IKE' ? <IconDividends className={`w-4 h-4 ${isNeon ? 'text-purple-500/80' : 'text-purple-400/60'}`} /> :
+                     <IconTrophy className={`w-4 h-4 ${isNeon ? 'text-purple-500/80' : 'text-purple-400/60'}`} />}
                   </div>
-                  {portfolioType === 'PPK' ? <IconEmployer className={`w-4 h-4 ${isNeon ? 'text-purple-500/80' : 'text-purple-400/60'}`} /> : 
-                   portfolioType === 'IKE' ? <IconDividends className={`w-4 h-4 ${isNeon ? 'text-purple-500/80' : 'text-purple-400/60'}`} /> :
-                   <IconTrophy className={`w-4 h-4 ${isNeon ? 'text-purple-500/80' : 'text-purple-400/60'}`} />}
-                </div>
-                <div className={`text-sm sm:text-base font-bold ${isNeon ? 'text-purple-300' : 'text-slate-700'}`}>
-                   {portfolioType === 'PPK' ? `${stats.totalEmployer?.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł` : 
-                    portfolioType === 'IKE' ? `${totalDividends.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł` :
-                    `${currentRoi.toFixed(1)}%`}
-                </div>
-                <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-purple-500/60' : 'text-slate-400'}`}>
-                   {portfolioType === 'PPK' ? 'Dopłata' : (portfolioType === 'IKE' ? 'Otrzymane' : 'Zwrot')}
-                </div>
-             </div>
+                  <div className={`text-sm sm:text-base font-bold ${isNeon ? 'text-purple-300' : 'text-slate-700'}`}>
+                     {portfolioType === 'PPK' ? `${stats.totalEmployer?.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł` : 
+                      portfolioType === 'IKE' ? `${totalDividends.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł` :
+                      `${currentRoi.toFixed(1)}%`}
+                  </div>
+                  <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-purple-500/60' : 'text-slate-400'}`}>
+                     {portfolioType === 'PPK' ? 'Dopłata' : (portfolioType === 'IKE' ? 'Otrzymane' : 'Zwrot')}
+                  </div>
+               </div>
+             )}
 
-             {/* STAT BLOCK 2 */}
-             <div className={`p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-                <div className="flex justify-between items-start mb-0.5">
-                  <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-amber-400' : 'text-slate-400'}`}>
-                    {portfolioType === 'PPK' ? 'Państwo' : (portfolioType === 'IKE' ? 'Tarcza Podatkowa' : 'Zysk')}
+             {/* STAT BLOCK 2 - Hidden for Crypto */}
+             {portfolioType !== 'CRYPTO' && (
+               <div className={`p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
+                  <div className="flex justify-between items-start mb-0.5">
+                    <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-amber-400' : 'text-slate-400'}`}>
+                      {portfolioType === 'PPK' ? 'Państwo' : (portfolioType === 'IKE' ? 'Tarcza Podatkowa' : 'Zysk')}
+                    </div>
+                    {portfolioType === 'PPK' ? <IconState className={`w-4 h-4 ${isNeon ? 'text-amber-500/80' : 'text-amber-400/60'}`} /> :
+                     portfolioType === 'IKE' ? <IconTaxShield className={`w-4 h-4 ${isNeon ? 'text-amber-500/80' : 'text-amber-400/60'}`} /> :
+                     <Anchor className={`w-4 h-4 ${isNeon ? 'text-amber-500/80' : 'text-amber-400/60'}`} />}
                   </div>
-                  {portfolioType === 'PPK' ? <IconState className={`w-4 h-4 ${isNeon ? 'text-amber-500/80' : 'text-amber-400/60'}`} /> :
-                   portfolioType === 'IKE' ? <IconTaxShield className={`w-4 h-4 ${isNeon ? 'text-amber-500/80' : 'text-amber-400/60'}`} /> :
-                   <Anchor className={`w-4 h-4 ${isNeon ? 'text-amber-500/80' : 'text-amber-400/60'}`} />}
-                </div>
-                <div className={`text-sm sm:text-base font-bold ${isNeon ? 'text-amber-300' : 'text-slate-700'}`}>
-                   {portfolioType === 'PPK' ? `${stats.totalState?.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł` :
-                    portfolioType === 'IKE' ? `${(stats.taxSaved || 0).toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł` :
-                    `${profitValue.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł`}
-                </div>
-                <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-amber-500/60' : 'text-slate-400'}`}>
-                   {portfolioType === 'PPK' ? 'Bonus' : (portfolioType === 'IKE' ? 'Zaoszczędzone' : 'Nominalny')}
-                </div>
-             </div>
+                  <div className={`text-sm sm:text-base font-bold ${isNeon ? 'text-amber-300' : 'text-slate-700'}`}>
+                     {portfolioType === 'PPK' ? `${stats.totalState?.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł` :
+                      portfolioType === 'IKE' ? `${(stats.taxSaved || 0).toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł` :
+                      `${profitValue.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł`}
+                  </div>
+                  <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-amber-500/60' : 'text-slate-400'}`}>
+                     {portfolioType === 'PPK' ? 'Bonus' : (portfolioType === 'IKE' ? 'Zaoszczędzone' : 'Nominalny')}
+                  </div>
+               </div>
+             )}
 
              {/* STAT BLOCK 3 (PPK Exit / Crypto Best) */}
              {portfolioType === 'PPK' && (
@@ -224,19 +228,21 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
                </div>
              )}
 
-             {/* STAT BLOCK 4 (Time) */}
-             <div className={`p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-                <div className="flex justify-between items-start mb-0.5">
-                  <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-cyan-400' : 'text-slate-400'}`}>Czas</div>
-                  <IconHourglass className={`w-4 h-4 ${isNeon ? 'text-cyan-500/80' : 'text-cyan-400/60'}`} />
-                </div>
-                <div className={`text-sm sm:text-base font-bold ${isNeon ? 'text-cyan-300' : 'text-slate-700'}`}>
-                   {portfolioType === 'PPK' ? `${monthsToPayout}` : '∞'} <span className="text-[10px] font-normal">msc</span>
-                </div>
-                <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-cyan-500/60' : 'text-slate-400'}`}>
-                   {portfolioType === 'PPK' ? 'do wypłaty' : 'Horyzont'}
-                </div>
-             </div>
+             {/* STAT BLOCK 4 (Time) - Only for PPK */}
+             {portfolioType === 'PPK' && (
+               <div className={`p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
+                  <div className="flex justify-between items-start mb-0.5">
+                    <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-cyan-400' : 'text-slate-400'}`}>Czas</div>
+                    <IconHourglass className={`w-4 h-4 ${isNeon ? 'text-cyan-500/80' : 'text-cyan-400/60'}`} />
+                  </div>
+                  <div className={`text-sm sm:text-base font-bold ${isNeon ? 'text-cyan-300' : 'text-slate-700'}`}>
+                     {monthsToPayout} <span className="text-[10px] font-normal">msc</span>
+                  </div>
+                  <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-cyan-500/60' : 'text-slate-400'}`}>
+                     do wypłaty
+                  </div>
+               </div>
+             )}
           </div>
 
         </div>
@@ -258,7 +264,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
                   onClick={() => setShowPPKProjection(!showPPKProjection)}
                   className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all border ${showPPKProjection ? styles.toggleProjectionActive : `bg-transparent ${isNeon ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'}`}`}
                 >
-                  <Anchor size={14} className="mr-2" /> Emerytura (+{ppkRateDisplay?.cagr}%)
+                  <TrendingUp size={14} className="mr-2" /> Prognoza
                 </button>
              )}
              
@@ -308,19 +314,6 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
         </div>
         <ROIChart data={data} showExitRoi={portfolioType === 'PPK'} themeMode={theme} />
       </div>
-
-      {/* 3. Conditional Charts */}
-      {portfolioType === 'PPK' && (
-        <div className={`mb-6 p-6 ${styles.cardContainer}`}>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className={`text-lg font-bold ${styles.text}`}>Dźwignia Finansowa</h3>
-            <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}>
-              <Anchor size={20} className={isNeon ? 'text-emerald-400' : 'text-emerald-600'} />
-            </div>
-          </div>
-          <PPKLeverageChart data={data} themeMode={theme} />
-        </div>
-      )}
 
       {/* IKE Specific: Dividends & Sector Allocation */}
       {portfolioType === 'IKE' && (
