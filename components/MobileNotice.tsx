@@ -12,18 +12,23 @@ export const MobileNotice: React.FC<MobileNoticeProps> = ({ theme }) => {
   const [shouldRender, setShouldRender] = useState(false);
 
   useEffect(() => {
-    // 1. Check if mobile
-    const isMobile = window.innerWidth < 768;
-    if (!isMobile) return;
-
-    // 2. Check if already dismissed
+    // 1. Check if already dismissed
     const hasSeen = localStorage.getItem('omf_mobile_notice_v1');
     if (hasSeen) return;
 
-    // 3. Delay appearance for better UX (don't block immediate interaction)
-    setShouldRender(true);
+    // 2. Delay check and appearance
+    // We check window.innerWidth INSIDE the timeout to avoid false positives 
+    // when the app loads in a small iframe/preview window that resizes immediately.
     const timer = setTimeout(() => {
-      setIsVisible(true);
+      const isMobile = window.innerWidth < 768;
+      
+      if (isMobile) {
+        setShouldRender(true);
+        // Small delay to ensure DOM is rendered before triggering CSS opacity transition
+        requestAnimationFrame(() => {
+            setIsVisible(true);
+        });
+      }
     }, 3000);
 
     return () => clearTimeout(timer);

@@ -139,8 +139,9 @@ export interface SummaryStats {
   dailyTrend?: number;  // 24h Portfolio Value trend percentage
   
   // Performance Metrics (Time-Weighted)
-  cagr?: number; // Compound Annual Growth Rate
-  ltm?: number;  // Last Twelve Months Return
+  cagr?: number; // Compound Annual Growth Rate (ROI Based)
+  ltm?: number;  // Last Twelve Months Return (TWR Based)
+  ltmRoi?: number; // Last Twelve Months Return (ROI Based)
   ytd?: number;  // Year To Date Return
 
   // PPK Specific Breakdown

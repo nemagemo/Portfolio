@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PortfolioType } from './types';
 import { themeStyles } from './theme/styles';
 import { useMarketData } from './hooks/useMarketData';
@@ -19,7 +19,7 @@ export const App: React.FC = () => {
   
   // Local UI State for OMF Dashboard
   const [showProjection, setShowProjection] = useState(false);
-  const [projectionMethod, setProjectionMethod] = useState<'LTM' | 'CAGR'>('LTM');
+  const [projectionMethod, setProjectionMethod] = useState<'LTM' | 'CAGR' | '2xCAGR'>('LTM');
   const [showCPI, setShowCPI] = useState(false);
   const [excludePPK, setExcludePPK] = useState(false);
 
@@ -62,8 +62,16 @@ export const App: React.FC = () => {
     portfolioType,
     showProjection,
     showPPKProjection,
-    projectionMethod
+    projectionMethod,
+    customCagr: stats?.cagr // Pass the actual calculated CAGR
   });
+
+  // Auto-switch from LTM if invalid
+  useEffect(() => {
+    if (projectionMethod === 'LTM' && !omfRates.isLtmValid) {
+        setProjectionMethod('2xCAGR');
+    }
+  }, [projectionMethod, omfRates.isLtmValid]);
 
   // 4. Chart Transformations Hook
   const {

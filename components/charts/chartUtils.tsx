@@ -72,7 +72,7 @@ export const CHART_THEMES: Record<ThemeMode, {
     state: '#db2777',      // Pink-600
     tax: '#dc2626',        // Red-600
     net: '#115e59',        // Teal-800
-    exit: '#ca8a04',       // Dark Yellow/Gold for visibility on white
+    exit: '#ffd43b',       // Yellow
     projection: '#d97706', // Amber-600
     taxedAccount: '#ea580c', 
     grid: '#e5e7eb',       

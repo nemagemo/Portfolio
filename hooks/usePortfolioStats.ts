@@ -60,7 +60,7 @@ export const usePortfolioStats = ({
         const aggregatedProfit = totalValue - totalInvestedSnapshot;
         const totalRoi = totalInvestedSnapshot > 0 ? (aggregatedProfit / totalInvestedSnapshot) * 100 : 0;
 
-        let profitTrend = 0, cagr = 0, ltm = 0, ytd = 0, dailyTrend = 0;
+        let profitTrend = 0, cagr = 0, ltm = 0, ltmRoi = 0, ytd = 0, dailyTrend = 0;
 
         if (globalHistoryData.length > 1) {
              const prevPeriod = globalHistoryData[globalHistoryData.length - 2];
@@ -91,6 +91,8 @@ export const usePortfolioStats = ({
         // Performance Metrics (CAGR, LTM, YTD)
         if (globalHistoryData.length > 0) {
              const currentIndex = globalHistoryData.length - 1;
+             
+             // --- TWR Calculation (Time-Weighted) ---
              const calculateAccumulatedTWR = (startIdx: number, endIdx: number) => {
                 let product = 1;
                 for (let i = startIdx; i <= endIdx; i++) {
@@ -125,8 +127,32 @@ export const usePortfolioStats = ({
              const firstIndexThisYear = globalHistoryData.findIndex(d => new Date(d.date).getFullYear() === currentYear);
              if (firstIndexThisYear !== -1) ytd = calculateAccumulatedTWR(firstIndexThisYear, currentIndex);
 
+             // LTM TWR
              const ltmStartIdx = Math.max(1, currentIndex - 11); 
              ltm = calculateAccumulatedTWR(ltmStartIdx, currentIndex);
+
+             // --- LTM ROI Calculation (Money-Weighted Approximation) ---
+             // Calculates return on average invested capital over the last 12 months.
+             const oneYearAgoDate = new Date(currentDate);
+             oneYearAgoDate.setFullYear(oneYearAgoDate.getFullYear() - 1);
+             
+             let ltmRoiIndex = 0;
+             for (let i = currentIndex; i >= 0; i--) {
+                 if (new Date(globalHistoryData[i].date) <= oneYearAgoDate) {
+                     ltmRoiIndex = i;
+                     break;
+                 }
+             }
+             
+             const ltmPrevData = globalHistoryData[ltmRoiIndex];
+             const ltmCurrData = globalHistoryData[currentIndex];
+             
+             const profitGeneratedLTM = ltmCurrData.profit - ltmPrevData.profit;
+             const avgCapitalLTM = (ltmCurrData.investment + ltmPrevData.investment) / 2;
+             
+             if (avgCapitalLTM > 0) {
+                 ltmRoi = (profitGeneratedLTM / avgCapitalLTM) * 100;
+             }
         }
 
         return {
@@ -136,7 +162,7 @@ export const usePortfolioStats = ({
             currentRoi: totalRoi,
             profitTrend,
             dailyTrend,
-            cagr, ltm, ytd
+            cagr, ltm, ltmRoi, ytd
         };
     } 
     
