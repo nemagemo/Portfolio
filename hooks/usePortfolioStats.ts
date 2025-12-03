@@ -60,7 +60,7 @@ export const usePortfolioStats = ({
         const aggregatedProfit = totalValue - totalInvestedSnapshot;
         const totalRoi = totalInvestedSnapshot > 0 ? (aggregatedProfit / totalInvestedSnapshot) * 100 : 0;
 
-        let profitTrend = 0, cagr = 0, ltm = 0, ltmRoi = 0, ytd = 0, dailyTrend = 0;
+        let profitTrend = 0, cagr = 0, cagrTwr = 0, ltm = 0, ltmRoi = 0, ytd = 0, dailyTrend = 0;
 
         if (globalHistoryData.length > 1) {
              const prevPeriod = globalHistoryData[globalHistoryData.length - 2];
@@ -117,10 +117,18 @@ export const usePortfolioStats = ({
              const years = (currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
              
              if (years > 0.5) {
+                // CAGR ROI (Money-Weighted)
                 const totalFactor = 1 + (totalRoi / 100);
                 cagr = (Math.pow(totalFactor, 1 / years) - 1) * 100;
+
+                // CAGR TWR (Time-Weighted)
+                const totalCumTWR = calculateAccumulatedTWR(1, currentIndex); // Full period TWR
+                const twrFactor = 1 + (totalCumTWR / 100);
+                cagrTwr = (Math.pow(twrFactor, 1 / years) - 1) * 100;
              } else {
                 cagr = totalRoi;
+                // For short period, TWR CAGR approx equals TWR
+                cagrTwr = calculateAccumulatedTWR(1, currentIndex); 
              }
 
              const currentYear = new Date().getFullYear();
@@ -162,7 +170,7 @@ export const usePortfolioStats = ({
             currentRoi: totalRoi,
             profitTrend,
             dailyTrend,
-            cagr, ltm, ltmRoi, ytd
+            cagr, cagrTwr, ltm, ltmRoi, ytd
         };
     } 
     

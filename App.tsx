@@ -19,7 +19,7 @@ export const App: React.FC = () => {
   
   // Local UI State for OMF Dashboard
   const [showProjection, setShowProjection] = useState(false);
-  const [projectionMethod, setProjectionMethod] = useState<'LTM' | 'CAGR' | '2xCAGR'>('LTM');
+  const [projectionMethod, setProjectionMethod] = useState<'CAGR' | 'CAGR_TWR'>('CAGR');
   const [showCPI, setShowCPI] = useState(false);
   const [excludePPK, setExcludePPK] = useState(false);
 
@@ -63,15 +63,9 @@ export const App: React.FC = () => {
     showProjection,
     showPPKProjection,
     projectionMethod,
-    customCagr: stats?.cagr // Pass the actual calculated CAGR
+    customCagr: stats?.cagr, // Pass the actual calculated CAGR (ROI based)
+    customCagrTwr: stats?.cagrTwr // Pass the actual calculated CAGR (TWR based)
   });
-
-  // Auto-switch from LTM if invalid
-  useEffect(() => {
-    if (projectionMethod === 'LTM' && !omfRates.isLtmValid) {
-        setProjectionMethod('2xCAGR');
-    }
-  }, [projectionMethod, omfRates.isLtmValid]);
 
   // 4. Chart Transformations Hook
   const {

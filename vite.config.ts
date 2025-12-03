@@ -17,7 +17,10 @@ export default defineConfig(({ mode }) => {
       resolve: {
         alias: {
           '@': path.resolve('.'),
-        }
+          'react': path.resolve('./node_modules/react'),
+          'react-dom': path.resolve('./node_modules/react-dom'),
+        },
+        dedupe: ['react', 'react-dom']
       }
     };
 });

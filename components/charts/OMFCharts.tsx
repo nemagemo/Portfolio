@@ -162,6 +162,30 @@ interface BubbleRiskChartProps {
   themeMode?: ThemeMode;
 }
 
+// Custom Label Renderer to ensure labels are black and visible
+const renderBubbleLabel = (props: any) => {
+  const { x, y, value, themeMode } = props;
+  const isNeon = themeMode === 'neon';
+  // Force strict black for light theme, cyan for neon
+  const color = isNeon ? '#a5f3fc' : '#000000';
+  
+  return (
+    <text 
+      x={x} 
+      y={y} 
+      dy={-10} // Offset slightly upwards
+      fill={color} 
+      fontSize={10} 
+      textAnchor="middle" 
+      fontWeight="bold"
+      pointerEvents="none"
+      stroke="none" // Explicitly disable stroke inheritance
+    >
+      {value}
+    </text>
+  );
+};
+
 export const BubbleRiskChart: React.FC<BubbleRiskChartProps> = ({ data, themeMode = 'light' }) => {
   const t = CHART_THEMES[themeMode || 'light'];
   const config = useChartConfig();
@@ -255,14 +279,7 @@ export const BubbleRiskChart: React.FC<BubbleRiskChartProps> = ({ data, themeMod
             })}
             <LabelList 
                 dataKey="name" 
-                position="top" 
-                offset={5}
-                style={{ 
-                    fontSize: '10px', 
-                    fill: (themeMode as string) === 'neon' ? '#a5f3fc' : '#1e293b',
-                    fontWeight: 'bold',
-                    pointerEvents: 'none'
-                }} 
+                content={(props) => renderBubbleLabel({ ...props, themeMode })}
             />
           </Scatter>
         </ScatterChart>

@@ -8,8 +8,9 @@ interface UseProjectionsProps {
   portfolioType: string;
   showProjection: boolean;
   showPPKProjection: boolean;
-  projectionMethod: 'LTM' | 'CAGR' | '2xCAGR';
-  customCagr?: number; // Calculated historical CAGR from stats
+  projectionMethod: 'CAGR' | 'CAGR_TWR';
+  customCagr?: number; // Calculated historical CAGR (ROI based)
+  customCagrTwr?: number; // Calculated historical CAGR (TWR based)
 }
 
 export const useProjections = ({
@@ -19,57 +20,27 @@ export const useProjections = ({
   showProjection,
   showPPKProjection,
   projectionMethod,
-  customCagr
+  customCagr,
+  customCagrTwr
 }: UseProjectionsProps) => {
 
   // --- Calculate Rates Logic ---
   const omfRates = useMemo(() => {
-      if (globalHistoryData.length < 2) {
-          return { ltm: 0, cagr: 0, doubleCagr: 0, isLtmValid: true };
-      }
+      // 1. Calculate CAGR Rates (Monthly Rate %)
       
-      const lastData = globalHistoryData[globalHistoryData.length - 1];
-      const firstData = globalHistoryData[0];
-      
-      // 1. Calculate Real LTM (Monthly Rate %)
-      let ltmRateDecimal = 0;
-      
-      if (globalHistoryData.length >= 12) {
-          const prev = globalHistoryData[globalHistoryData.length - 12];
-          if (prev.totalValue > 0) {
-             // Monthly equivalent of the last 12 months growth
-             ltmRateDecimal = Math.pow(lastData.totalValue / prev.totalValue, 1/12) - 1;
-          }
-      } else {
-          // If less than a year, annualize the total return so far -> convert to monthly
-          const months = Math.max(1, globalHistoryData.length);
-          if (firstData.totalValue > 0) {
-             ltmRateDecimal = Math.pow(lastData.totalValue / firstData.totalValue, 1/months) - 1;
-          }
-      }
-
-      const ltmRatePercent = ltmRateDecimal * 100;
-      const isLtmValid = ltmRateDecimal > 0;
-
-      // 2. Calculate CAGR Rates (Monthly Rate %)
-      // Use customCagr from stats if valid, otherwise fallback to safe 10%
-      // Note: customCagr is annual percentage (e.g. 15.5)
+      // CAGR ROI (Money-Weighted)
       const effectiveAnnualCagr = (customCagr && customCagr > -90) ? customCagr : 10;
-      
-      // Normal CAGR Monthly %
       const cagrRatePercent = (Math.pow(1 + (effectiveAnnualCagr / 100), 1/12) - 1) * 100;
       
-      // 2x CAGR (Aggressive) Monthly %
-      const doubleAnnualCagr = effectiveAnnualCagr * 2;
-      const doubleCagrRatePercent = (Math.pow(1 + (doubleAnnualCagr / 100), 1/12) - 1) * 100;
+      // CAGR TWR (Time-Weighted)
+      const effectiveAnnualCagrTwr = (customCagrTwr && customCagrTwr > -90) ? customCagrTwr : 10;
+      const cagrTwrRatePercent = (Math.pow(1 + (effectiveAnnualCagrTwr / 100), 1/12) - 1) * 100;
 
       return { 
-          ltm: ltmRatePercent, 
           cagr: cagrRatePercent, 
-          doubleCagr: doubleCagrRatePercent, 
-          isLtmValid 
+          cagrTwr: cagrTwrRatePercent
       };
-  }, [globalHistoryData, customCagr]);
+  }, [globalHistoryData, customCagr, customCagrTwr]);
 
   // --- OMF: Road to Million ---
   const omfProjection = useMemo(() => {
@@ -80,17 +51,10 @@ export const useProjections = ({
     // Determine which rate to use
     let monthlyRatePercent = 0.8; // Default fallback (~10% annual)
 
-    if (projectionMethod === 'LTM') {
-        // If LTM is valid, use it. If not, internal fallback to 2xCAGR to avoid broken chart
-        if (omfRates.isLtmValid) {
-            monthlyRatePercent = omfRates.ltm;
-        } else {
-            monthlyRatePercent = omfRates.doubleCagr;
-        }
-    } else if (projectionMethod === '2xCAGR') {
-        monthlyRatePercent = omfRates.doubleCagr;
+    if (projectionMethod === 'CAGR_TWR') {
+        monthlyRatePercent = omfRates.cagrTwr;
     } else {
-        // CAGR
+        // Default to CAGR (ROI)
         monthlyRatePercent = omfRates.cagr;
     }
 

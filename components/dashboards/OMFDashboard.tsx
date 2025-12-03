@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { TrendingUp, Wallet, ArrowUpRight, ArrowDownRight, ChevronDown, ChevronUp, PieChart, Snowflake, ScatterChart, LayoutTemplate, CalendarDays, Milestone, Activity } from 'lucide-react';
+import { TrendingUp, Wallet, ArrowUpRight, ArrowDownRight, ChevronDown, ChevronUp, PieChart, Snowflake, ScatterChart, LayoutTemplate, CalendarDays, Milestone, Activity, RotateCw } from 'lucide-react';
 import { SummaryStats, OMFDataRow, GlobalHistoryRow } from '../../types';
 import { Theme, themeStyles } from '../../theme/styles';
 import { GlobalSummaryChart, GlobalPerformanceChart, OMFTreemapChart, SeasonalityChart, PortfolioAllocationHistoryChart, BubbleRiskChart, DrawdownChart } from '../Charts';
@@ -22,14 +22,76 @@ interface OMFDashboardProps {
   setShowCPI: (v: boolean) => void;
   showProjection: boolean;
   setShowProjection: (v: boolean) => void;
-  projectionMethod: 'LTM' | 'CAGR' | '2xCAGR';
-  setProjectionMethod: (m: 'LTM' | 'CAGR' | '2xCAGR') => void;
-  rateDisplay: { ltm: number; cagr: number; doubleCagr: number; isLtmValid: boolean };
+  projectionMethod: 'CAGR' | 'CAGR_TWR';
+  setProjectionMethod: (m: 'CAGR' | 'CAGR_TWR') => void;
+  rateDisplay: { cagr: number; cagrTwr: number };
   chartDataWithProjection: GlobalHistoryRow[];
   omfStructureData: any[];
   heatmapHistoryData: any[];
   investmentDurationMonths: number;
 }
+
+// Internal component for 3D Flip Card
+const StatFlipCard: React.FC<{
+  frontTitle: string;
+  frontValue: string | number;
+  frontSub: string;
+  backTitle: string;
+  backValue: string | number;
+  backSub: string;
+  icon: React.ElementType;
+  theme: Theme;
+  colorClass: string;
+}> = ({ frontTitle, frontValue, frontSub, backTitle, backValue, backSub, icon: Icon, theme, colorClass }) => {
+  const [isFlipped, setIsFlipped] = useState(false);
+  const isNeon = (theme as string) === 'neon';
+
+  return (
+    <div className="h-[76px] perspective-1000 cursor-pointer group" onClick={() => setIsFlipped(!isFlipped)}>
+      <div className={`relative w-full h-full transition-transform duration-500 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}>
+        
+        {/* FRONT FACE */}
+        <div className={`absolute w-full h-full [backface-visibility:hidden] p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
+          <div className="flex justify-between items-start mb-0.5">
+            <div className={`text-[10px] sm:text-xs uppercase font-bold ${colorClass}`}>
+              {frontTitle}
+            </div>
+            <div className="flex items-center space-x-1">
+               <RotateCw className={`w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity ${colorClass}`} />
+               <Icon className={`w-4 h-4 opacity-80 ${colorClass}`} />
+            </div>
+          </div>
+          <div className={`text-lg sm:text-xl font-bold ${isNeon ? colorClass.replace('text-', 'text-opacity-90 text-') : 'text-slate-700'}`}>
+            {frontValue}
+          </div>
+          <div className={`text-[9px] sm:text-[10px] ${isNeon ? colorClass.replace('400', '600') : 'text-slate-400'}`}>
+            {frontSub}
+          </div>
+        </div>
+
+        {/* BACK FACE */}
+        <div className={`absolute w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] p-2.5 border ${isNeon ? 'bg-cyan-900/10 border-cyan-900/50 rounded-lg' : 'bg-slate-100 border-slate-200 rounded-lg'}`}>
+          <div className="flex justify-between items-start mb-0.5">
+            <div className={`text-[10px] sm:text-xs uppercase font-bold ${colorClass}`}>
+              {backTitle}
+            </div>
+            <div className="flex items-center space-x-1">
+               <RotateCw className={`w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity ${colorClass}`} />
+               <Icon className={`w-4 h-4 opacity-80 ${colorClass}`} />
+            </div>
+          </div>
+          <div className={`text-lg sm:text-xl font-bold ${isNeon ? colorClass.replace('text-', 'text-opacity-90 text-') : 'text-slate-700'}`}>
+            {backValue}
+          </div>
+          <div className={`text-[9px] sm:text-[10px] ${isNeon ? colorClass.replace('400', '600') : 'text-slate-400'}`}>
+            {backSub}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+};
 
 export const OMFDashboard: React.FC<OMFDashboardProps> = ({
   stats, theme, activeAssets, closedAssets, globalHistory, dailyChangeData,
@@ -59,7 +121,6 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
     }));
   }, [drawdownHistoryData, drawdownExcludePPK]);
 
-  // Filter Bubble Chart Data
   const filteredBubbleData = useMemo(() => {
     let baseData = activeAssets;
     if (bubbleChartFilter !== 'ALL') {
@@ -124,8 +185,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
 
   // Determine current displayed rate
   let currentRateValue = 0;
-  if (projectionMethod === 'LTM') currentRateValue = rateDisplay.ltm;
-  else if (projectionMethod === '2xCAGR') currentRateValue = rateDisplay.doubleCagr;
+  if (projectionMethod === 'CAGR_TWR') currentRateValue = rateDisplay.cagrTwr;
   else currentRateValue = rateDisplay.cagr;
 
   return (
@@ -171,22 +231,33 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
              )}
           </div>
           <div className="lg:col-span-4 grid grid-cols-2 gap-2">
-             <div className={`p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-                <div className="flex justify-between items-start mb-0.5">
-                  <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-purple-400' : 'text-slate-400'}`}>CAGR</div>
-                  <IconCAGR className={`w-4 h-4 ${isNeon ? 'text-purple-500/80' : 'text-purple-400/60'}`} />
-                </div>
-                <div className={`text-lg sm:text-xl font-bold ${isNeon ? 'text-purple-300' : 'text-slate-700'}`}>{stats.cagr?.toFixed(2)}%</div>
-                <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-purple-500/60' : 'text-slate-400'}`}>Średniorocznie</div>
-             </div>
-             <div className={`p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-                <div className="flex justify-between items-start mb-0.5">
-                  <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-amber-400' : 'text-slate-400'}`}>LTM</div>
-                  <IconLTM className={`w-4 h-4 ${isNeon ? 'text-amber-500/80' : 'text-amber-400/60'}`} />
-                </div>
-                <div className={`text-lg sm:text-xl font-bold ${isNeon ? 'text-amber-300' : 'text-slate-700'}`}>{stats.ltmRoi?.toFixed(2)}%</div>
-                <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-amber-500/60' : 'text-slate-400'}`}>Ost. 12 msc (ROI)</div>
-             </div>
+             
+             {/* CAGR Flip Card */}
+             <StatFlipCard 
+                theme={theme}
+                icon={IconCAGR}
+                colorClass={isNeon ? 'text-purple-400' : 'text-slate-400'}
+                frontTitle="CAGR"
+                frontValue={`${stats.cagr?.toFixed(2)}%`}
+                frontSub="Średnio rocznie"
+                backTitle="CAGR (TWR)"
+                backValue={`${stats.cagrTwr?.toFixed(2)}%`}
+                backSub="Średnio rocznie"
+             />
+
+             {/* LTM Flip Card */}
+             <StatFlipCard 
+                theme={theme}
+                icon={IconLTM}
+                colorClass={isNeon ? 'text-amber-400' : 'text-slate-400'}
+                frontTitle="LTM"
+                frontValue={`${stats.ltmRoi?.toFixed(2)}%`}
+                frontSub="Ost. 12 msc"
+                backTitle="LTM (TWR)"
+                backValue={`${stats.ltm?.toFixed(2)}%`}
+                backSub="Ost. 12 msc"
+             />
+
              <div className={`p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
                 <div className="flex justify-between items-start mb-0.5">
                   <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-blue-400' : 'text-slate-400'}`}>Czas</div>
@@ -227,12 +298,8 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
               {showProjection && (
                 <div className="flex items-center space-x-2 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className={`flex border p-0.5 ${isNeon ? 'bg-black border-cyan-900/50 rounded-md' : 'bg-white border-slate-200 rounded-md'}`}>
-                    {rateDisplay.isLtmValid ? (
-                        <button onClick={() => setProjectionMethod('LTM')} className={`px-2 py-1 text-[10px] font-medium ${projectionMethod === 'LTM' ? (isNeon ? 'bg-cyan-900 text-cyan-300' : 'bg-slate-800 text-white') : (isNeon ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')} rounded`}>LTM</button>
-                    ) : (
-                        <button onClick={() => setProjectionMethod('2xCAGR')} className={`px-2 py-1 text-[10px] font-medium ${projectionMethod === '2xCAGR' ? (isNeon ? 'bg-cyan-900 text-cyan-300' : 'bg-slate-800 text-white') : (isNeon ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')} rounded`}>2xCAGR</button>
-                    )}
                     <button onClick={() => setProjectionMethod('CAGR')} className={`px-2 py-1 text-[10px] font-medium ${projectionMethod === 'CAGR' ? (isNeon ? 'bg-cyan-900 text-cyan-300' : 'bg-slate-800 text-white') : (isNeon ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')} rounded`}>CAGR</button>
+                    <button onClick={() => setProjectionMethod('CAGR_TWR')} className={`px-2 py-1 text-[10px] font-medium ${projectionMethod === 'CAGR_TWR' ? (isNeon ? 'bg-cyan-900 text-cyan-300' : 'bg-slate-800 text-white') : (isNeon ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')} rounded`}>CAGR TWR</button>
                   </div>
                   <span className={`text-[10px] font-mono ${styles.textSub}`}>+{currentRateValue.toFixed(2)}% m/m</span>
                 </div>
@@ -257,6 +324,31 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
         <div className="w-full">
           <GlobalPerformanceChart data={globalHistory} themeMode={theme} showSP500={showSP500} showWIG20={showWIG20} />
         </div>
+      </div>
+
+      {/* Treemap ROI - Full Width - MOVED UP */}
+      <div className={`${styles.cardContainer} p-6 hidden md:block`}>
+        <div className="flex items-center justify-between mb-0">
+          <div><h3 className={`text-lg font-bold ${styles.text}`}>Heatmap ROI</h3></div>
+          <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><LayoutTemplate className={isNeon ? 'text-cyan-400' : 'text-cyan-600'} size={20} /></div>
+        </div>
+        <OMFTreemapChart data={omfStructureData} themeMode={theme} />
+      </div>
+
+      {/* Bubble Risk Map (Intraday) - Full Width - MOVED UP */}
+      <div className={`${styles.cardContainer} p-6 hidden md:block`}>
+        <div className="flex items-center justify-between mb-0">
+          <div><h3 className={`text-lg font-bold ${styles.text}`}>Intraday</h3><p className={`text-[10px] sm:text-xs mt-1 ${isNeon ? 'text-slate-500' : 'text-slate-400'}`}>Gdy zmiana wynosi 0 lub jest bardzo duża, może to wskazywać na błąd synchronizacji danych.</p></div>
+          <div className="flex space-x-2 items-center">
+            <div className={`flex items-center space-x-1 p-1 border ${isNeon ? 'bg-black/50 border-cyan-900/50 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
+                <button onClick={() => setBubbleChartFilter('ALL')} className={`px-3 py-1 text-xs font-bold transition-all ${bubbleChartFilter === 'ALL' ? (isNeon ? 'bg-cyan-900 text-cyan-300' : 'bg-white text-slate-800 shadow-sm') : (isNeon ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')} rounded-md`}>Wszystkie</button>
+                <button onClick={() => setBubbleChartFilter('KRYPTO')} className={`px-3 py-1 text-xs font-bold transition-all ${bubbleChartFilter === 'KRYPTO' ? (isNeon ? 'bg-cyan-900 text-cyan-300' : 'bg-white text-slate-800 shadow-sm') : (isNeon ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')} rounded-md`}>Krypto</button>
+                <button onClick={() => setBubbleChartFilter('IKE')} className={`px-3 py-1 text-xs font-bold transition-all ${bubbleChartFilter === 'IKE' ? (isNeon ? 'bg-cyan-900 text-cyan-300' : 'bg-white text-slate-800 shadow-sm') : (isNeon ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')} rounded-md`}>IKE</button>
+            </div>
+            <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><ScatterChart className={isNeon ? 'text-amber-400' : 'text-amber-600'} size={20} /></div>
+          </div>
+        </div>
+        <BubbleRiskChart data={filteredBubbleData} themeMode={theme} />
       </div>
 
       {/* Monthly Returns - Hidden on Mobile */}
@@ -289,31 +381,6 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
           </div>
         </div>
         <DrawdownChart data={chartDrawdownData} themeMode={theme} />
-      </div>
-
-      {/* Treemap ROI - Full Width */}
-      <div className={`${styles.cardContainer} p-6 hidden md:block`}>
-        <div className="flex items-center justify-between mb-0">
-          <div><h3 className={`text-lg font-bold ${styles.text}`}>Heatmap ROI</h3></div>
-          <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><LayoutTemplate className={isNeon ? 'text-cyan-400' : 'text-cyan-600'} size={20} /></div>
-        </div>
-        <OMFTreemapChart data={omfStructureData} themeMode={theme} />
-      </div>
-
-      {/* Bubble Risk Map (Intraday) - Full Width */}
-      <div className={`${styles.cardContainer} p-6 hidden md:block`}>
-        <div className="flex items-center justify-between mb-0">
-          <div><h3 className={`text-lg font-bold ${styles.text}`}>Intraday</h3><p className={`text-[10px] sm:text-xs mt-1 ${isNeon ? 'text-slate-500' : 'text-slate-400'}`}>Gdy zmiana wynosi 0 lub jest bardzo duża, może to wskazywać na błąd synchronizacji danych.</p></div>
-          <div className="flex space-x-2 items-center">
-            <div className={`flex items-center space-x-1 p-1 border ${isNeon ? 'bg-black/50 border-cyan-900/50 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-                <button onClick={() => setBubbleChartFilter('ALL')} className={`px-3 py-1 text-xs font-bold transition-all ${bubbleChartFilter === 'ALL' ? (isNeon ? 'bg-cyan-900 text-cyan-300' : 'bg-white text-slate-800 shadow-sm') : (isNeon ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')} rounded-md`}>Wszystkie</button>
-                <button onClick={() => setBubbleChartFilter('KRYPTO')} className={`px-3 py-1 text-xs font-bold transition-all ${bubbleChartFilter === 'KRYPTO' ? (isNeon ? 'bg-cyan-900 text-cyan-300' : 'bg-white text-slate-800 shadow-sm') : (isNeon ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')} rounded-md`}>Krypto</button>
-                <button onClick={() => setBubbleChartFilter('IKE')} className={`px-3 py-1 text-xs font-bold transition-all ${bubbleChartFilter === 'IKE' ? (isNeon ? 'bg-cyan-900 text-cyan-300' : 'bg-white text-slate-800 shadow-sm') : (isNeon ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')} rounded-md`}>IKE</button>
-            </div>
-            <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><ScatterChart className={isNeon ? 'text-amber-400' : 'text-amber-600'} size={20} /></div>
-          </div>
-        </div>
-        <BubbleRiskChart data={filteredBubbleData} themeMode={theme} />
       </div>
 
       {/* Allocation History - Full Width */}
