@@ -298,7 +298,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
             <div className="hidden md:flex space-x-1 sm:space-x-2">
                 <button
                   onClick={() => setShowSP500(!showSP500)}
-                  className={`px-2 py-1 text-[10px] sm:text-xs font-medium rounded-full transition-all ${
+                  className={`px-2 py-1 text-[10px] sm:text-xs font-medium rounded-md transition-all ${
                     showSP500 
                       ? 'bg-slate-700 text-white ring-2 ring-slate-700 ring-offset-1' 
                       : `border border-slate-300 ${theme === 'neon' ? 'bg-slate-700 text-slate-200' : 'bg-white text-slate-600'} hover:opacity-80`
@@ -308,7 +308,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
                 </button>
                 <button
                   onClick={() => setShowWIG20(!showWIG20)}
-                  className={`px-2 py-1 text-[10px] sm:text-xs font-medium rounded-full transition-all ${
+                  className={`px-2 py-1 text-[10px] sm:text-xs font-medium rounded-md transition-all ${
                     showWIG20 
                       ? 'bg-purple-800 text-white ring-2 ring-purple-800 ring-offset-1' 
                       : `border border-slate-300 ${theme === 'neon' ? 'bg-slate-700 text-slate-200' : 'bg-white text-slate-600'} hover:opacity-80`
@@ -362,11 +362,29 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
         <BubbleRiskChart data={filteredBubbleData} themeMode={theme} />
       </div>
 
+      {/* Monthly Returns - Hidden on Mobile - MOVED HERE */}
+      <div className={`${styles.cardContainer} p-6 overflow-x-auto hidden md:block`}>
+        <div className="flex items-center justify-between mb-0 min-w-[600px]">
+          <div><h3 className={`text-lg font-bold ${styles.text}`}>Miesięczne Stopy Zwrotu</h3><p className={`text-sm ${styles.textSub}`}>Bez PPK</p></div>
+          <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><CalendarDays className={isNeon ? 'text-emerald-400' : 'text-emerald-600'} size={20} /></div>
+        </div>
+        <ReturnsHeatmap data={heatmapHistoryData} themeMode={theme} />
+      </div>
+
+      {/* Seasonality - Hidden on Mobile - MOVED HERE */}
+      <div className={`${styles.cardContainer} p-6 hidden md:block`}>
+        <div className="flex items-center justify-between mb-0">
+          <div><h3 className={`text-lg font-bold ${styles.text}`}>Sezonowość</h3><p className={`text-sm ${styles.textSub}`}>Średnia stopa zwrotu w poszczególnych miesiącach</p></div>
+          <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><Snowflake className={isNeon ? 'text-blue-400' : 'text-blue-600'} size={20} /></div>
+        </div>
+        <SeasonalityChart data={heatmapHistoryData} themeMode={theme} />
+      </div>
+
       {/* Drawdown Chart (Risk Analysis) */}
       <div className={`${styles.cardContainer} p-6 hidden md:block`}>
         <div className="flex items-center justify-between mb-0">
           <div>
-            <h3 className={`text-lg font-bold ${styles.text}`}>Ryzyko i Obsunięcie (Drawdown)</h3>
+            <h3 className={`text-lg font-bold ${styles.text}`}>Drawdown</h3>
             <p className={`text-sm ${styles.textSub}`}>Procentowy spadek od najwyższego historycznego szczytu</p>
           </div>
           <div className="flex items-center space-x-2">
@@ -388,24 +406,6 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
           <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><PieChart className={isNeon ? 'text-blue-400' : 'text-blue-600'} size={20} /></div>
         </div>
         <PortfolioAllocationHistoryChart data={globalHistory} themeMode={theme} />
-      </div>
-
-      {/* Monthly Returns - Hidden on Mobile */}
-      <div className={`${styles.cardContainer} p-6 overflow-x-auto hidden md:block`}>
-        <div className="flex items-center justify-between mb-0 min-w-[600px]">
-          <div><h3 className={`text-lg font-bold ${styles.text}`}>Miesięczne Stopy Zwrotu</h3><p className={`text-sm ${styles.textSub}`}>Bez PPK</p></div>
-          <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><CalendarDays className={isNeon ? 'text-emerald-400' : 'text-emerald-600'} size={20} /></div>
-        </div>
-        <ReturnsHeatmap data={heatmapHistoryData} themeMode={theme} />
-      </div>
-
-      {/* Seasonality - Hidden on Mobile */}
-      <div className={`${styles.cardContainer} p-6 hidden md:block`}>
-        <div className="flex items-center justify-between mb-0">
-          <div><h3 className={`text-lg font-bold ${styles.text}`}>Sezonowość</h3><p className={`text-sm ${styles.textSub}`}>Średnia stopa zwrotu w poszczególnych miesiącach</p></div>
-          <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><Snowflake className={isNeon ? 'text-blue-400' : 'text-blue-600'} size={20} /></div>
-        </div>
-        <SeasonalityChart data={heatmapHistoryData} themeMode={theme} />
       </div>
 
       {/* Active Positions Table - Hidden on Mobile */}

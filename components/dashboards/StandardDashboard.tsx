@@ -228,18 +228,18 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
                </div>
              )}
 
-             {/* STAT BLOCK 4 (Time) - Only for PPK */}
-             {portfolioType === 'PPK' && (
+             {/* STAT BLOCK 4 (Time) - Hidden for Crypto and IKE */}
+             {portfolioType !== 'CRYPTO' && portfolioType !== 'IKE' && (
                <div className={`p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
                   <div className="flex justify-between items-start mb-0.5">
                     <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-cyan-400' : 'text-slate-400'}`}>Czas</div>
                     <IconHourglass className={`w-4 h-4 ${isNeon ? 'text-cyan-500/80' : 'text-cyan-400/60'}`} />
                   </div>
                   <div className={`text-sm sm:text-base font-bold ${isNeon ? 'text-cyan-300' : 'text-slate-700'}`}>
-                     {monthsToPayout} <span className="text-[10px] font-normal">msc</span>
+                     {portfolioType === 'PPK' ? `${monthsToPayout}` : '∞'} <span className="text-[10px] font-normal">msc</span>
                   </div>
                   <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-cyan-500/60' : 'text-slate-400'}`}>
-                     do wypłaty
+                     {portfolioType === 'PPK' ? 'do wypłaty' : 'Horyzont'}
                   </div>
                </div>
              )}
@@ -262,7 +262,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
              {portfolioType === 'PPK' && setShowPPKProjection && (
                 <button
                   onClick={() => setShowPPKProjection(!showPPKProjection)}
-                  className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all border ${showPPKProjection ? styles.toggleProjectionActive : `bg-transparent ${isNeon ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'}`}`}
+                  className={`hidden md:flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all border ${showPPKProjection ? styles.toggleProjectionActive : `bg-transparent ${isNeon ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'}`}`}
                 >
                   <TrendingUp size={14} className="mr-2" /> Prognoza
                 </button>
@@ -272,7 +272,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
              {portfolioType === 'IKE' && setShowTaxComparison && (
                 <button 
                   onClick={() => setShowTaxComparison(!showTaxComparison)}
-                  className={`flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all border ${showTaxComparison ? (isNeon ? 'bg-amber-900/30 text-amber-400 border-amber-500/50' : 'bg-amber-50 text-amber-700 border-amber-200') : `bg-transparent ${isNeon ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'}`}`}
+                  className={`hidden md:flex items-center px-3 py-1.5 text-xs font-bold rounded-md transition-all border ${showTaxComparison ? (isNeon ? 'bg-amber-900/30 text-amber-400 border-amber-500/50' : 'bg-amber-50 text-amber-700 border-amber-200') : `bg-transparent ${isNeon ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'}`}`}
                   title="Porównaj z kontem opodatkowanym (19% Belki)"
                 >
                   <TaxToggleIcon className="w-4 h-4 mr-2" />
@@ -315,9 +315,12 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
         <ROIChart data={data} showExitRoi={portfolioType === 'PPK'} themeMode={theme} />
       </div>
 
+      {/* 3. Conditional Charts */}
+      {/* PPK Leverage Chart REMOVED as requested */}
+
       {/* IKE Specific: Dividends & Sector Allocation */}
       {portfolioType === 'IKE' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div className="hidden md:grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             
             {/* Left: Dividend History */}
             <div className={`${styles.cardContainer} p-6`}>
