@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Briefcase, Coins, PiggyBank, Menu, X, RefreshCw, Wifi, WifiOff, AlertCircle } from 'lucide-react';
+import { Building2, Bitcoin, LineChart, Menu, X, RefreshCw, Wifi, WifiOff, AlertCircle } from 'lucide-react';
 import { PortfolioType, OMFDataRow } from '../../types';
 import { Theme, themeStyles } from '../../theme/styles';
 import { HeaderLogo } from '../logos/HeaderLogo';
@@ -111,9 +111,9 @@ export const Header: React.FC<HeaderProps> = ({
           <button onClick={() => handlePortfolioChange('OMF')} className={`flex items-center justify-center md:px-2 md:py-1 md:text-lg lg:px-4 lg:text-2xl font-bold leading-none transition-all whitespace-nowrap ${portfolioType === 'OMF' ? styles.buttonActive : styles.buttonInactive} rounded-md`}>
             Σ
           </button>
-          <button onClick={() => handlePortfolioChange('PPK')} className={`flex items-center md:px-2 md:py-1 md:text-[10px] lg:px-4 lg:py-1.5 lg:text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'PPK' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><Briefcase size={16} className="md:mr-1 lg:mr-2 hidden sm:block" />PPK</button>
-          <button onClick={() => handlePortfolioChange('CRYPTO')} className={`flex items-center md:px-2 md:py-1 md:text-[10px] lg:px-4 lg:py-1.5 lg:text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'CRYPTO' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><Coins size={16} className="md:mr-1 lg:mr-2 hidden sm:block" />Krypto</button>
-          <button onClick={() => handlePortfolioChange('IKE')} className={`flex items-center md:px-2 md:py-1 md:text-[10px] lg:px-4 lg:py-1.5 lg:text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'IKE' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><PiggyBank size={16} className="md:mr-1 lg:mr-2 hidden sm:block" />IKE</button>
+          <button onClick={() => handlePortfolioChange('PPK')} className={`flex items-center md:px-2 md:py-1 md:text-[10px] lg:px-4 lg:py-1.5 lg:text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'PPK' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><Building2 size={16} className="md:mr-1 lg:mr-2 hidden sm:block" />PPK</button>
+          <button onClick={() => handlePortfolioChange('CRYPTO')} className={`flex items-center md:px-2 md:py-1 md:text-[10px] lg:px-4 lg:py-1.5 lg:text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'CRYPTO' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><Bitcoin size={16} className="md:mr-1 lg:mr-2 hidden sm:block" />Krypto</button>
+          <button onClick={() => handlePortfolioChange('IKE')} className={`flex items-center md:px-2 md:py-1 md:text-[10px] lg:px-4 lg:py-1.5 lg:text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'IKE' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><LineChart size={16} className="md:mr-1 lg:mr-2 hidden sm:block" />IKE</button>
         </div>
 
         {/* RIGHT: Status & Hamburger */}
@@ -166,13 +166,13 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
               <div className="grid grid-cols-3 gap-2 mt-2">
                  <button onClick={() => handlePortfolioChange('PPK')} className={`flex flex-col items-center justify-center p-3 rounded-lg text-sm font-medium ${portfolioType === 'PPK' ? styles.buttonActive : styles.buttonInactive}`}>
-                    <Briefcase size={20} className="mb-1" /> PPK
+                    <Building2 size={20} className="mb-1" /> PPK
                  </button>
                  <button onClick={() => handlePortfolioChange('CRYPTO')} className={`flex flex-col items-center justify-center p-3 rounded-lg text-sm font-medium ${portfolioType === 'CRYPTO' ? styles.buttonActive : styles.buttonInactive}`}>
-                    <Coins size={20} className="mb-1" /> Krypto
+                    <Bitcoin size={20} className="mb-1" /> Krypto
                  </button>
                  <button onClick={() => handlePortfolioChange('IKE')} className={`flex flex-col items-center justify-center p-3 rounded-lg text-sm font-medium ${portfolioType === 'IKE' ? styles.buttonActive : styles.buttonInactive}`}>
-                    <PiggyBank size={20} className="mb-1" /> IKE
+                    <LineChart size={20} className="mb-1" /> IKE
                  </button>
               </div>
            </div>
