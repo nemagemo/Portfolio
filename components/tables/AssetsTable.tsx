@@ -46,13 +46,6 @@ export const AssetsTable: React.FC<AssetsTableProps> = ({ data, variant = 'activ
       const aValue = a[sortConfig.key];
       const bValue = b[sortConfig.key];
 
-      // Handle specific column logic
-      if (sortConfig.key === 'investmentPeriod') {
-         const aNum = parseInt(String(aValue || '0'), 10);
-         const bNum = parseInt(String(bValue || '0'), 10);
-         return sortConfig.direction === 'asc' ? aNum - bNum : bNum - aNum;
-      }
-
       // Handle numeric comparisons (with null safety)
       if (typeof aValue === 'number' && typeof bValue === 'number') {
         return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
@@ -216,7 +209,6 @@ export const AssetsTable: React.FC<AssetsTableProps> = ({ data, variant = 'activ
             <tr>
               <SortableHeader label="Symbol" sortKey="symbol" />
               <SortableHeader label={variant === 'closed' ? 'Data' : 'Zakup'} sortKey="lastPurchaseDate" />
-              <SortableHeader label="Dni" sortKey="investmentPeriod" align="center" />
               
               {variant !== 'closed' && (
                 <SortableHeader label="Ilość" sortKey="quantity" align="right" />
@@ -250,7 +242,6 @@ export const AssetsTable: React.FC<AssetsTableProps> = ({ data, variant = 'activ
                 <tr key={`${r.symbol}-${index}`} className={getRowClass(index)}>
                   <td className={`px-1 py-1.5 md:px-1 md:py-2 lg:px-4 lg:py-3 ${getTextClass(true)}`}>{r.symbol}</td>
                   <td className={`px-1 py-1.5 md:px-1 md:py-2 lg:px-4 lg:py-3 ${isNeon ? 'text-cyan-600' : (isComic ? 'text-zinc-300' : (isDark ? 'text-slate-400' : 'text-slate-500'))}`}>{r.lastPurchaseDate}</td>
-                  <td className={`px-1 py-1.5 md:px-1 md:py-2 lg:px-4 lg:py-3 text-center ${isNeon ? 'text-cyan-600' : (isComic ? 'text-zinc-300' : (isDark ? 'text-slate-400' : 'text-slate-500'))}`}>{r.investmentPeriod}</td>
                   
                   {variant !== 'closed' && (
                     <td className={`px-1 py-1.5 md:px-1 md:py-2 lg:px-4 lg:py-3 text-right ${isNeon ? 'text-cyan-200 font-mono' : 'font-mono'}`}>{(r.quantity || 0) > 0 ? (r.quantity || 0).toFixed(4) : '-'}</td>

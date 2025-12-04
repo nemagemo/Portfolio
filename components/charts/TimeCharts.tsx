@@ -197,7 +197,7 @@ export const ROIChart: React.FC<ChartProps> = ({ data, showExitRoi = true, showT
           <Tooltip 
             formatter={(value: number, name: string) => [
               `${value.toFixed(2)}%`, 
-              name === 'exitRoi' ? 'Exit ROI' : (name === 'twr' ? 'TWR' : 'ROI')
+              (name === 'exitRoi' || name === 'Exit ROI') ? 'Exit ROI' : ((name === 'twr' || name === 'TWR') ? 'TWR' : 'ROI')
             ]}
             labelFormatter={formatDate}
             contentStyle={getTooltipStyle(themeMode as ThemeMode, config.isMobile)}
