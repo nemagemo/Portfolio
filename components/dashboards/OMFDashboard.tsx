@@ -250,7 +250,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
       {/* Performance Chart */}
       <div className={`${styles.cardContainer} p-3 sm:p-6`}>
         <div className="flex items-center justify-between mb-0">
-          <div><h3 className={`text-lg font-bold ${styles.text}`}>Efektywność Old Man Fund</h3><p className={`text-sm ${styles.textSub}`}>ROI oraz TWR w czasie</p></div>
+          <div><h3 className={`text-lg font-bold ${styles.text}`}>Stopa zwrotu w czasie</h3></div>
           <div className="flex items-center space-x-2">
             <div className="hidden md:flex space-x-1 sm:space-x-2">
                 <button onClick={() => setShowSP500(!showSP500)} className={`px-2 py-1 text-[10px] sm:text-xs font-medium rounded-md transition-all ${showSP500 ? 'bg-slate-700 text-white ring-2 ring-slate-700 ring-offset-1' : `border border-slate-300 ${(theme as string) === 'neon' ? 'bg-slate-700 text-slate-200' : 'bg-white text-slate-600'} hover:opacity-80`}`}>S&P 500</button>

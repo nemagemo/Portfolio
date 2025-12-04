@@ -170,7 +170,7 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjecti
   );
 };
 
-export const ROIChart: React.FC<ChartProps> = ({ data, showExitRoi = true, themeMode = 'light' }) => {
+export const ROIChart: React.FC<ChartProps> = ({ data, showExitRoi = true, showTwr = false, themeMode = 'light' }) => {
   const hasExitRoi = showExitRoi && data.length > 0 && 'exitRoi' in data[0];
   const t = CHART_THEMES[themeMode || 'light'];
   const config = useChartConfig();
@@ -197,7 +197,7 @@ export const ROIChart: React.FC<ChartProps> = ({ data, showExitRoi = true, theme
           <Tooltip 
             formatter={(value: number, name: string) => [
               `${value.toFixed(2)}%`, 
-              name === 'exitRoi' ? 'Exit ROI' : 'ROI'
+              name === 'exitRoi' ? 'Exit ROI' : (name === 'twr' ? 'TWR' : 'ROI')
             ]}
             labelFormatter={formatDate}
             contentStyle={getTooltipStyle(themeMode as ThemeMode, config.isMobile)}
@@ -208,7 +208,7 @@ export const ROIChart: React.FC<ChartProps> = ({ data, showExitRoi = true, theme
             iconSize={config.iconSize}
             wrapperStyle={config.legendStyle}
           />
-          <ReferenceLine y={0} stroke={t.tax} strokeDasharray="3 3" strokeWidth={1} />
+          <ReferenceLine y={0} stroke={t.axis} strokeDasharray="3 3" strokeWidth={1} />
           <Line 
             type={t.lineType || "monotone"} 
             dataKey="roi" 
@@ -218,6 +218,18 @@ export const ROIChart: React.FC<ChartProps> = ({ data, showExitRoi = true, theme
             dot={false} 
             activeDot={{ r: 6 }} 
           />
+          {showTwr && (
+            <Line 
+              type={t.lineType || "monotone"} 
+              dataKey="twr" 
+              name="TWR"
+              stroke={t.projection} 
+              strokeWidth={t.strokeWidth} 
+              strokeDasharray="5 5"
+              dot={false} 
+              activeDot={{ r: 6 }} 
+            />
+          )}
           {hasExitRoi && (
             <Line 
               type={t.lineType || "monotone"} 

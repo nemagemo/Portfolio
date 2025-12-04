@@ -1,11 +1,11 @@
+
 import React, { useMemo, useState } from 'react';
 import { Wallet, TrendingUp, Anchor, PieChart } from 'lucide-react';
 import { SummaryStats, PortfolioType, AnyDataRow, DividendDataRow, OMFDataRow } from '../../types';
 import { Theme, themeStyles } from '../../theme/styles';
 import { ValueCompositionChart, ROIChart, CryptoValueChart, DividendChart, SectorAllocationChart } from '../Charts';
-import { TaxToggleIcon, IconEmployer, IconState, IconExit, IconHourglass, IconTaxShield, IconDividends, IconTrophy, IconCAGR, IconLTM } from '../Icons';
+import { TaxToggleIcon, IconEmployer, IconState, IconExit, IconHourglass, IconTaxShield, IconDividends, IconTrophy, IconCAGR, IconLTM, IconPulse } from '../Icons';
 import { useDividendGrouping } from '../../hooks/useChartTransformations';
-import { StatFlipCard } from './StatFlipCard';
 
 interface StandardDashboardProps {
   portfolioType: PortfolioType;
@@ -83,6 +83,59 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
         .sort((a, b) => b.value - a.value);
   }, [portfolioType, activeAssets]);
 
+  // Calculate TWR for IKE (Time-Weighted Return)
+  const chartDataWithTwr = useMemo(() => {
+    if (portfolioType !== 'IKE') return data;
+
+    // Create a copy and ensure it is sorted by date ascending
+    const sorted = [...data].sort((a, b) => {
+        const dateA = 'date' in a ? a.date : '';
+        const dateB = 'date' in b ? b.date : '';
+        return new Date(dateA).getTime() - new Date(dateB).getTime();
+    });
+    let twrProduct = 1;
+
+    return sorted.map((row, index) => {
+        const curr = row as any;
+        const currVal = curr.totalValue;
+        const currInv = curr.investment;
+        let r = 0;
+        
+        // Threshold to ignore artifacts from trivial "opening" entries like 0.00001 PLN.
+        // If capital is less than 10 PLN, we assume the portfolio hasn't really started.
+        const MIN_THRESHOLD = 10.0;
+
+        if (index === 0) {
+            // First month: simple return, but only if significant capital
+            if (currInv > MIN_THRESHOLD) {
+               r = (currVal - currInv) / currInv;
+            }
+        } else {
+            const prev = sorted[index - 1] as any;
+            const prevVal = prev.totalValue;
+            const prevInv = prev.investment;
+            
+            // Flow = change in investment (deposit/withdrawal)
+            const flow = currInv - prevInv;
+            
+            // Denominator = Start Value + Flow
+            const denom = prevVal + flow;
+            
+            // Safety against division by zero AND trivial amounts leading to massive volatility
+            if (denom > MIN_THRESHOLD) {
+                // Gain = End Value - (Start Value + Flow)
+                const gain = currVal - denom;
+                r = gain / denom;
+            }
+        }
+
+        twrProduct *= (1 + r);
+        const twr = (twrProduct - 1) * 100;
+
+        return { ...curr, twr };
+    });
+  }, [data, portfolioType]);
+
   if (!stats) return null;
 
   // Unify Investment Value
@@ -90,6 +143,26 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
   const profitValue = stats.totalProfit || 0;
   const totalValue = stats.totalValue || 0;
   const currentRoi = stats.currentRoi || 0;
+
+  // Helper for rendering simple stat blocks
+  const SimpleStatBlock = ({ title, value, sub, icon: Icon, colorClass }: { title: string, value: string, sub: string, icon: any, colorClass: string }) => (
+    <div className={`p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
+      <div className="flex justify-between items-start mb-0.5">
+        <div className={`text-[10px] sm:text-xs uppercase font-bold ${colorClass}`}>
+          {title}
+        </div>
+        <div>
+           <Icon className={`w-4 h-4 opacity-80 ${colorClass}`} />
+        </div>
+      </div>
+      <div className={`text-sm sm:text-base font-bold ${isNeon ? colorClass.replace('text-', 'text-opacity-90 text-') : 'text-slate-700'}`}>
+        {value}
+      </div>
+      <div className={`text-[9px] sm:text-[10px] ${isNeon ? colorClass.replace('400', '600') : 'text-slate-400'}`}>
+        {sub}
+      </div>
+    </div>
+  );
 
   return (
     <>
@@ -153,109 +226,91 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
              </div>
           </div>
 
-          {/* RIGHT: Detailed Stats Breakdown (4 cols) */}
+          {/* RIGHT: Detailed Stats Breakdown */}
           <div className="lg:col-span-4 grid grid-cols-2 gap-2">
-             {/* STAT BLOCK 1 - Hidden for Crypto */}
-             {portfolioType !== 'CRYPTO' && (
-               <div className={`p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-                  <div className="flex justify-between items-start mb-0.5">
-                    <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-purple-400' : 'text-slate-400'}`}>
-                      {portfolioType === 'PPK' ? 'Pracodawca' : (portfolioType === 'IKE' ? 'Dywidendy' : 'ROI')}
-                    </div>
-                    {portfolioType === 'PPK' ? <IconEmployer className={`w-4 h-4 ${isNeon ? 'text-purple-500/80' : 'text-purple-400/60'}`} /> : 
-                     portfolioType === 'IKE' ? <IconDividends className={`w-4 h-4 ${isNeon ? 'text-purple-500/80' : 'text-purple-400/60'}`} /> :
-                     <IconTrophy className={`w-4 h-4 ${isNeon ? 'text-purple-500/80' : 'text-purple-400/60'}`} />}
-                  </div>
-                  <div className={`text-sm sm:text-base font-bold ${isNeon ? 'text-purple-300' : 'text-slate-700'}`}>
-                     {portfolioType === 'PPK' ? `${stats.totalEmployer?.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł` : 
-                      portfolioType === 'IKE' ? `${totalDividends.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł` :
-                      `${currentRoi.toFixed(1)}%`}
-                  </div>
-                  <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-purple-500/60' : 'text-slate-400'}`}>
-                     {portfolioType === 'PPK' ? 'Dopłata' : (portfolioType === 'IKE' ? 'Otrzymane' : 'Zwrot')}
-                  </div>
-               </div>
-             )}
-
-             {/* STAT BLOCK 2 - Hidden for Crypto */}
-             {portfolioType !== 'CRYPTO' && (
-               <div className={`p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-                  <div className="flex justify-between items-start mb-0.5">
-                    <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-amber-400' : 'text-slate-400'}`}>
-                      {portfolioType === 'PPK' ? 'Państwo' : (portfolioType === 'IKE' ? 'Tarcza Podatkowa' : 'Zysk')}
-                    </div>
-                    {portfolioType === 'PPK' ? <IconState className={`w-4 h-4 ${isNeon ? 'text-amber-500/80' : 'text-amber-400/60'}`} /> :
-                     portfolioType === 'IKE' ? <IconTaxShield className={`w-4 h-4 ${isNeon ? 'text-amber-500/80' : 'text-amber-400/60'}`} /> :
-                     <Anchor className={`w-4 h-4 ${isNeon ? 'text-amber-500/80' : 'text-amber-400/60'}`} />}
-                  </div>
-                  <div className={`text-sm sm:text-base font-bold ${isNeon ? 'text-amber-300' : 'text-slate-700'}`}>
-                     {portfolioType === 'PPK' ? `${stats.totalState?.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł` :
-                      portfolioType === 'IKE' ? `${(stats.taxSaved || 0).toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł` :
-                      `${profitValue.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł`}
-                  </div>
-                  <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-amber-500/60' : 'text-slate-400'}`}>
-                     {portfolioType === 'PPK' ? 'Bonus' : (portfolioType === 'IKE' ? 'Zaoszczędzone' : 'Nominalny')}
-                  </div>
-               </div>
-             )}
-
-             {/* STAT BLOCK 3 (PPK Exit) */}
+             
+             {/* --- PPK SPECIFIC LAYOUT --- */}
              {portfolioType === 'PPK' && (
-               <div className={`p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-                  <div className="flex justify-between items-start mb-0.5">
-                    <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-rose-400' : 'text-slate-400'}`}>Exit ROI</div>
-                    <IconExit className={`w-4 h-4 ${isNeon ? 'text-rose-500/80' : 'text-rose-400/60'}`} />
-                  </div>
-                  <div className={`text-sm sm:text-base font-bold ${isNeon ? 'text-rose-300' : 'text-slate-700'}`}>
-                     {stats.currentExitRoi?.toFixed(2)}%
-                  </div>
-                  <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-rose-500/60' : 'text-slate-400'}`}>Przy wypłacie</div>
-               </div>
+               <>
+                 <SimpleStatBlock 
+                    title="Pracodawca" 
+                    value={`${stats.totalEmployer?.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł`}
+                    sub="Dopłata"
+                    icon={IconEmployer}
+                    colorClass={isNeon ? 'text-purple-400' : 'text-slate-400'}
+                 />
+                 <SimpleStatBlock 
+                    title="Państwo" 
+                    value={`${stats.totalState?.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł`}
+                    sub="Bonus"
+                    icon={IconState}
+                    colorClass={isNeon ? 'text-amber-400' : 'text-slate-400'}
+                 />
+                 <SimpleStatBlock 
+                    title="Exit ROI" 
+                    value={`${stats.currentExitRoi?.toFixed(2)}%`}
+                    sub="Przy wypłacie"
+                    icon={IconExit}
+                    colorClass={isNeon ? 'text-rose-400' : 'text-slate-400'}
+                 />
+                 <SimpleStatBlock 
+                    title="Czas" 
+                    value={`${monthsToPayout} msc`}
+                    sub="do wypłaty"
+                    icon={IconHourglass}
+                    colorClass={isNeon ? 'text-cyan-400' : 'text-slate-400'}
+                 />
+               </>
              )}
 
-             {/* STAT BLOCK 3/4 - CAGR and LTM for Crypto/IKE */}
+             {/* --- CRYPTO & IKE SPECIFIC LAYOUT (Static Cards) --- */}
              {(portfolioType === 'CRYPTO' || portfolioType === 'IKE') && (
                 <>
-                  <StatFlipCard 
-                    theme={theme}
+                  {/* Row 1: CAGR & LTM ROI */}
+                  <SimpleStatBlock 
+                    title="CAGR" 
+                    value={`${stats.cagr?.toFixed(2)}%`}
+                    sub="Średnio rocznie"
                     icon={IconCAGR}
-                    colorClass={isNeon ? 'text-purple-400' : 'text-slate-400'}
-                    frontTitle="CAGR"
-                    frontValue={`${stats.cagr?.toFixed(2)}%`}
-                    frontSub="Średnio rocznie"
-                    backTitle="YTD"
-                    backValue={`${stats.ytd?.toFixed(2)}%`}
-                    backSub="Od początku roku"
+                    colorClass={isNeon ? 'text-blue-400' : 'text-slate-400'}
                   />
-                  <StatFlipCard 
-                    theme={theme}
+                  <SimpleStatBlock 
+                    title="LTM" 
+                    value={`${stats.ltmRoi?.toFixed(2)}%`}
+                    sub="Ost. 12 msc"
                     icon={IconLTM}
-                    colorClass={isNeon ? 'text-amber-400' : 'text-slate-400'}
-                    frontTitle="LTM"
-                    frontValue={`${stats.ltmRoi?.toFixed(2)}%`}
-                    frontSub="Ost. 12 msc"
-                    backTitle="Zysk LTM"
-                    backValue={`${stats.ltm?.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł`}
-                    backSub="Zysk ost. 12 msc"
+                    colorClass={isNeon ? 'text-emerald-400' : 'text-slate-400'}
                   />
+
+                  {/* Row 2: YTD & (LTM Profit OR Tax Shield) */}
+                  <SimpleStatBlock 
+                    title="YTD" 
+                    value={`${stats.ytd?.toFixed(2)}%`}
+                    sub="Od początku roku"
+                    icon={IconPulse}
+                    colorClass={isNeon ? 'text-cyan-400' : 'text-slate-400'}
+                  />
+                  
+                  {portfolioType === 'IKE' ? (
+                    <SimpleStatBlock 
+                        title="Tarcza Podatkowa" 
+                        value={`${(stats.taxSaved || 0).toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł`}
+                        sub="Zaoszczędzone"
+                        icon={IconTaxShield}
+                        colorClass={isNeon ? 'text-rose-400' : 'text-slate-400'}
+                    />
+                  ) : (
+                    <SimpleStatBlock 
+                        title="Zysk LTM" 
+                        value={`${stats.ltm?.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł`}
+                        sub="Zysk ost. 12 msc"
+                        icon={TrendingUp}
+                        colorClass={isNeon ? 'text-rose-400' : 'text-slate-400'}
+                    />
+                  )}
                 </>
              )}
 
-             {/* STAT BLOCK 4 (Time) - Only for PPK */}
-             {portfolioType === 'PPK' && (
-               <div className={`p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-                  <div className="flex justify-between items-start mb-0.5">
-                    <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-cyan-400' : 'text-slate-400'}`}>Czas</div>
-                    <IconHourglass className={`w-4 h-4 ${isNeon ? 'text-cyan-500/80' : 'text-cyan-400/60'}`} />
-                  </div>
-                  <div className={`text-sm sm:text-base font-bold ${isNeon ? 'text-cyan-300' : 'text-slate-700'}`}>
-                     {monthsToPayout} <span className="text-[10px] font-normal">msc</span>
-                  </div>
-                  <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-cyan-500/60' : 'text-slate-400'}`}>
-                     do wypłaty
-                  </div>
-               </div>
-             )}
           </div>
 
         </div>
@@ -318,14 +373,19 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
       <div className={`mb-6 p-6 ${styles.cardContainer}`}>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className={`text-lg font-bold ${styles.text}`}>Rentowność (ROI)</h3>
+            <h3 className={`text-lg font-bold ${styles.text}`}>Stopa zwrotu w czasie</h3>
             {portfolioType === 'PPK' && <p className={`text-sm ${styles.textSub}`}>Nominalna vs Exit (po potrąceniach)</p>}
           </div>
           <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}>
             <Wallet size={20} className={isNeon ? 'text-purple-400' : 'text-purple-600'} />
           </div>
         </div>
-        <ROIChart data={data} showExitRoi={portfolioType === 'PPK'} themeMode={theme} />
+        <ROIChart 
+            data={chartDataWithTwr} 
+            showExitRoi={portfolioType === 'PPK'} 
+            showTwr={portfolioType === 'IKE'}
+            themeMode={theme} 
+        />
       </div>
 
       {/* 3. Conditional Charts */}

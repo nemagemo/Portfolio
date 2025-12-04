@@ -36,6 +36,7 @@ export interface ChartProps {
   showCPI?: boolean;
   showTaxComparison?: boolean;
   showExitRoi?: boolean;
+  showTwr?: boolean;
   themeMode?: ThemeMode;
 }
 
@@ -49,6 +50,7 @@ export const CHART_THEMES: Record<ThemeMode, {
   net: string;
   exit: string;
   projection: string;
+  twr: string;
   taxedAccount: string;
   grid: string;
   axis: string;
@@ -74,6 +76,7 @@ export const CHART_THEMES: Record<ThemeMode, {
     net: '#115e59',        // Teal-800
     exit: '#ffd43b',       // Yellow
     projection: '#d97706', // Amber-600
+    twr: '#8b5cf6',        // Violet-500
     taxedAccount: '#ea580c', 
     grid: '#e5e7eb',       
     axis: '#6b7280',       
