@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { TrendingUp, Wallet, ArrowUpRight, ArrowDownRight, ChevronDown, ChevronUp, PieChart, Snowflake, ScatterChart, LayoutTemplate, CalendarDays, Milestone, Activity } from 'lucide-react';
 import { SummaryStats, OMFDataRow, GlobalHistoryRow } from '../../types';
@@ -127,7 +128,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
   else currentRateValue = rateDisplay.cagr;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       
       {/* PORTFOLIO HEADER (Compact Style) */}
       <div className={`w-full p-3 sm:p-4 ${styles.cardContainer} relative overflow-hidden`}>
@@ -196,7 +197,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
                 backSub="Ost. 12 msc"
              />
 
-             <div className={`p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
+             <div className={`h-[76px] p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
                 <div className="flex justify-between items-start mb-0.5">
                   <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-blue-400' : 'text-slate-400'}`}>Czas</div>
                   <IconHourglass className={`w-4 h-4 ${isNeon ? 'text-blue-500/80' : 'text-blue-400/60'}`} />
@@ -204,7 +205,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
                 <div className={`text-lg sm:text-xl font-bold ${isNeon ? 'text-blue-300' : 'text-slate-700'}`}>{investmentDurationMonths} <span className="text-[10px] font-normal">msc</span></div>
                 <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-blue-500/60' : 'text-slate-400'}`}>od startu</div>
              </div>
-             <div className={`p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
+             <div className={`h-[76px] p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
                 <div className="flex justify-between items-start mb-0.5">
                   <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-cyan-400' : 'text-slate-400'}`}>Intraday</div>
                   <IconPulse className={`w-4 h-4 ${isNeon ? 'text-cyan-500/80' : 'text-cyan-400/60'}`} />

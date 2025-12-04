@@ -146,7 +146,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
 
   // Helper for rendering simple stat blocks
   const SimpleStatBlock = ({ title, value, sub, icon: Icon, colorClass }: { title: string, value: string, sub: string, icon: any, colorClass: string }) => (
-    <div className={`p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
+    <div className={`h-[76px] p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
       <div className="flex justify-between items-start mb-0.5">
         <div className={`text-[10px] sm:text-xs uppercase font-bold ${colorClass}`}>
           {title}
@@ -155,7 +155,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
            <Icon className={`w-4 h-4 opacity-80 ${colorClass}`} />
         </div>
       </div>
-      <div className={`text-sm sm:text-base font-bold ${isNeon ? colorClass.replace('text-', 'text-opacity-90 text-') : 'text-slate-700'}`}>
+      <div className={`text-lg sm:text-xl font-bold ${isNeon ? colorClass.replace('text-', 'text-opacity-90 text-') : 'text-slate-700'}`}>
         {value}
       </div>
       <div className={`text-[9px] sm:text-[10px] ${isNeon ? colorClass.replace('400', '600') : 'text-slate-400'}`}>
