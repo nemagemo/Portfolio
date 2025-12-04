@@ -56,8 +56,7 @@ const StatFlipCard: React.FC<{
             <div className={`text-[10px] sm:text-xs uppercase font-bold ${colorClass}`}>
               {frontTitle}
             </div>
-            <div className="flex items-center space-x-1">
-               <RotateCw className={`w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity ${colorClass}`} />
+            <div>
                <Icon className={`w-4 h-4 opacity-80 ${colorClass}`} />
             </div>
           </div>
@@ -67,6 +66,10 @@ const StatFlipCard: React.FC<{
           <div className={`text-[9px] sm:text-[10px] ${isNeon ? colorClass.replace('400', '600') : 'text-slate-400'}`}>
             {frontSub}
           </div>
+          {/* Flip Icon - Bottom Right */}
+          <div className="absolute bottom-2 right-2">
+            <RotateCw className={`w-3 h-3 opacity-30 group-hover:opacity-100 transition-opacity ${colorClass}`} />
+          </div>
         </div>
 
         {/* BACK FACE */}
@@ -75,8 +78,7 @@ const StatFlipCard: React.FC<{
             <div className={`text-[10px] sm:text-xs uppercase font-bold ${colorClass}`}>
               {backTitle}
             </div>
-            <div className="flex items-center space-x-1">
-               <RotateCw className={`w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity ${colorClass}`} />
+            <div>
                <Icon className={`w-4 h-4 opacity-80 ${colorClass}`} />
             </div>
           </div>
@@ -85,6 +87,10 @@ const StatFlipCard: React.FC<{
           </div>
           <div className={`text-[9px] sm:text-[10px] ${isNeon ? colorClass.replace('400', '600') : 'text-slate-400'}`}>
             {backSub}
+          </div>
+          {/* Flip Icon - Bottom Right */}
+          <div className="absolute bottom-2 right-2">
+            <RotateCw className={`w-3 h-3 opacity-30 group-hover:opacity-100 transition-opacity ${colorClass}`} />
           </div>
         </div>
 
