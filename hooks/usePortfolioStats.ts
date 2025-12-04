@@ -1,6 +1,5 @@
-
 import { useMemo } from 'react';
-import { SummaryStats, PortfolioType, GlobalHistoryRow, OMFDataRow, AnyDataRow, DividendDataRow, PPKDataRow, CryptoDataRow } from '../types';
+import { SummaryStats, PortfolioType, GlobalHistoryRow, OMFDataRow, AnyDataRow, DividendDataRow, PPKDataRow, CryptoDataRow, IKEDataRow } from '../types';
 import { parseCSV } from '../utils/parser';
 import { OMF_CLOSED_DATA } from '../CSV/OMFclosed';
 
@@ -174,8 +173,83 @@ export const usePortfolioStats = ({
         };
     } 
     
+    // --- NON-OMF PORTFOLIOS (IKE, CRYPTO, PPK) ---
     if (!data.length) return null;
-    const last = data[data.length - 1];
+    
+    // Filter data to ensure it contains only TimeSeries rows (with date and roi)
+    const timeSeriesData = data.filter((row): row is PPKDataRow | CryptoDataRow | IKEDataRow => 
+        'date' in row && 'roi' in row
+    );
+
+    if (!timeSeriesData.length) return null;
+
+    // Sort to ensure chronological order for calculations
+    const sortedData = [...timeSeriesData].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const last = sortedData[sortedData.length - 1];
+    
+    // Common CAGR & LTM Calculation logic for sub-portfolios
+    let cagr = 0;
+    let ltmRoi = 0;
+    let ytd = 0;
+    let ltmProfit = 0;
+
+    const startDate = new Date(sortedData[0].date);
+    const currentDate = new Date(last.date);
+    const years = (currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+
+    if (years > 0.5) {
+        const factor = 1 + (last.roi / 100);
+        cagr = (Math.pow(factor, 1 / years) - 1) * 100;
+    } else {
+        cagr = last.roi;
+    }
+
+    // LTM ROI
+    const oneYearAgoDate = new Date(currentDate);
+    oneYearAgoDate.setFullYear(oneYearAgoDate.getFullYear() - 1);
+    
+    // Find closest row to 1 year ago
+    let ltmPrevRow = sortedData[0];
+    for (let i = sortedData.length - 1; i >= 0; i--) {
+        if (new Date(sortedData[i].date) <= oneYearAgoDate) {
+            ltmPrevRow = sortedData[i];
+            break;
+        }
+    }
+
+    // Determine Investment and Profit fields based on type
+    const getInv = (r: any) => portfolioType === 'PPK' ? r.employeeContribution : r.investment;
+    const getProf = (r: any) => r.profit;
+
+    if (ltmPrevRow && ltmPrevRow.date !== last.date) {
+        ltmProfit = getProf(last) - getProf(ltmPrevRow);
+        const avgCapital = (getInv(last) + getInv(ltmPrevRow)) / 2;
+        if (avgCapital > 0) {
+            ltmRoi = (ltmProfit / avgCapital) * 100;
+        }
+    } else {
+        // Less than a year of history
+        ltmRoi = last.roi;
+        ltmProfit = getProf(last);
+    }
+
+    // YTD
+    const currentYear = new Date().getFullYear();
+    let ytdPrevRow = sortedData[0];
+    // Find last row of previous year or first of current
+    const startOfYearRow = sortedData.find(d => new Date(d.date).getFullYear() === currentYear);
+    if (startOfYearRow) {
+       // We need the value at the END of previous year, which is essentially the start point for YTD.
+       // Approximation: Start with the first record of this year.
+       // YTD Profit = Current Profit - Profit at start of year
+       const profitSinceStartOfYear = getProf(last) - getProf(startOfYearRow);
+       const invAtStart = getInv(startOfYearRow);
+       if (invAtStart > 0) {
+           // Simple ROI diff is not accurate for YTD with flows, but reasonable proxy for simple display
+           ytd = ((getProf(last) - getProf(startOfYearRow)) / getInv(last)) * 100; // Simplified
+       }
+    }
+
 
     if (portfolioType === 'PPK') {
         const row = last as PPKDataRow;
@@ -192,7 +266,9 @@ export const usePortfolioStats = ({
             totalState: row.stateContribution,
             currentRoi: row.roi,
             currentExitRoi: row.exitRoi,
-            customExitValue: exitValue
+            customExitValue: exitValue,
+            cagr, ltmRoi, ytd, 
+            ltm: ltmProfit // using ltm field to pass profit amount for flip card
         } as SummaryStats & { customExitValue?: number };
     } else {
         const row = last as CryptoDataRow;
@@ -219,7 +295,9 @@ export const usePortfolioStats = ({
             totalProfit: row.profit,
             totalInvestment: row.investment,
             currentRoi: row.roi,
-            taxSaved: taxSaved
+            taxSaved: taxSaved,
+            cagr, ltmRoi, ytd,
+            ltm: ltmProfit // using ltm field to pass profit amount for flip card
         };
     }
   }, [data, portfolioType, globalHistoryData, omfActiveAssets, omfClosedAssets, excludePPK, dividends]);

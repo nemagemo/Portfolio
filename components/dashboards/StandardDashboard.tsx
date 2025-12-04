@@ -1,11 +1,11 @@
-
 import React, { useMemo, useState } from 'react';
 import { Wallet, TrendingUp, Anchor, PieChart } from 'lucide-react';
 import { SummaryStats, PortfolioType, AnyDataRow, DividendDataRow, OMFDataRow } from '../../types';
 import { Theme, themeStyles } from '../../theme/styles';
 import { ValueCompositionChart, ROIChart, CryptoValueChart, DividendChart, SectorAllocationChart } from '../Charts';
-import { TaxToggleIcon, IconEmployer, IconState, IconExit, IconHourglass, IconTaxShield, IconDividends, IconTrophy } from '../Icons';
+import { TaxToggleIcon, IconEmployer, IconState, IconExit, IconHourglass, IconTaxShield, IconDividends, IconTrophy, IconCAGR, IconLTM } from '../Icons';
 import { useDividendGrouping } from '../../hooks/useChartTransformations';
+import { StatFlipCard } from './StatFlipCard';
 
 interface StandardDashboardProps {
   portfolioType: PortfolioType;
@@ -199,7 +199,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
                </div>
              )}
 
-             {/* STAT BLOCK 3 (PPK Exit / Crypto Best) */}
+             {/* STAT BLOCK 3 (PPK Exit) */}
              {portfolioType === 'PPK' && (
                <div className={`p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
                   <div className="flex justify-between items-start mb-0.5">
@@ -213,33 +213,46 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
                </div>
              )}
 
-             {portfolioType === 'CRYPTO' && bestCrypto && (
-               <div className={`p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-                  <div className="flex justify-between items-start mb-0.5">
-                    <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-blue-400' : 'text-slate-400'}`}>Top Asset</div>
-                    <IconTrophy className={`w-4 h-4 ${isNeon ? 'text-blue-500/80' : 'text-blue-400/60'}`} />
-                  </div>
-                  <div className={`text-sm sm:text-base font-bold ${isNeon ? 'text-blue-300' : 'text-slate-700'}`}>
-                     {bestCrypto.symbol}
-                  </div>
-                  <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-blue-500/60' : 'text-slate-400'}`}>
-                     +{bestCrypto.roi.toFixed(0)}% ROI
-                  </div>
-               </div>
+             {/* STAT BLOCK 3/4 - CAGR and LTM for Crypto/IKE */}
+             {(portfolioType === 'CRYPTO' || portfolioType === 'IKE') && (
+                <>
+                  <StatFlipCard 
+                    theme={theme}
+                    icon={IconCAGR}
+                    colorClass={isNeon ? 'text-purple-400' : 'text-slate-400'}
+                    frontTitle="CAGR"
+                    frontValue={`${stats.cagr?.toFixed(2)}%`}
+                    frontSub="Średnio rocznie"
+                    backTitle="YTD"
+                    backValue={`${stats.ytd?.toFixed(2)}%`}
+                    backSub="Od początku roku"
+                  />
+                  <StatFlipCard 
+                    theme={theme}
+                    icon={IconLTM}
+                    colorClass={isNeon ? 'text-amber-400' : 'text-slate-400'}
+                    frontTitle="LTM"
+                    frontValue={`${stats.ltmRoi?.toFixed(2)}%`}
+                    frontSub="Ost. 12 msc"
+                    backTitle="Zysk LTM"
+                    backValue={`${stats.ltm?.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł`}
+                    backSub="Zysk ost. 12 msc"
+                  />
+                </>
              )}
 
-             {/* STAT BLOCK 4 (Time) - Hidden for Crypto and IKE */}
-             {portfolioType !== 'CRYPTO' && portfolioType !== 'IKE' && (
+             {/* STAT BLOCK 4 (Time) - Only for PPK */}
+             {portfolioType === 'PPK' && (
                <div className={`p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
                   <div className="flex justify-between items-start mb-0.5">
                     <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-cyan-400' : 'text-slate-400'}`}>Czas</div>
                     <IconHourglass className={`w-4 h-4 ${isNeon ? 'text-cyan-500/80' : 'text-cyan-400/60'}`} />
                   </div>
                   <div className={`text-sm sm:text-base font-bold ${isNeon ? 'text-cyan-300' : 'text-slate-700'}`}>
-                     {portfolioType === 'PPK' ? `${monthsToPayout}` : '∞'} <span className="text-[10px] font-normal">msc</span>
+                     {monthsToPayout} <span className="text-[10px] font-normal">msc</span>
                   </div>
                   <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-cyan-500/60' : 'text-slate-400'}`}>
-                     {portfolioType === 'PPK' ? 'do wypłaty' : 'Horyzont'}
+                     do wypłaty
                   </div>
                </div>
              )}
