@@ -235,7 +235,7 @@ export const ROIChart: React.FC<ChartProps> = ({ data, showExitRoi = true, showT
               type={t.lineType || "monotone"} 
               dataKey="exitRoi" 
               name="Exit ROI"
-              stroke={t.projection} 
+              stroke={t.exit} 
               strokeWidth={t.strokeWidth} 
               strokeDasharray="5 5"
               dot={false} 
