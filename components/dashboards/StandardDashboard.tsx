@@ -1,9 +1,9 @@
 
 import React, { useMemo, useState } from 'react';
-import { Wallet, TrendingUp, Anchor, PieChart } from 'lucide-react';
+import { Wallet, TrendingUp, Anchor, PieChart, Activity } from 'lucide-react';
 import { SummaryStats, PortfolioType, AnyDataRow, DividendDataRow, OMFDataRow } from '../../types';
 import { Theme, themeStyles } from '../../theme/styles';
-import { ValueCompositionChart, ROIChart, CryptoValueChart, DividendChart, SectorAllocationChart } from '../Charts';
+import { ValueCompositionChart, ROIChart, CryptoValueChart, DividendChart, SectorAllocationChart, DrawdownChart } from '../Charts';
 import { TaxToggleIcon, IconEmployer, IconState, IconExit, IconHourglass, IconTaxShield, IconDividends, IconTrophy, IconCAGR, IconLTM, IconPulse } from '../Icons';
 import { useDividendGrouping } from '../../hooks/useChartTransformations';
 
@@ -133,6 +133,30 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
         const twr = (twrProduct - 1) * 100;
 
         return { ...curr, twr };
+    });
+  }, [data, portfolioType]);
+
+  // Drawdown Calculation for IKE
+  const drawdownData = useMemo(() => {
+    if (portfolioType !== 'IKE' || data.length === 0) return [];
+    
+    // Sort ascending by date to calculate running peak
+    const sorted = [...data].sort((a, b) => {
+        const dateA = 'date' in a ? a.date : '';
+        const dateB = 'date' in b ? b.date : '';
+        return new Date(dateA).getTime() - new Date(dateB).getTime();
+    });
+
+    let maxPeak = 0;
+    return sorted.map(row => {
+        const val = (row as any).totalValue || 0;
+        if (val > maxPeak) maxPeak = val;
+        
+        const dd = maxPeak > 0 ? ((val - maxPeak) / maxPeak) * 100 : 0;
+        return {
+            date: 'date' in row ? row.date : '',
+            drawdown: dd
+        };
     });
   }, [data, portfolioType]);
 
@@ -387,6 +411,22 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
             themeMode={theme} 
         />
       </div>
+
+      {/* 2.5 IKE Drawdown Chart */}
+      {portfolioType === 'IKE' && (
+        <div className={`mb-6 p-6 ${styles.cardContainer}`}>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className={`text-lg font-bold ${styles.text}`}>Drawdown</h3>
+              <p className={`text-sm ${styles.textSub}`}>Obsunięcie kapitału od szczytu</p>
+            </div>
+            <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}>
+              <Activity size={20} className={isNeon ? 'text-rose-400' : 'text-rose-600'} />
+            </div>
+          </div>
+          <DrawdownChart data={drawdownData} themeMode={theme} />
+        </div>
+      )}
 
       {/* 3. Conditional Charts */}
       {/* PPK Leverage Chart REMOVED as requested */}

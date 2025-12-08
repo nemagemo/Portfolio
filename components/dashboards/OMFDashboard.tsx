@@ -159,15 +159,20 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
              <div className={`text-xl sm:text-2xl font-bold mb-0.5 ${(stats.totalProfit || 0) >= 0 ? (isNeon ? 'text-[#39ff14] drop-shadow-[0_0_5px_rgba(57,255,20,0.5)]' : 'text-emerald-600') : 'text-rose-500'}`}>
                 {(stats.totalProfit || 0) > 0 ? '+' : ''}{(stats.totalProfit || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł
              </div>
-             <div className="flex items-center mt-1">
+             
+             {/* ROI and M/M Trend Badges */}
+             <div className="flex items-center mt-1 flex-wrap gap-2">
                 <span className={`px-2 py-0.5 text-xs font-bold flex items-center ${(stats.currentRoi || 0) >= 0 ? (isNeon ? 'bg-green-900/30 text-green-400 border border-green-500/30 rounded' : 'bg-emerald-100 text-emerald-700 rounded') : 'bg-rose-100 text-rose-700 rounded'}`}>
                   {(stats.currentRoi || 0) >= 0 ? <TrendingUp size={12} className="mr-1"/> : <TrendingUp size={12} className="mr-1 rotate-180"/>}
                   {(stats.currentRoi || 0).toFixed(2)}% ROI
                 </span>
+                
+                {stats.profitTrend !== undefined && (
+                   <span className={`px-2 py-0.5 text-xs font-bold flex items-center ${(stats.profitTrend || 0) > 0 ? (isNeon ? 'bg-green-900/30 text-green-400 border border-green-500/30 rounded' : 'bg-emerald-100 text-emerald-700 rounded') : 'bg-rose-100 text-rose-700 rounded'}`}>
+                      {(stats.profitTrend || 0) > 0 ? '▲' : '▼'} {Math.abs(stats.profitTrend || 0).toFixed(1)}% m/m
+                   </span>
+                )}
              </div>
-             {stats.profitTrend !== undefined && (
-                <div className={`text-[9px] mt-1 font-mono ${isNeon ? 'text-slate-500' : 'text-slate-400'}`}>{(stats.profitTrend || 0) > 0 ? '▲' : '▼'} {Math.abs(stats.profitTrend || 0).toFixed(1)}% m/m</div>
-             )}
           </div>
           <div className="lg:col-span-4 grid grid-cols-2 gap-2">
              
