@@ -136,7 +136,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 relative z-10">
           <div className="lg:col-span-5 flex flex-col justify-center relative">
             <h2 className={`text-[10px] uppercase tracking-widest font-bold mb-1 flex items-center ${isNeon ? 'text-cyan-600' : 'text-slate-400'}`}>
-              <Wallet size={12} className="mr-1.5" /> Wartość Portfela
+              <Wallet size={12} className="mr-1.5" /> Wartość Całkowita
             </h2>
             <div className="flex items-baseline relative z-10">
               <span className={`text-3xl sm:text-4xl font-black tracking-tight ${isNeon ? 'text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-500' : 'text-slate-900'}`}>
@@ -155,7 +155,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
             </div>
           </div>
           <div className={`lg:col-span-3 flex flex-col justify-center lg:border-l lg:border-r ${isNeon ? 'lg:border-cyan-900/30' : 'lg:border-slate-100'} lg:px-4`}>
-             <h2 className={`text-[10px] uppercase tracking-widest font-bold mb-1 ${isNeon ? 'text-cyan-600' : 'text-slate-400'}`}>Wynik Całkowity</h2>
+             <h2 className={`text-[10px] uppercase tracking-widest font-bold mb-1 ${isNeon ? 'text-cyan-600' : 'text-slate-400'}`}>Zysk Całkowity</h2>
              <div className={`text-xl sm:text-2xl font-bold mb-0.5 ${(stats.totalProfit || 0) >= 0 ? (isNeon ? 'text-[#39ff14] drop-shadow-[0_0_5px_rgba(57,255,20,0.5)]' : 'text-emerald-600') : 'text-rose-500'}`}>
                 {(stats.totalProfit || 0) > 0 ? '+' : ''}{(stats.totalProfit || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł
              </div>

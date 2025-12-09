@@ -202,7 +202,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
           {/* LEFT: Main Capital Stats */}
           <div className="lg:col-span-5 flex flex-col justify-center">
             <h2 className={`text-[10px] uppercase tracking-widest font-bold mb-1 flex items-center ${isNeon ? 'text-cyan-600' : 'text-slate-400'}`}>
-              <Wallet size={12} className="mr-1.5" /> {portfolioType === 'PPK' ? "Wartość Całkowita" : "Wartość Portfela"}
+              <Wallet size={12} className="mr-1.5" /> Wartość Portfela
             </h2>
             <div className="flex items-baseline">
               <span className={`text-3xl sm:text-4xl font-black tracking-tight ${isNeon ? 'text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-500' : 'text-slate-900'}`}>
@@ -232,7 +232,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
           {/* MIDDLE: Performance Stats */}
           <div className={`lg:col-span-3 flex flex-col justify-center lg:border-l lg:border-r ${isNeon ? 'lg:border-cyan-900/30' : 'lg:border-slate-100'} lg:px-4`}>
              <h2 className={`text-[10px] uppercase tracking-widest font-bold mb-1 ${isNeon ? 'text-cyan-600' : 'text-slate-400'}`}>
-               Wynik
+               Zysk
              </h2>
              <div className={`text-xl sm:text-2xl font-bold mb-0.5 ${profitValue >= 0 ? (isNeon ? 'text-[#39ff14] drop-shadow-[0_0_5px_rgba(57,255,20,0.5)]' : 'text-emerald-600') : 'text-rose-500'}`}>
                 {profitValue > 0 ? '+' : ''}{profitValue.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł
