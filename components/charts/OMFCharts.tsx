@@ -2,8 +2,8 @@
 import React, { useMemo } from 'react';
 import {
   Cell, ResponsiveContainer, Tooltip, Treemap,
-  ScatterChart, CartesianGrid, XAxis, YAxis, ZAxis, ReferenceLine, Scatter, LabelList, 
-  Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis
+  ScatterChart, CartesianGrid, XAxis, YAxis, ZAxis, ReferenceLine, Scatter, LabelList,
+  PieChart, Pie, Legend
 } from 'recharts';
 import { OMFDataRow } from '../../types';
 import { ThemeMode, CHART_THEMES, getTooltipStyle, formatCurrency, AssetLogo, useChartConfig } from './chartUtils';
@@ -47,11 +47,9 @@ const TreemapContent = (props: any) => {
   const strokeColor = isNeon ? '#000' : '#fff';
   const strokeWidth = themeMode === 'comic' ? 2 : 2;
 
-  // Neon-specific text styling for better contrast on colored tiles
-  const symbolColor = isNeon ? '#cffafe' : '#fff'; // Cyan-100 for neon symbol to match theme but keep high contrast
-  const roiColor = '#fff'; // Pure white for ROI value
+  const symbolColor = isNeon ? '#cffafe' : '#fff'; 
+  const roiColor = '#fff'; 
   
-  // Stronger text shadow/outline for Neon to ensure visibility against saturated backgrounds
   const textShadow = isNeon 
     ? '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 2px 2px 2px rgba(0,0,0,0.8)' 
     : '0 2px 4px rgba(0,0,0,0.9)';
@@ -76,7 +74,7 @@ const TreemapContent = (props: any) => {
           textAnchor="start"
           fill={symbolColor}
           fontSize={fontSizeName}
-          fontWeight={isNeon ? "700" : "700"} // Reduced to 700
+          fontWeight="700"
           style={{ 
             textShadow: textShadow, 
             pointerEvents: 'none',
@@ -93,7 +91,7 @@ const TreemapContent = (props: any) => {
           textAnchor="end"
           fill={roiColor}
           fontSize={fontSizeRoi}
-          fontWeight={isNeon ? "700" : "500"} // Reduced to 700
+          fontWeight={isNeon ? "700" : "500"} 
           style={{ 
             textShadow: textShadow, 
             pointerEvents: 'none', 
@@ -108,7 +106,7 @@ const TreemapContent = (props: any) => {
 };
 
 interface OMFTreemapChartProps {
-  data: any[]; // Expects nested structure
+  data: any[]; 
   themeMode?: ThemeMode;
 }
 
@@ -162,24 +160,31 @@ interface BubbleRiskChartProps {
   themeMode?: ThemeMode;
 }
 
-// Custom Label Renderer to ensure labels are black and visible
 const renderBubbleLabel = (props: any) => {
-  const { x, y, value, themeMode } = props;
+  const { cx, cy, value, themeMode } = props;
+  if (cx === undefined || cy === undefined) return null;
+
   const isNeon = themeMode === 'neon';
-  // Force strict black for light theme, cyan for neon
-  const color = isNeon ? '#a5f3fc' : '#000000';
+  // Use pure black for light theme or bright cyan for neon
+  const color = isNeon ? '#a5f3fc' : '#111827';
   
   return (
     <text 
-      x={x} 
-      y={y} 
-      dy={-10} // Offset slightly upwards
+      x={cx} 
+      y={cy} 
+      dy={-14} // Shift up to clear the bubble
       fill={color} 
       fontSize={10} 
       textAnchor="middle" 
       fontWeight="bold"
       pointerEvents="none"
-      stroke="none" // Explicitly disable stroke inheritance
+      style={{
+        // White "halo" stroke for readability in light mode
+        stroke: isNeon ? 'none' : '#ffffff',
+        strokeWidth: isNeon ? 0 : 3,
+        paintOrder: 'stroke',
+        filter: isNeon ? 'drop-shadow(0px 0px 2px rgba(0,0,0,0.8))' : 'none'
+      }}
     >
       {value}
     </text>
@@ -190,7 +195,6 @@ export const BubbleRiskChart: React.FC<BubbleRiskChartProps> = ({ data, themeMod
   const t = CHART_THEMES[themeMode || 'light'];
   const config = useChartConfig();
   
-  // Transform data for ScatterChart
   const chartData = useMemo(() => {
     return data
       .filter(d => d.symbol !== 'PLN' && d.symbol !== 'PLN-IKE')
@@ -229,7 +233,7 @@ export const BubbleRiskChart: React.FC<BubbleRiskChartProps> = ({ data, themeMod
             fontSize={12}
             label={{ value: 'Całkowite ROI (%)', angle: -90, position: 'insideLeft', fill: t.axis, fontSize: 10, style: { textAnchor: 'middle' } }}
           />
-          <ZAxis type="number" dataKey="z" range={[60, 600]} name="Wartość" unit=" zł" />
+          <ZAxis type="number" dataKey="z" range={[80, 800]} name="Wartość" unit=" zł" />
           <Tooltip 
             cursor={{ strokeDasharray: '3 3' }} 
             content={({ active, payload }) => {
@@ -272,7 +276,7 @@ export const BubbleRiskChart: React.FC<BubbleRiskChartProps> = ({ data, themeMod
                   key={`cell-${index}`} 
                   fill={fill} 
                   fillOpacity={0.7}
-                  stroke={(themeMode as string) === 'neon' ? '#fff' : '#fff'}
+                  stroke="#fff"
                   strokeWidth={1}
                 />
               );
@@ -288,55 +292,52 @@ export const BubbleRiskChart: React.FC<BubbleRiskChartProps> = ({ data, themeMod
   );
 };
 
-export const SectorAllocationChart: React.FC<{ data: any[], themeMode?: ThemeMode, chartType?: 'bar' | 'radar' }> = ({ 
-  data, 
-  themeMode = 'light',
-  // chartType prop removed from usage but kept in signature for compatibility if needed, though unused
-}) => {
+// --- SECTOR ALLOCATION CHART ---
+
+/**
+ * SectorAllocationChart
+ * Renders a Pie Chart showing the distribution of assets across different sectors.
+ * Specifically used in StandardDashboard for IKE view.
+ */
+export const SectorAllocationChart: React.FC<{ data: { name: string; value: number }[]; themeMode?: ThemeMode }> = ({ data, themeMode = 'light' }) => {
   const t = CHART_THEMES[themeMode || 'light'];
   const config = useChartConfig();
 
-  // Calculate percentages for chart logic
-  const totalValue = useMemo(() => data.reduce((acc, curr) => acc + curr.value, 0), [data]);
-
-  // Process data to include percentage for the Radar
-  const radarData = data.map(d => ({
-      ...d,
-      percentage: totalValue > 0 ? (d.value / totalValue) * 100 : 0,
-      fullValue: d.value // Keep original value for tooltip
-  }));
+  if (data.length === 0) {
+    return <div className="flex items-center justify-center h-full text-slate-400 text-sm">Brak danych alokacji</div>;
+  }
 
   return (
     <div className="h-80 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <RadarChart cx="50%" cy="50%" outerRadius="75%" data={radarData} margin={config.margin}>
-          <PolarGrid stroke={t.grid} strokeOpacity={0.5} />
-          <PolarAngleAxis 
-            dataKey="name" 
-            tick={{ fill: t.axis, fontSize: config.isMobile ? 9 : 11 }} 
-          />
-          <PolarRadiusAxis 
-            angle={30} 
-            domain={[0, 'auto']} 
-            tick={{ fill: t.axis, fontSize: 10 }}
-            tickFormatter={(val) => `${val.toFixed(0)}%`}
-          />
-          <Radar
-            name="Sektory"
-            dataKey="percentage"
-            stroke={t.employer}
+        <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+          <Pie
+            data={data}
+            cx="50%"
+            cy="50%"
+            innerRadius={config.isMobile ? 40 : 60}
+            outerRadius={config.isMobile ? 70 : 100}
+            paddingAngle={2}
+            dataKey="value"
+            stroke={themeMode === 'neon' ? '#000' : '#fff'}
             strokeWidth={2}
-            fill={t.employer}
-            fillOpacity={0.4}
-          />
+            isAnimationActive={true}
+          >
+            {data.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={t.pieColors[index % t.pieColors.length]} />
+            ))}
+          </Pie>
           <Tooltip 
-            formatter={(value: number, name: string, props: any) => {
-                const fullVal = props.payload.fullValue;
-                return [`${value.toFixed(2)}% (${formatCurrency(fullVal)})`, 'Udział'];
-            }}
+            formatter={(value: number) => [`${value.toLocaleString('pl-PL')} zł`, 'Wartość']}
             contentStyle={getTooltipStyle(themeMode as ThemeMode, config.isMobile)}
           />
-        </RadarChart>
+          <Legend 
+            verticalAlign="bottom" 
+            height={config.legendHeight}
+            iconSize={config.iconSize}
+            wrapperStyle={config.legendStyle}
+          />
+        </PieChart>
       </ResponsiveContainer>
     </div>
   );
