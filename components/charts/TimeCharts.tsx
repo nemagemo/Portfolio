@@ -13,7 +13,6 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjecti
   const t = CHART_THEMES[themeMode || 'light'];
   const config = useChartConfig();
 
-  // Prepare data with additional computed fields for PPK
   const chartData = useMemo(() => {
     if (!isPPK) return data;
     return data.map(d => {
@@ -54,7 +53,7 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjecti
             stroke={t.axis} 
             fontSize={10}
             tickMargin={config.tickMargin}
-            minTickGap={30}
+            minTickGap={config.minTickGap}
             padding={config.xAxisPadding}
           />
           <YAxis 
@@ -106,7 +105,6 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjecti
                 style={{ color: t.tax }}
               />
               
-              {/* Dashed Lines for Net and Exit */}
               <Line 
                 type={t.lineType || "monotone"} 
                 dataKey="netValue" 
@@ -186,7 +184,7 @@ export const ROIChart: React.FC<ChartProps> = ({ data, showExitRoi = true, showT
             stroke={t.axis} 
             fontSize={10}
             tickMargin={config.tickMargin}
-            minTickGap={15}
+            minTickGap={config.minTickGap}
             padding={config.xAxisPadding}
           />
           <YAxis 
@@ -269,7 +267,7 @@ export const DrawdownChart: React.FC<{ data: any[], themeMode?: ThemeMode }> = (
             stroke={t.axis} 
             fontSize={10}
             tickMargin={config.tickMargin}
-            minTickGap={15}
+            minTickGap={config.minTickGap}
             padding={config.xAxisPadding}
           />
           <YAxis 
@@ -327,7 +325,7 @@ export const CryptoValueChart: React.FC<ChartProps> = ({ data, showTaxComparison
             stroke={t.axis} 
             fontSize={10}
             tickMargin={config.tickMargin}
-            minTickGap={15}
+            minTickGap={config.minTickGap}
             padding={config.xAxisPadding}
           />
           <YAxis 
@@ -427,7 +425,7 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection,
             stroke={t.axis} 
             fontSize={10}
             tickMargin={config.tickMargin}
-            minTickGap={30}
+            minTickGap={config.minTickGap}
             padding={config.xAxisPadding}
           />
           <YAxis 
@@ -455,7 +453,6 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection,
             wrapperStyle={config.legendStyle}
           />
           
-          {/* Total Value - Background Area (Green) */}
           <Area 
             type={t.lineType || "monotone"} 
             dataKey="totalValue" 
@@ -467,13 +464,12 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection,
             style={{ color: t.profit }}
           />
 
-          {/* Investment - Overlay Area (Matches Crypto Chart Style) */}
           <Area 
             type={t.lineType || "monotone"} 
             dataKey="investment" 
             name="Zainwestowany Kapitał" 
             stroke={t.axis} 
-            fillOpacity={1}
+            fillOpacity={1} 
             fill="url(#colorInvestGlobal)" 
             strokeWidth={t.strokeWidth}
             strokeDasharray="5 5"
@@ -538,7 +534,7 @@ export const GlobalPerformanceChart: React.FC<GlobalPerformanceChartProps> = ({
               stroke={t.axis} 
               fontSize={10}
               tickMargin={config.tickMargin}
-              minTickGap={30}
+              minTickGap={config.minTickGap}
               padding={config.xAxisPadding}
             />
             <YAxis 
@@ -623,14 +619,12 @@ export const PortfolioAllocationHistoryChart: React.FC<ChartProps> = ({ data, th
 
   const chartData = data.map(row => {
     const r = row as any;
-    // Handle specific artifact where 0 value in stacked area can sometimes show stroke
     const ikeVal = (r.ikeShare || 0) * 100;
     
     return {
       date: r.date,
       ppk: (r.ppkShare || 0) * 100,
       crypto: (r.cryptoShare || 0) * 100,
-      // FIX: Use undefined to prevent visible stroke line when value is 0.
       ike: ikeVal > 0 ? ikeVal : undefined,
     };
   });
@@ -646,7 +640,7 @@ export const PortfolioAllocationHistoryChart: React.FC<ChartProps> = ({ data, th
             stroke={t.axis} 
             fontSize={10}
             tickMargin={config.tickMargin}
-            minTickGap={30}
+            minTickGap={config.minTickGap}
             padding={config.xAxisPadding}
           />
           <YAxis 

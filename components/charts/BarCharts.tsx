@@ -35,7 +35,7 @@ export const PPKLeverageChart: React.FC<ChartProps> = ({ data, themeMode = 'ligh
             stroke={t.axis} 
             fontSize={10}
             tickMargin={config.tickMargin}
-            minTickGap={15}
+            minTickGap={config.minTickGap}
             padding={config.xAxisPadding}
           />
           <YAxis 

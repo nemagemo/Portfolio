@@ -119,11 +119,6 @@ export const getTooltipStyle = (theme: ThemeMode, isMobile: boolean = false) => 
 // --- RESPONSIVE CHART CONFIG HOOK ---
 /**
  * Detects if the screen is mobile (< 768px) and provides optimized Recharts configuration.
- * On Mobile:
- * - Reduced legend size (iconSize: 8)
- * - Tighter margins (left: -20) to maximize chart width
- * - Centered legends
- * - Reduced font sizes
  */
 export const useChartConfig = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -144,7 +139,6 @@ export const useChartConfig = () => {
       margin: { top: 10, right: 10, left: -20, bottom: 20 },
       xAxisPadding: { left: 0, right: 5 },
       legendHeight: 44,
-      // Force centering for mobile legends
       legendStyle: { 
         fontSize: '9px', 
         width: '100%', 
@@ -152,7 +146,8 @@ export const useChartConfig = () => {
         textAlign: 'center' as const,
         paddingTop: '0px'
       },
-      tickMargin: 5
+      tickMargin: 5,
+      minTickGap: 10 // Dense on mobile
     };
   }
 
@@ -166,14 +161,12 @@ export const useChartConfig = () => {
       fontSize: '12px',
       paddingTop: '0px'
     },
-    tickMargin: 10
+    tickMargin: 10,
+    minTickGap: 15 // Very dense on desktop to show as many labels as possible
   };
 };
 
 // --- LOGO LOGIC ---
-
-// Mapping of asset names to their respective Logo components
-// Used by AssetLogo to dynamically render the correct SVG based on asset symbol.
 const LOGO_MAP: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
   PPK: PPKLogo,
   GAW: GAWLogo,
