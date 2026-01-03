@@ -3,7 +3,8 @@ import React, { useMemo } from 'react';
 import {
   Cell, ResponsiveContainer, Tooltip, Treemap,
   ScatterChart, CartesianGrid, XAxis, YAxis, ZAxis, ReferenceLine, Scatter, LabelList,
-  PieChart, Pie, Legend
+  PieChart, Pie, Legend,
+  Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis
 } from 'recharts';
 import { OMFDataRow } from '../../types';
 import { ThemeMode, CHART_THEMES, getTooltipStyle, formatCurrency, AssetLogo, useChartConfig } from './chartUtils';
@@ -296,7 +297,7 @@ export const BubbleRiskChart: React.FC<BubbleRiskChartProps> = ({ data, themeMod
 
 /**
  * SectorAllocationChart
- * Renders a Pie Chart showing the distribution of assets across different sectors.
+ * Renders a Radar Chart showing the distribution of assets across different sectors.
  * Specifically used in StandardDashboard for IKE view.
  */
 export const SectorAllocationChart: React.FC<{ data: { name: string; value: number }[]; themeMode?: ThemeMode }> = ({ data, themeMode = 'light' }) => {
@@ -310,34 +311,32 @@ export const SectorAllocationChart: React.FC<{ data: { name: string; value: numb
   return (
     <div className="h-80 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-          <Pie
-            data={data}
-            cx="50%"
-            cy="50%"
-            innerRadius={config.isMobile ? 40 : 60}
-            outerRadius={config.isMobile ? 70 : 100}
-            paddingAngle={2}
+        <RadarChart cx="50%" cy="50%" outerRadius={config.isMobile ? "70%" : "80%"} data={data}>
+          <PolarGrid stroke={t.grid} />
+          <PolarAngleAxis 
+            dataKey="name" 
+            stroke={t.axis} 
+            fontSize={config.isMobile ? 8 : 10} 
+          />
+          <PolarRadiusAxis 
+            angle={30} 
+            domain={[0, 'auto']} 
+            stroke={t.axis} 
+            fontSize={8} 
+            tickFormatter={(val) => `${(val/1000).toFixed(0)}k`}
+          />
+          <Radar
+            name="Sektory"
             dataKey="value"
-            stroke={themeMode === 'neon' ? '#000' : '#fff'}
-            strokeWidth={2}
-            isAnimationActive={true}
-          >
-            {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={t.pieColors[index % t.pieColors.length]} />
-            ))}
-          </Pie>
+            stroke={t.employer}
+            fill={t.employer}
+            fillOpacity={0.6}
+          />
           <Tooltip 
             formatter={(value: number) => [`${value.toLocaleString('pl-PL')} zł`, 'Wartość']}
             contentStyle={getTooltipStyle(themeMode as ThemeMode, config.isMobile)}
           />
-          <Legend 
-            verticalAlign="bottom" 
-            height={config.legendHeight}
-            iconSize={config.iconSize}
-            wrapperStyle={config.legendStyle}
-          />
-        </PieChart>
+        </RadarChart>
       </ResponsiveContainer>
     </div>
   );
