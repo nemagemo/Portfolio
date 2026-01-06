@@ -3,7 +3,6 @@ import React, { useMemo } from 'react';
 import {
   Cell, ResponsiveContainer, Tooltip, Treemap,
   ScatterChart, CartesianGrid, XAxis, YAxis, ZAxis, ReferenceLine, Scatter, LabelList,
-  PieChart, Pie, Legend,
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis
 } from 'recharts';
 import { OMFDataRow } from '../../types';
