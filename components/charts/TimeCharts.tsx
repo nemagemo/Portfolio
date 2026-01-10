@@ -32,6 +32,57 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjecti
     });
   }, [data, isPPK]);
 
+  // Calculate custom ticks for PPK to fix negative scale at -1k steps
+  const customTicks = useMemo(() => {
+    if (!isPPK || chartData.length === 0) return undefined;
+
+    let minVal = 0;
+    let maxVal = 0;
+
+    (chartData as any[]).forEach(d => {
+        if (d.taxSigned < minVal) minVal = d.taxSigned;
+        const top = Math.max(d.totalValue || 0, d.projectedTotalValue || 0);
+        if (top > maxVal) maxVal = top;
+    });
+
+    // Only apply custom logic if there are negative values (tax)
+    if (minVal >= 0) return undefined;
+
+    const ticks = [0];
+
+    // Negative ticks: Force every -1000 down until we are below minVal
+    let curr = -1000;
+    while (true) {
+        ticks.unshift(curr);
+        // Stop if the current tick provides enough clearance below the minimum value
+        if (curr < minVal) break; 
+        curr -= 1000;
+    }
+
+    // Positive ticks: Determine a "nice" step for the upper part
+    // We aim for roughly 4-5 ticks on the positive side
+    const targetTickCount = 5;
+    const rawStep = maxVal / targetTickCount;
+    const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
+    const residual = rawStep / magnitude;
+    
+    let niceStep = magnitude;
+    if (residual > 5) niceStep = 10 * magnitude;
+    else if (residual > 2) niceStep = 5 * magnitude;
+    else if (residual > 1) niceStep = 2 * magnitude;
+
+    // Ensure we don't have too dense ticks if magnitude is small
+    if (niceStep < 1000) niceStep = 1000;
+
+    curr = niceStep;
+    while (curr <= maxVal * 1.1) { // 10% headroom
+        ticks.push(curr);
+        curr += niceStep;
+    }
+
+    return ticks;
+  }, [chartData, isPPK]);
+
   return (
     <div className="h-96 w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -60,6 +111,8 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjecti
             tickFormatter={(val) => `${(val/1000).toFixed(0)}k`} 
             stroke={t.axis} 
             fontSize={10}
+            ticks={customTicks}
+            domain={customTicks ? [customTicks[0], customTicks[customTicks.length - 1]] : ['auto', 'auto']}
           />
           <Tooltip 
             formatter={(value: number, name: string) => {
