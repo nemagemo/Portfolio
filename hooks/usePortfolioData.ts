@@ -1,10 +1,11 @@
 
 import { useMemo } from 'react';
-import { PortfolioType, SummaryStats, AnyDataRow, ValidationReport, OMFValidationReport, OMFDataRow, GlobalHistoryRow, DividendDataRow, BenchmarkData, PPKDataRow, CryptoDataRow, IKEDataRow } from '../types';
+import { SummaryStats, PortfolioType, AnyDataRow, ValidationReport, OMFValidationReport, OMFDataRow, GlobalHistoryRow, DividendDataRow, PPKDataRow, CryptoDataRow, IKEDataRow, BenchmarkData } from '../types';
 import { useDividends } from './useDividends';
 import { useAssetPricing } from './useAssetPricing';
 import { useGlobalHistory } from './useGlobalHistory';
 import { usePortfolioStats } from './usePortfolioStats';
+import { OMF_LAST_UPDATED } from '../CSV/OMFopen';
 
 interface UsePortfolioDataProps {
   portfolioType: PortfolioType;
@@ -29,8 +30,8 @@ interface UsePortfolioDataReturn {
 export const usePortfolioData = ({ 
   portfolioType, 
   onlinePrices, 
-  historyPrices,
-  benchmarks = null,
+  historyPrices, 
+  benchmarks = null, 
   excludePPK = false 
 }: UsePortfolioDataProps): UsePortfolioDataReturn => {
   
@@ -82,9 +83,19 @@ export const usePortfolioData = ({
     if (!lastRow || !('date' in lastRow)) return rawData;
 
     const lastDate = new Date(lastRow.date);
-    const today = new Date();
     
-    // Check if last row is from the current month
+    // Determine "Today" for the chart.
+    // If OMF_LAST_UPDATED is in the future (Time Travel scenario), use that.
+    // Otherwise use System Date.
+    let today = new Date();
+    if (OMF_LAST_UPDATED) {
+        const omfDate = new Date(OMF_LAST_UPDATED);
+        if (!isNaN(omfDate.getTime()) && omfDate > today) {
+            today = omfDate;
+        }
+    }
+    
+    // Check if last row is from the same month as our target "today"
     const isSameMonth = lastDate.getMonth() === today.getMonth() && lastDate.getFullYear() === today.getFullYear();
     const dateStr = today.toISOString().split('T')[0];
 
