@@ -79,6 +79,7 @@ System logotypów opiera się na plikach SVG w folderze `logos/` oraz mapowaniu 
 ### Struktura Danych PPK
 W plikach CSV oraz logice aplikacji dla portfela PPK obowiązuje następująca definicja zysku:
 *   **Całkowity Zysk (Profit)** = Zysk z Funduszu + Wpłaty Pracodawcy + Dopłaty Państwa.
+*   **Podatek (Bieżący)** = Jest to podatek dochodowy od wpłat pracodawcy potrącany z pensji (12%). Traktowany jako koszt (wartość ujemna). Nie mylić z podatkiem Belki.
 *   **Exit ROI (Zwrot)**: Obliczany wg wzoru: `((Zysk Funduszu * 0.81) + (Wpłaty Pracodawcy * 0.70)) / Wpłaty Pracownika`. Uwzględnia podatek Belki i "karę" 30% zwrotu środków pracodawcy.
 *   Przy wizualizacji struktury kapitału (np. wykresy skumulowane), aby składniki sumowały się do 100% Wartości Portfela, należy używać: **Wkład Pracownika + Wkład Pracodawcy + Dopłaty Państwa + Zysk Funduszu**.
 
@@ -193,6 +194,7 @@ Aplikacja stosuje hybrydowy model wyceny w czasie rzeczywistym:
     *   *Opcjonalnie:* Jeśli użytkownik poda w poleceniu nowe wpłaty pracodawcy/państwa, dodaj je do pobranych wartości skumulowanych.
     *   Wylicz `Zysk Funduszu` = `Obecna wartość` - (`Pracownik` + `Pracodawca` + `Państwo`).
     *   Wylicz `Całkowity Zysk` = `Obecna wartość` - `Pracownik`.
+    *   **Wylicz `Podatek` = `Pracodawca` * 0.12 (ujemna wartość). To jest zryczałtowany podatek dochodowy od wpłaty pracodawcy.**
     *   Wylicz `ROI` i `Exit ROI`.
     *   Sformatuj i dopisz nowy wiersz do `CSV/PPK.ts`.
 3.  **Snapshot IKE i Krypto:**
