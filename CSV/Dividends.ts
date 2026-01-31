@@ -1,3 +1,4 @@
+
 export const DIVIDENDS_DATA = `Data,Portfel,Symbol,Kwota,Status
 2025-08-15,IKE,GAW,"6,04 zł",Historyczna
 2025-10-03,IKE,GAW,"3,85 zł",Historyczna
@@ -31,4 +32,5 @@ export const DIVIDENDS_DATA = `Data,Portfel,Symbol,Kwota,Status
 2025-11-05,IKE,KTY,"35,43 zł",Aktywna
 2025-10-31,IKE,LPP,"16,34 zł",Aktywna
 2025-12-10,IKE,ROL,"2,49 zł",Aktywna
-2025-12-11,IKE,MSFT,"1,87 zł",Aktywna`;
+2025-12-11,IKE,MSFT,"1,87 zł",Aktywna
+2026-01-28,IKE,GAW,"6,97 zł",Aktywna`;
