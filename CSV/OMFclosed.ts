@@ -1,5 +1,7 @@
 
 export const OMF_CLOSED_DATA = `Status pozycji,Portfel,Typ,Symbol,ISIN,Sektor,Okres inwestycji,Ostatni zakup,Ilość,Obecna wartość,Wartość zakupu,Zysk/Strata,ROI
+Zamknięta,Krypto,Krypto,USDC,,,367,2026-02-15,"50,050000","177,56 zł","184,47 zł","-6,91 zł","-3,75%"
+Zamknięta,Krypto,Krypto,USDC,,,367,2026-02-15,"49,950000","177,21 zł","184,10 zł","-6,89 zł","-3,74%"
 Zamknięta,Krypto,Krypto,USDC,,,567,2026-02-01,"50,000000","177,50 zł","184,28 zł","-6,78 zł","-3,68%"
 Zamknięta,Krypto,Krypto,USDC,,,569,2026-02-03,"50,000000","178,50 zł","184,29 zł","-5,79 zł","-3,14%"
 Zamknięta,Krypto,Krypto,USDC,,,571,2026-02-05,"50,000000","178,50 zł","184,29 zł","-5,79 zł","-3,14%"
