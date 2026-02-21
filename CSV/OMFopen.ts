@@ -16,7 +16,7 @@ Otwarta,IKE,Akcje,KRU,PLKRK0000010,Financials,412,2025-07-04,"2,327700","1 138,0
 Otwarta,IKE,Akcje,ABS,PLABS0000018,Information Technology,416,2025-07-15,"13,000000","1 097,20 zł","892,80 zł","204,40 zł","22,89%"
 Otwarta,IKE,Akcje,KLE,PLMRTIN00011,Consumer Discretionary,172,2025-07-04,"135,000000","1 150,20 zł","939,36 zł","210,84 zł","22,44%"
 Otwarta,IKE,Akcje,KTY,PLKETY000011,Materials,416,2025-07-04,"0,913800","932,08 zł","717,87 zł","214,21 zł","29,84%"
-Otwarta,IKE,Akcje,ACN,IE00B4BNMY34,Information Technology,412,2025-07-10,"0,763400","715,68 zł","985,17 zł","-269,49 zł","-27,35%"
+Otwarta,IKE,Akcje,ACN,IE00B4BNMY34,Information Technology,412,2026-02-17,"0,827000","765,92 zł","1 035,41 zł","-269,49 zł","-26,03%"
 Otwarta,IKE,Akcje,FAST,US3119001044,Industrials,226,2025-05-06,"4,606400","710,24 zł","702,43 zł","7,81 zł","1,11%"
 Otwarta,IKE,Akcje,GAW,GB0003718474,Consumer Discretionary,412,2025-07-04,"1,447000","1 202,01 zł","965,50 zł","236,51 zł","24,50%"
 Otwarta,IKE,Akcje,ROL,US7757111049,Industrials,412,2026-02-13,"4,203200","940,32 zł","855,77 zł","84,55 zł","9,88%"
@@ -49,7 +49,7 @@ Otwarta,Krypto,Krypto,FOREX,,,719,2024-06-14,"5388,141100","7,53 zł","132,99 z�
 Otwarta,Krypto,Krypto,KAVA,,,719,2024-01-06,"9,283358","3,98 zł","30,14 zł","-26,16 zł","-86,80%"
 Otwarta,Krypto,Krypto,5IRE,,,688,2024-04-14,"80,090420","0,15 zł","56,89 zł","-56,74 zł","-99,74%"
 Otwarta,Krypto,Krypto,BTC,,,0,2026-02-15,"0,00278901","711,71 zł","711,71 zł","0,00 zł","0,00%"
-Otwarta,IKE,Gotówka,PLN-IKE,,,0,2026-02-13,"25,510000","25,51 zł","25,51 zł","0,00 zł","0,00%"
-Otwarta,Gotówka,Gotówka,PLN,,,382,2025-11-07,"1107,930000","1 107,93 zł","1 107,93 zł","0,00 zł","0,00%"`;
+Otwarta,IKE,Gotówka,PLN-IKE,,,0,2026-02-17,"0,000000","0,00 zł","0,00 zł","0,00 zł","0,00%"
+Otwarta,Gotówka,Gotówka,PLN,,,382,2026-02-17,"1083,200000","1 083,20 zł","1 083,20 zł","0,00 zł","0,00%"`;
 
-export const OMF_LAST_UPDATED = '2026-02-15';
+export const OMF_LAST_UPDATED = '2026-02-17';
