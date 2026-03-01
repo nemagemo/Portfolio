@@ -75,13 +75,8 @@ export const useAssetPricing = ({ portfolioType, onlinePrices, historyPrices, di
                 finalPrice = onlinePrices[symbolKey];
                 isLivePrice = true;
             } 
-            // Priority 2: Fallback Price (Hardcoded in constants/fallbackPrices.ts)
-            else if (FALLBACK_PRICES[symbolKey] > 0) {
-                finalPrice = FALLBACK_PRICES[symbolKey];
-                isLivePrice = false;
-            }
             
-            // If we found a valid price (Online or Fallback), recalculate current value.
+            // If we found a valid price (Online), recalculate current value.
             if (finalPrice !== undefined && finalPrice > 0) {
                 let newCurrentValue = 0;
                 if (row.quantity > 0) {
