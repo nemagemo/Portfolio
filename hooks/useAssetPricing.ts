@@ -7,7 +7,6 @@ import {
   PortfolioType, IKEDataRow, CryptoDataRow, DividendDataRow 
 } from '../types';
 import { parseCSV, validateOMFIntegrity } from '../utils/parser';
-import { FALLBACK_PRICES } from '../constants/fallbackPrices';
 
 // Import Data Sources
 import { PPK_DATA } from '../CSV/PPK';
