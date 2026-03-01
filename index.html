@@ -1,6 +1,18 @@
 <!DOCTYPE html>
 <html lang="pl">
   <head>
+    <script>
+      // Suppress "Cannot set property ethereum of #<Window>" error
+      // This often happens when a browser extension (like MetaMask) injects a read-only ethereum object
+      // and another script tries to overwrite it.
+      window.addEventListener('error', function(e) {
+        if (e.message && e.message.includes('Cannot set property ethereum')) {
+          e.stopImmediatePropagation();
+          e.preventDefault();
+          console.warn('Suppressed "Cannot set property ethereum" error from external source.');
+        }
+      });
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Old Man Fund</title>
