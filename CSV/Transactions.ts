@@ -13,4 +13,6 @@ export const TRANSACTIONS_DATA = `Data,Portfel,Typ,Symbol,Ilość,Koszt,Waluta
 2026-02-15,Krypto,Kupno,BTC,"0,00072442","177,21 zł",PLN
 2026-02-15,Krypto,Sprzedaż,USDC,"50,050000","177,56 zł",PLN
 2026-02-15,Krypto,Kupno,LINK,"5,654340","177,56 zł",PLN
-2026-02-17,IKE,Kupno,ACN,"0,063600","50,24 zł",PLN`;
+2026-02-17,IKE,Kupno,ACN,"0,063600","50,24 zł",PLN
+2026-03-13,Krypto,Sprzedaż,USDC,"50,000000","187,00 zł",PLN
+2026-03-13,Krypto,Kupno,LINK,"5,734300","187,00 zł",PLN`;
