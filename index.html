@@ -12,6 +12,31 @@
           console.warn('Suppressed "Cannot set property ethereum" error from external source.');
         }
       });
+      window.addEventListener('unhandledrejection', function(e) {
+        if (e.reason && e.reason.message && e.reason.message.includes('Cannot set property ethereum')) {
+          e.stopImmediatePropagation();
+          e.preventDefault();
+          console.warn('Suppressed "Cannot set property ethereum" unhandled rejection from external source.');
+        }
+      });
+      const originalConsoleError = console.error;
+      console.error = function(...args) {
+        if (args.length > 0) {
+          const arg = args[0];
+          if (typeof arg === 'string' && arg.includes('Cannot set property ethereum')) return;
+          if (arg && typeof arg === 'object' && arg.message && typeof arg.message === 'string' && arg.message.includes('Cannot set property ethereum')) return;
+        }
+        originalConsoleError.apply(console, args);
+      };
+      const originalConsoleWarn = console.warn;
+      console.warn = function(...args) {
+        if (args.length > 0) {
+          const arg = args[0];
+          if (typeof arg === 'string' && arg.includes('Cannot set property ethereum')) return;
+          if (arg && typeof arg === 'object' && arg.message && typeof arg.message === 'string' && arg.message.includes('Cannot set property ethereum')) return;
+        }
+        originalConsoleWarn.apply(console, args);
+      };
     </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

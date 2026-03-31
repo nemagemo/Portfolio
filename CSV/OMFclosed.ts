@@ -1,6 +1,6 @@
 
 export const OMF_CLOSED_DATA = `Status pozycji,Portfel,Typ,Symbol,ISIN,Sektor,Okres inwestycji,Ostatni zakup,Ilość,Obecna wartość,Wartość zakupu,Zysk/Strata,ROI
-Zamknięta,Krypto,Krypto,USDC,,,404,2026-03-24,"350,000000","1 260,27 zł","1 289,99 zł","-29,72 zł","-2,30%"
+Zamknięta,Krypto,Krypto,USDC,,,404,2026-03-24,"450,000000","1 634,27 zł","1 658,55 zł","-24,28 zł","-1,46%"
 Zamknięta,IKE,ETF,IWQU.L,IE00BP3QZ601,,122,2025-02-03,"0,000000","953,97 zł","929,13 zł","24,84 zł","2,67%"
 Zamknięta,Krypto,Krypto,BTC,,,997,2025-07-14,"0,000000","2 297,39 zł","1 022,61 zł","1 274,78 zł","124,66%"
 Zamknięta,IKE,ETF,NDIA.L,IE00BZCQB185,,686,2024-10-03,"0,000000","1 021,45 zł","957,83 zł","63,62 zł","6,64%"
