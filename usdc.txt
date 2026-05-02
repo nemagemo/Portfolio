@@ -1,0 +1,10 @@
+2026-02-01,Krypto,Sprzedaż,USDC,"50,000000","177,50 zł",PLN
+2026-02-03,Krypto,Sprzedaż,USDC,"50,000000","178,50 zł",PLN
+2026-02-05,Krypto,Sprzedaż,USDC,"50,000000","178,50 zł",PLN
+2026-02-15,Krypto,Sprzedaż,USDC,"49,950000","177,21 zł",PLN
+2026-02-15,Krypto,Sprzedaż,USDC,"50,050000","177,56 zł",PLN
+2026-03-13,Krypto,Sprzedaż,USDC,"50,000000","187,00 zł",PLN
+2026-03-13,Krypto,Sprzedaż,USDC,"50,000000","187,00 zł",PLN
+2026-03-24,Krypto,Sprzedaż,USDC,"50,000000","184,00 zł",PLN
+2026-04-12,Krypto,Sprzedaż,USDC,"29,920000","90,21 zł",PLN
+2026-04-23,Krypto,Sprzedaż,USDC,"32,240000","116,70 zł",PLN
