@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Building2, Bitcoin, LineChart, Menu, X, RefreshCw, Wifi, WifiOff, AlertCircle } from 'lucide-react';
+import { Building2, Bitcoin, LineChart, Menu, X, RefreshCw, Wifi, WifiOff, AlertCircle, Turtle } from 'lucide-react';
 import { PortfolioType, OMFDataRow } from '../../types';
 import { Theme, themeStyles } from '../../theme/styles';
 import { HeaderLogo } from '../logos/HeaderLogo';
@@ -114,6 +114,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button onClick={() => handlePortfolioChange('PPK')} className={`flex items-center md:px-2 md:py-1 md:text-[10px] lg:px-4 lg:py-1.5 lg:text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'PPK' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><Building2 size={16} className="md:mr-1 lg:mr-2 hidden sm:block" />PPK</button>
           <button onClick={() => handlePortfolioChange('CRYPTO')} className={`flex items-center md:px-2 md:py-1 md:text-[10px] lg:px-4 lg:py-1.5 lg:text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'CRYPTO' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><Bitcoin size={16} className="md:mr-1 lg:mr-2 hidden sm:block" />Krypto</button>
           <button onClick={() => handlePortfolioChange('IKE')} className={`flex items-center md:px-2 md:py-1 md:text-[10px] lg:px-4 lg:py-1.5 lg:text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'IKE' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><LineChart size={16} className="md:mr-1 lg:mr-2 hidden sm:block" />IKE</button>
+          <button onClick={() => handlePortfolioChange('TURTLE')} className={`flex items-center md:px-2 md:py-1 md:text-[10px] lg:px-4 lg:py-1.5 lg:text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'TURTLE' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><Turtle size={16} /></button>
         </div>
 
         {/* RIGHT: Status & Hamburger */}
@@ -164,7 +165,7 @@ export const Header: React.FC<HeaderProps> = ({
                  <span>Portfel Główny</span>
                  <span className="text-2xl font-black leading-none">Σ</span>
               </button>
-              <div className="grid grid-cols-3 gap-2 mt-2">
+              <div className="grid grid-cols-2 gap-2 mt-2">
                  <button onClick={() => handlePortfolioChange('PPK')} className={`flex flex-col items-center justify-center p-3 rounded-lg text-sm font-medium ${portfolioType === 'PPK' ? styles.buttonActive : styles.buttonInactive}`}>
                     <Building2 size={20} className="mb-1" /> PPK
                  </button>
@@ -174,6 +175,9 @@ export const Header: React.FC<HeaderProps> = ({
                  <button onClick={() => handlePortfolioChange('IKE')} className={`flex flex-col items-center justify-center p-3 rounded-lg text-sm font-medium ${portfolioType === 'IKE' ? styles.buttonActive : styles.buttonInactive}`}>
                     <LineChart size={20} className="mb-1" /> IKE
                  </button>
+                 <button onClick={() => handlePortfolioChange('TURTLE')} className={`flex flex-col items-center justify-center p-3 rounded-lg text-sm font-medium ${portfolioType === 'TURTLE' ? styles.buttonActive : styles.buttonInactive}`}>
+                    <Turtle size={20} className="mb-1" /> Żółw
+                 </button>
               </div>
            </div>
         </div>
@@ -181,3 +185,4 @@ export const Header: React.FC<HeaderProps> = ({
     </header>
   );
 };
+

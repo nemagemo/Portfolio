@@ -265,14 +265,14 @@ export const AssetsTable: React.FC<AssetsTableProps> = ({ data, variant = 'activ
                   </td>
                   <td className="px-1 py-1.5 md:px-1 md:py-2 lg:px-4 lg:py-3 text-right">
                     <span className={getBadgeClass(r.roi || 0)}>
-                      {r.roi}%
+                      {(r.roi || 0).toFixed(2)}%
                     </span>
                   </td>
                   
                   {/* 24h Change: Only show if valid/live, else show '-' */}
                   {variant !== 'closed' && (
                     <td className={`px-1 py-1.5 md:px-1 md:py-2 lg:px-4 lg:py-3 text-right font-medium ${r.change24h !== undefined ? getProfitClass(r.change24h) : (isNeon ? 'text-slate-700' : (isDark ? 'text-slate-600' : (isComic ? 'text-zinc-600' : 'text-slate-300')))}`}>
-                      {r.change24h !== undefined ? `${r.change24h > 0 ? '+' : ''}${r.change24h.toFixed(1)}%` : '-'}
+                      {r.change24h !== undefined ? `${r.change24h > 0 ? '+' : ''}${r.change24h.toFixed(2)}%` : '-'}
                     </td>
                   )}
                 </tr>

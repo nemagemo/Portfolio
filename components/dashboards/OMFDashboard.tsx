@@ -43,6 +43,41 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
   const [isClosedHistoryExpanded, setIsClosedHistoryExpanded] = useState(false);
   const [bubbleChartFilter, setBubbleChartFilter] = useState<'ALL' | 'KRYPTO' | 'IKE'>('ALL');
   
+  // Aggregate Turtle Cash
+  const processedActiveAssets = useMemo(() => {
+    const turtleCash = activeAssets.filter(a => a.portfolio === 'Żółwie' && a.type === 'Gotówka');
+    if (turtleCash.length <= 1) return activeAssets;
+
+    const others = activeAssets.filter(a => !(a.portfolio === 'Żółwie' && a.type === 'Gotówka'));
+    
+    let totalCurrent = 0;
+    let totalPurchase = 0;
+    
+    turtleCash.forEach(a => {
+      totalCurrent += a.currentValue;
+      totalPurchase += a.purchaseValue;
+    });
+
+    const syntheticCash: OMFDataRow = {
+      symbol: 'PLN-Żółwie',
+      portfolio: 'Żółwie',
+      status: 'Otwarta',
+      type: 'Gotówka',
+      sector: 'Gotówka',
+      quantity: 0,
+      lastPurchaseDate: turtleCash[0]?.lastPurchaseDate || '',
+      investmentPeriod: '',
+      currentValue: totalCurrent,
+      purchaseValue: totalPurchase,
+      profit: totalCurrent - totalPurchase,
+      roi: totalPurchase > 0 ? ((totalCurrent - totalPurchase) / totalPurchase) * 100 : 0,
+      change24h: 0,
+      isLivePrice: false
+    };
+
+    return [...others, syntheticCash];
+  }, [activeAssets]);
+
   const [showSP500, setShowSP500] = useState(false);
   const [showWIG20, setShowWIG20] = useState(false);
   const [drawdownExcludePPK, setDrawdownExcludePPK] = useState(false);
@@ -61,9 +96,9 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
   }, [drawdownHistoryData, drawdownExcludePPK]);
 
   const filteredBubbleData = useMemo(() => {
-    let baseData = activeAssets;
+    let baseData = processedActiveAssets;
     if (bubbleChartFilter !== 'ALL') {
-        baseData = activeAssets.filter(a => a.portfolio.toUpperCase().includes(bubbleChartFilter));
+        baseData = processedActiveAssets.filter(a => a.portfolio.toUpperCase().includes(bubbleChartFilter));
     }
     if (bubbleChartFilter === 'KRYPTO') return baseData;
 
@@ -230,7 +265,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-0 space-y-4 md:space-y-0">
           <div>
             <h3 className={`text-lg font-bold ${styles.text} text-left`}>Historia Old Man Fund</h3>
-            <p className={`text-sm ${styles.textSub} text-left`}>PPK + Krypto + IKE</p>
+            <p className={`text-sm ${styles.textSub} text-left`}>PPK + Krypto + IKE + Żółwie</p>
           </div>
           <div className={`hidden md:flex items-center space-x-3 p-2 border ${isNeon ? 'bg-black/50 border-cyan-900/50 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
               <button onClick={() => setExcludePPK(!excludePPK)} disabled={showCPI || showProjection} className={`flex items-center justify-center w-20 px-2 py-1.5 transition-all ${excludePPK ? styles.toggleNoPPKActive : `bg-transparent ${isNeon ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`} rounded-md ${showCPI || showProjection ? 'opacity-50 cursor-not-allowed' : ''}`} title={excludePPK ? "Pokaż PPK" : "Ukryj PPK"}>
@@ -340,9 +375,9 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
       <div className={`${styles.cardContainer} overflow-hidden hidden md:block`}>
         <div className={`px-6 py-4 border-b flex justify-between items-center cursor-pointer transition-colors ${isNeon ? 'bg-black/20 border-cyan-900/30 hover:bg-cyan-950/10' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`} onClick={() => setIsActivePositionsExpanded(!isActivePositionsExpanded)}>
           <div className="flex items-center space-x-2"><h3 className={`text-lg font-bold ${styles.text}`}>Aktywne Pozycje</h3>{isActivePositionsExpanded ? <ChevronUp size={20} className={isNeon ? 'text-cyan-600' : 'text-slate-400'}/> : <ChevronDown size={20} className={isNeon ? 'text-cyan-600' : 'text-slate-400'}/>}</div>
-          <span className={`text-xs font-medium px-2 py-1 transition-all ${isNeon ? 'rounded-full bg-emerald-900/40 text-emerald-400 border border-emerald-700/50' : 'rounded-full bg-emerald-100 text-emerald-700'}`}>{activeAssets.length} pozycji</span>
+          <span className={`text-xs font-medium px-2 py-1 transition-all ${isNeon ? 'rounded-full bg-emerald-900/40 text-emerald-400 border border-emerald-700/50' : 'rounded-full bg-emerald-100 text-emerald-700'}`}>{processedActiveAssets.length} pozycji</span>
         </div>
-        {isActivePositionsExpanded && (<HistoryTable data={activeAssets} type="OMF" omfVariant="active" themeMode={theme} />)}
+        {isActivePositionsExpanded && (<HistoryTable data={processedActiveAssets} type="OMF" omfVariant="active" themeMode={theme} />)}
       </div>
 
       {/* Closed Positions Table - Hidden on Mobile */}

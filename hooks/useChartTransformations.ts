@@ -20,8 +20,15 @@ export const useChartTransformations = ({
     const groups: Record<string, any[]> = {};
     let cryptoRestVal = 0, cryptoRestPurch = 0;
     let aggregatedCashVal = 0;
+    let turtleCashVal = 0;
 
     omfActiveAssets.forEach(a => {
+      // Aggregate Turtle Cash separately
+      if (a.portfolio === 'Żółwie' && a.type === 'Gotówka') {
+        turtleCashVal += a.currentValue;
+        return;
+      }
+
       // AGGREGATION LOGIC: Sum PLN and PLN-IKE into one variable
       if (a.symbol === 'PLN' || a.symbol === 'PLN-IKE') {
         aggregatedCashVal += a.currentValue;
@@ -46,13 +53,19 @@ export const useChartTransformations = ({
        groups['Krypto'].push({ name: 'Reszta Krypto', value: cryptoRestVal, roi: aggRoi, portfolio: 'Krypto' });
     }
 
+    // Add Aggregated "PLN-Żółwie" Tile
+    if (turtleCashVal > 0) {
+        if (!groups['Żółwie']) groups['Żółwie'] = [];
+        groups['Żółwie'].push({ name: 'PLN-Żółwie', value: turtleCashVal, roi: 0, portfolio: 'Żółwie' });
+    }
+
     // Add Aggregated "PLN" Tile to "Gotówka" Group
     if (aggregatedCashVal > 0) {
         if (!groups['Gotówka']) groups['Gotówka'] = [];
         groups['Gotówka'].push({ name: 'PLN', value: aggregatedCashVal, roi: 0, portfolio: 'Gotówka' });
     }
 
-    const ORDER = ['PPK', 'IKE', 'Krypto', 'Gotówka'];
+    const ORDER = ['PPK', 'IKE', 'Krypto', 'Żółwie', 'Gotówka'];
     return Object.keys(groups).map(key => ({
       name: key,
       children: groups[key].sort((a, b) => b.value - a.value)
@@ -65,8 +78,14 @@ export const useChartTransformations = ({
     const groups: Record<string, any[]> = {};
     let cryptoRestNow = 0, cryptoRestPrev = 0;
     let aggregatedCashNow = 0;
+    let turtleCashNow = 0;
 
     omfActiveAssets.forEach(a => {
+        if (a.portfolio === 'Żółwie' && a.type === 'Gotówka') {
+            turtleCashNow += a.currentValue;
+            return;
+        }
+
         if (a.symbol === 'PLN' || a.symbol === 'PLN-IKE') {
             aggregatedCashNow += a.currentValue;
             return;
@@ -95,12 +114,17 @@ export const useChartTransformations = ({
         groups['Krypto'].push({ name: 'Reszta Krypto', size: cryptoRestNow, change24h: avgChange, portfolio: 'Krypto' });
     }
 
+    if (turtleCashNow > 0) {
+        if (!groups['Żółwie']) groups['Żółwie'] = [];
+        groups['Żółwie'].push({ name: 'PLN-Żółwie', size: turtleCashNow, change24h: 0, portfolio: 'Żółwie' });
+    }
+
     if (aggregatedCashNow > 0) {
         if (!groups['Gotówka']) groups['Gotówka'] = [];
         groups['Gotówka'].push({ name: 'PLN', size: aggregatedCashNow, change24h: 0, portfolio: 'Gotówka' });
     }
 
-    const ORDER = ['PPK', 'IKE', 'Krypto', 'Gotówka'];
+    const ORDER = ['PPK', 'IKE', 'Krypto', 'Żółwie', 'Gotówka'];
     return Object.keys(groups).map(key => ({
         name: key,
         children: groups[key].sort((a, b) => b.size - a.size)

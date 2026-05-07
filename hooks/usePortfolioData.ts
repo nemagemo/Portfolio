@@ -224,7 +224,7 @@ export const usePortfolioData = ({
         groups['Krypto'].push({ name: 'Reszta Krypto', size: cryptoRestNow, change24h: avgChange, portfolio: 'Krypto' });
     }
 
-    const ORDER = ['PPK', 'IKE', 'Krypto', 'Gotówka'];
+    const ORDER = ['PPK', 'IKE', 'Żółwie', 'Krypto', 'Gotówka'];
     return Object.keys(groups).map(key => ({
         name: key,
         children: groups[key].sort((a, b) => b.size - a.size)

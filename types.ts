@@ -9,7 +9,7 @@
  * 2. 'AnyDataRow' is a discriminated union used for generic components like HistoryTable.
  */
 
-export type PortfolioType = 'PPK' | 'CRYPTO' | 'IKE' | 'OMF' | 'CASH' | 'DIVIDENDS';
+export type PortfolioType = 'PPK' | 'CRYPTO' | 'IKE' | 'OMF' | 'CASH' | 'DIVIDENDS' | 'TURTLE';
 
 /**
  * Represents a single month of PPK data.
@@ -103,6 +103,7 @@ export interface GlobalHistoryRow {
   ppkShare: number;     // 0.0 - 1.0 ratio of PPK in total portfolio
   cryptoShare: number;  // 0.0 - 1.0 ratio of Crypto in total portfolio
   ikeShare: number;     // 0.0 - 1.0 ratio of IKE in total portfolio
+  turtleShare: number;  // 0.0 - 1.0 ratio of Turtles in total portfolio
   
   // Specific fields for Heatmap/Analysis excluding PPK (Active Management)
   investmentNoPPK?: number;
@@ -125,8 +126,20 @@ export interface BenchmarkData {
   wig20: Record<string, number>;
 }
 
+/**
+ * Represents a single turtle transaction.
+ */
+export interface TurtleTransactionRow {
+  date: string;
+  dateObj: Date;
+  turtle: string;
+  symbol: string;
+  quantity: number;
+  cost: number;
+}
+
 // Union type for general usage in generic Tables/Charts
-export type AnyDataRow = PPKDataRow | CryptoDataRow | IKEDataRow | OMFDataRow | GlobalHistoryRow | CashDataRow | DividendDataRow;
+export type AnyDataRow = PPKDataRow | CryptoDataRow | IKEDataRow | OMFDataRow | GlobalHistoryRow | CashDataRow | DividendDataRow | TurtleTransactionRow;
 
 /**
  * Summary Statistics displayed in top cards.
@@ -154,6 +167,7 @@ export interface SummaryStats {
   // Crypto/IKE Specific
   totalInvestment?: number;
   taxSaved?: number; // For IKE: Amount saved due to tax shield (19% of profit)
+  unrealizedTaxSaved?: number; // For IKE: Theoretical tax shield from unrealized profits
 }
 
 /**

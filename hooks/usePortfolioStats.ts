@@ -290,12 +290,18 @@ export const usePortfolioStats = ({
             taxSaved = capitalGainsTaxSaved + dividendTaxSaved;
         }
 
+        const ikeOpenProfit = omfActiveAssets
+            .filter(a => a.portfolio === 'IKE' && a.status === 'Otwarta')
+            .reduce((acc, curr) => acc + curr.profit, 0);
+        const unrealizedTaxSaved = portfolioType === 'IKE' && ikeOpenProfit > 0 ? ikeOpenProfit * 0.19 : 0;
+
         return {
             totalValue: row.totalValue,
             totalProfit: row.profit,
             totalInvestment: row.investment,
             currentRoi: row.roi,
             taxSaved: taxSaved,
+            unrealizedTaxSaved: unrealizedTaxSaved,
             cagr, ltmRoi, ytd,
             ltm: ltmProfit // using ltm field to pass profit amount for flip card
         };

@@ -454,6 +454,54 @@ const parseStandard = (lines: string[], type: PortfolioType, source: 'Online' | 
   return { data, report };
 };
 
+const parseTurtles = (lines: string[], source: 'Online' | 'Offline'): { data: AnyDataRow[], report: ValidationReport } => {
+  const report = createBaseReport(source);
+  const data: TurtleTransactionRow[] = [];
+  
+  const headers = splitCSVLine(lines[0]).map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
+  const colMap: Record<string, number> = { date: -1, turtle: -1, symbol: -1, quantity: -1, cost: -1 };
+  
+  headers.forEach((h, index) => {
+    if (h.includes('data')) colMap.date = index;
+    else if (h.includes('żółw') || h.includes('zolw') || h.includes('turtle')) colMap.turtle = index;
+    else if (h.includes('symbol') || h.includes('ticker')) colMap.symbol = index;
+    else if (h.includes('ilość') || h.includes('ilosc')) colMap.quantity = index;
+    else if (h.includes('koszt')) colMap.cost = index;
+  });
+  
+  if (colMap.date === -1 || colMap.turtle === -1 || colMap.symbol === -1 || colMap.quantity === -1 || colMap.cost === -1) {
+    report.isValid = false;
+    report.errors.push(`[TURTLE] Brak wymaganych kolumn: Data, Żółw, Symbol, Ilość, Koszt`);
+    return { data: [], report };
+  }
+  report.checks.structure = true;
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    report.stats.totalRows++;
+    const row = splitCSVLine(line).map(cell => cell.replace(/^"|"$/g, '').trim());
+
+    const dateStr = row[colMap.date];
+    const dateObj = new Date(dateStr);
+    if (isNaN(dateObj.getTime())) continue;
+
+    data.push({
+      date: dateStr,
+      dateObj,
+      turtle: row[colMap.turtle],
+      symbol: row[colMap.symbol].toUpperCase(),
+      quantity: parseFloatStr(row[colMap.quantity]),
+      cost: parseCurrency(row[colMap.cost])
+    });
+  }
+
+  report.stats.validRows = data.length;
+  report.checks.dataTypes = true;
+  report.checks.logic = true;
+  return { data, report };
+};
+
 // --- MAIN PARSER DISPATCHER ---
 
 export const parseCSV = (csvText: string, type: PortfolioType, source: 'Online' | 'Offline' = 'Offline'): { data: AnyDataRow[], report: ValidationReport } => {
@@ -474,6 +522,8 @@ export const parseCSV = (csvText: string, type: PortfolioType, source: 'Online' 
       return parseCash(lines, source);
     case 'DIVIDENDS':
       return parseDividends(lines, source);
+    case 'TURTLE':
+      return parseTurtles(lines, source);
     case 'IKE':
     case 'CRYPTO':
       return parseStandard(lines, type, source);

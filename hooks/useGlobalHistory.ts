@@ -9,6 +9,8 @@ import { PPK_DATA } from '../CSV/PPK';
 import { KRYPTO_DATA } from '../CSV/Krypto';
 import { IKE_DATA } from '../CSV/IKE';
 import { CASH_DATA } from '../CSV/Cash';
+import { TURTLE_TRANSACTIONS_DATA } from '../CSV/TurtleTransactions';
+import { TurtleTransactionRow } from '../types';
 
 interface UseGlobalHistoryProps {
   portfolioType: PortfolioType;
@@ -40,6 +42,7 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
     const cryptoData = parseCSV(KRYPTO_DATA, 'CRYPTO', 'Offline').data as CryptoDataRow[];
     const ikeData = parseCSV(IKE_DATA, 'IKE', 'Offline').data as IKEDataRow[];
     const cashData = parseCSV(CASH_DATA, 'CASH', 'Offline').data as CashDataRow[];
+    const turtleTransactions = parseCSV(TURTLE_TRANSACTIONS_DATA, 'TURTLE', 'Offline').data as TurtleTransactionRow[];
 
     // Map Lookups for faster access by Date
     const createMap = (arr: any[]) => new Map<string, { inv: number, profit: number }>(
@@ -50,6 +53,14 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
     const ikeMap = createMap(ikeData);
     const cashMap = new Map(cashData.map(r => [r.date, r.value]));
 
+    // Aggregate Turtle Transactions by month (bucket by date string)
+    const turtleHistMap = new Map<string, { inv: number, profit: number }>();
+    turtleTransactions.forEach(t => {
+        const dateKey = t.date; // Use the exact date or bucket it
+        const current = turtleHistMap.get(dateKey) || { inv: 0, profit: 0 };
+        turtleHistMap.set(dateKey, { inv: current.inv + t.cost, profit: 0 });
+    });
+
     // --- LIVE TOTALS & SNOWBALL LOGIC ---
     // Calculate the current state from OMF snapshots.
     const closedProfits = { IKE: 0, CRYPTO: 0 };
@@ -58,13 +69,14 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
         if (a.portfolio.toUpperCase().includes('KRYPTO')) closedProfits.CRYPTO += a.profit;
     });
 
-    const liveTotals = { PPK: {inv:0, val:0}, CRYPTO: {inv:0, val:0}, IKE: {inv:0, val:0}, CASH: {inv:0, val:0} };
+    const liveTotals = { PPK: {inv:0, val:0}, CRYPTO: {inv:0, val:0}, IKE: {inv:0, val:0}, TURTLE: {inv:0, val:0}, CASH: {inv:0, val:0} };
     omfActiveAssets.forEach(a => {
         const p = a.portfolio.toUpperCase();
         let target = liveTotals.CASH;
         if (p === 'PPK') target = liveTotals.PPK;
         else if (p.includes('KRYPTO')) target = liveTotals.CRYPTO;
         else if (p.includes('IKE')) target = liveTotals.IKE;
+        else if (p.includes('ŻÓŁWIE')) target = liveTotals.TURTLE;
         
         target.inv += a.purchaseValue;
         target.val += a.currentValue;
@@ -80,9 +92,17 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
     const liveNetInvIKE = liveTotals.IKE.inv - closedProfits.IKE - totalActiveDividendsIKE;
     const liveNetInvCrypto = liveTotals.CRYPTO.inv - closedProfits.CRYPTO;
 
-    // Dates Union & Sorting
-    const allDates = new Set([...ppkMap.keys(), ...cryptoMap.keys(), ...ikeMap.keys(), ...cashMap.keys()]);
-    const sortedDates = Array.from(allDates).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+    // Dates Union & Sorting - Force Monthly Bucketing
+    const monthsMap = new Map<string, string>(); // YYYY-MM -> Latest YYYY-MM-DD
+    [...ppkMap.keys(), ...cryptoMap.keys(), ...ikeMap.keys(), ...cashMap.keys(), ...turtleHistMap.keys()].forEach(date => {
+        const monthKey = date.substring(0, 7); // "YYYY-MM"
+        const existing = monthsMap.get(monthKey);
+        if (!existing || date > existing) {
+            monthsMap.set(monthKey, date);
+        }
+    });
+    
+    const sortedDates = Array.from(monthsMap.values()).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
 
     // Update Last Point with Live Data (Live prices usually newer than CSV history)
     if (sortedDates.length > 0) {
@@ -110,7 +130,7 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
         }
     }
 
-    let lastPPK = { inv: 0, profit: 0 }, lastCrypto = { inv: 0, profit: 0 }, lastIKE = { inv: 0, profit: 0 };
+    let lastPPK = { inv: 0, profit: 0 }, lastCrypto = { inv: 0, profit: 0 }, lastIKE = { inv: 0, profit: 0 }, lastTurtle = { inv: 0, profit: 0 };
     let twrProduct = 1, prevTwrVal = 0, prevTwrInv = 0;
     
     // --- REAL VALUE CALCULATION (CPI - Chain Linked) ---
@@ -159,6 +179,7 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
         if (ppkMap.has(date)) lastPPK = ppkMap.get(date)!;
         if (cryptoMap.has(date)) lastCrypto = cryptoMap.get(date)!;
         if (ikeMap.has(date)) lastIKE = ikeMap.get(date)!;
+        if (turtleHistMap.has(date)) lastTurtle = turtleHistMap.get(date)!;
 
         const currentPPKInv = excludePPK ? 0 : lastPPK.inv;
         const currentPPKProfit = excludePPK ? 0 : lastPPK.profit;
@@ -174,13 +195,22 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
         const cashInv = cashVal;
         const cashProfit = 0; // Cash generates no profit in this model
 
-        const totalInvestment = currentPPKInv + lastCrypto.inv + lastIKE.inv + cashInv;
-        const totalProfit = currentPPKProfit + lastCrypto.profit + lastIKE.profit + cashProfit;
+        // Fix: Use liveTotals.TURTLE only for the last point, otherwise use history or 0.
+        let turtleInv = lastTurtle.inv;
+        let turtleProfit = lastTurtle.profit;
+        
+        if (isCurrentMonth && liveTotals.TURTLE.val > 0) {
+            turtleInv = liveTotals.TURTLE.inv;
+            turtleProfit = liveTotals.TURTLE.val - liveTotals.TURTLE.inv;
+        }
+
+        const totalInvestment = currentPPKInv + lastCrypto.inv + lastIKE.inv + cashInv + turtleInv;
+        const totalProfit = currentPPKProfit + lastCrypto.profit + lastIKE.profit + cashProfit + turtleProfit;
         const totalValue = totalInvestment + totalProfit;
 
         // NoPPK specific calculation (Used for Heatmap/Active Management Analysis)
-        const invNoPPK = lastCrypto.inv + lastIKE.inv + cashInv;
-        const profitNoPPK = lastCrypto.profit + lastIKE.profit + cashProfit;
+        const invNoPPK = lastCrypto.inv + lastIKE.inv + cashInv + turtleInv;
+        const profitNoPPK = lastCrypto.profit + lastIKE.profit + cashProfit + turtleProfit;
         const valNoPPK = invNoPPK + profitNoPPK;
 
         // --- TWR Calculation (Active Management Only - IKE + Crypto) ---
@@ -260,7 +290,8 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
         const ppkVal = excludePPK ? 0 : (lastPPK.inv + lastPPK.profit);
         const cryptoVal = lastCrypto.inv + lastCrypto.profit;
         const ikeVal = lastIKE.inv + lastIKE.profit;
-        const sumVal = ppkVal + cryptoVal + ikeVal; 
+        const turtleVal = turtleInv + turtleProfit;
+        const sumVal = ppkVal + cryptoVal + ikeVal + cashVal + turtleVal; 
 
         return {
             date,
@@ -273,6 +304,7 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
             ppkShare: sumVal > 0 ? ppkVal / sumVal : 0,
             cryptoShare: sumVal > 0 ? cryptoVal / sumVal : 0,
             ikeShare: sumVal > 0 ? ikeVal / sumVal : 0,
+            turtleShare: sumVal > 0 ? turtleVal / sumVal : 0,
             sp500Return: sp500Ret,
             wig20Return: wig20Ret,
             

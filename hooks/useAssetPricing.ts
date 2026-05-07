@@ -15,6 +15,7 @@ import { IKE_DATA } from '../CSV/IKE';
 import { OMF_OPEN_DATA } from '../CSV/OMFopen';
 import { OMF_CLOSED_DATA } from '../CSV/OMFclosed';
 import { CASH_DATA } from '../CSV/Cash';
+import { TURTLE_TRANSACTIONS_DATA } from '../CSV/TurtleTransactions';
 
 interface UseAssetPricingProps {
   portfolioType: PortfolioType;
@@ -61,7 +62,7 @@ export const useAssetPricing = ({ portfolioType, onlinePrices, historyPrices, di
         const closedRes = parseCSV(csvSources.OMF_CLOSED, 'OMF', 'Offline');
         const omfClosedRows = closedRes.data as OMFDataRow[];
 
-        // --- Revaluation Logic ---
+        // --- Revaluation Logic for all rows ---
         omfOpenRows = omfOpenRows.map(row => {
             if (row.status !== 'Otwarta' && row.status !== 'Gotówka') return row;
 

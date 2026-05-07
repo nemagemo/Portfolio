@@ -169,7 +169,7 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
   const currentRoi = stats.currentRoi || 0;
 
   // Helper for rendering simple stat blocks
-  const SimpleStatBlock = ({ title, value, sub, icon: Icon, colorClass }: { title: string, value: string, sub: string, icon: any, colorClass: string }) => (
+  const SimpleStatBlock = ({ title, value, sub, icon: Icon, colorClass }: { title: string, value: React.ReactNode, sub: string, icon: any, colorClass: string }) => (
     <div className={`h-[76px] p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
       <div className="flex justify-between items-start mb-0.5">
         <div className={`text-[10px] sm:text-xs uppercase font-bold ${colorClass}`}>
@@ -318,8 +318,17 @@ export const StandardDashboard: React.FC<StandardDashboardProps> = ({
                   {portfolioType === 'IKE' ? (
                     <SimpleStatBlock 
                         title="Tarcza Podatkowa" 
-                        value={`${(stats.taxSaved || 0).toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł`}
-                        sub="Zaoszczędzone"
+                        value={(
+                          <div className="flex items-baseline gap-1">
+                            <span>{(stats.taxSaved || 0).toLocaleString('pl-PL', { maximumFractionDigits: 0 })}</span>
+                            <span className="text-xs text-slate-400 font-normal">/</span>
+                            <span className={`text-base font-medium opacity-50 ${isNeon ? 'text-rose-500/70 border-rose-900/30' : 'text-slate-500 border-slate-300'} border-b border-dashed`}>
+                              {Math.round(stats.unrealizedTaxSaved || 0).toLocaleString('pl-PL')} 
+                            </span>
+                            <span className="text-[10px] ml-0.5 text-slate-400 font-normal">zł</span>
+                          </div>
+                        )}
+                        sub="Aktualne / Teoret."
                         icon={IconTaxShield}
                         colorClass={isNeon ? 'text-rose-400' : 'text-slate-400'}
                     />

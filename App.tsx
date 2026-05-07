@@ -9,6 +9,7 @@ import { useChartTransformations } from './hooks/useChartTransformations';
 import { DataStatus, OMFIntegrityStatus } from './components/StatusCards';
 import { StandardDashboard } from './components/dashboards/StandardDashboard';
 import { OMFDashboard } from './components/dashboards/OMFDashboard';
+import { TurtleDashboard } from './components/dashboards/TurtleDashboard';
 import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
 import { MobileNotice } from './components/MobileNotice';
@@ -84,7 +85,7 @@ export const App: React.FC = () => {
     setShowTaxComparison(false);
   };
 
-  const isOfflineValid = (portfolioType === 'OMF' && omfReport?.isConsistent) || (portfolioType !== 'OMF' && report?.isValid);
+  const isOfflineValid = (portfolioType === 'OMF' && omfReport?.isConsistent) || (portfolioType !== 'OMF' && portfolioType !== 'TURTLE' && report?.isValid);
 
   return (
     <div className={`flex flex-col min-h-screen ${styles.appBg} ${styles.text} transition-colors duration-300`}>
@@ -101,7 +102,7 @@ export const App: React.FC = () => {
       />
 
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full relative">
-        {!isOfflineValid && (
+        {(!isOfflineValid && portfolioType !== 'TURTLE') && (
            <>
              {portfolioType === 'OMF' && omfReport && <OMFIntegrityStatus report={omfReport} theme={theme} />}
              {portfolioType !== 'OMF' && report && <DataStatus report={report} theme={theme} />}
@@ -121,6 +122,12 @@ export const App: React.FC = () => {
             omfStructureData={omfStructureData} heatmapHistoryData={heatmapHistoryData}
             investmentDurationMonths={investmentDurationMonths}
           />
+        ) : portfolioType === 'TURTLE' ? (
+            <TurtleDashboard 
+              theme={theme} 
+              activeAssets={omfActiveAssets} 
+              closedAssets={omfClosedAssets} 
+            />
         ) : (
           <StandardDashboard 
             portfolioType={portfolioType} stats={stats} data={data} dividends={dividends} theme={theme}
@@ -139,5 +146,6 @@ export const App: React.FC = () => {
     </div>
   );
 };
+
 
 export default App;
