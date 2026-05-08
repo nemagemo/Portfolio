@@ -212,68 +212,106 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
         </div>
       </div>
 
-      {/* Race Track Section */}
-      <div className={`${styles.cardBg} ${styles.cardBorder} p-10 rounded-3xl shadow-xl border border-slate-200 overflow-hidden relative`}>
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-50 via-white to-slate-100 opacity-50" />
+      {/* Turtle Grand Prix - New Horizontal Race Design */}
+      <div className={`${styles.cardBg} ${styles.cardBorder} p-12 rounded-[40px] shadow-2xl border border-slate-200 overflow-hidden relative`}>
+        {/* Stadium Background Elements */}
+        <div className="absolute inset-0 bg-slate-50/30" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 blur-[100px] rounded-full" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/5 blur-[100px] rounded-full" />
+        
         <div className="relative z-10">
-          <div className="flex items-center justify-between mb-10">
-            <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
-              <Trophy className="text-amber-500 fill-amber-200" size={28} /> Wyścig Żółwi
-            </h2>
-          </div>
-          
-          <div className="space-y-4 relative py-4 px-4">
-            <div className="absolute inset-0 flex justify-between pointer-events-none px-4">
-              {[ -20, -10, 0, 10, 20, 30, 40 ].map((roi) => (
-                <div key={roi} className="flex flex-col items-center h-full">
-                  <div className={`w-px h-full ${roi === 0 ? 'bg-slate-400 w-0.5' : 'bg-slate-200'} border-dashed`} />
-                  <span className={`text-[9px] font-bold mt-2 ${roi === 0 ? 'text-slate-900' : 'text-slate-400'}`}>{roi}%</span>
-                </div>
-              ))}
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-[10px] font-black uppercase tracking-widest mb-3">
+                <Trophy size={12} className="fill-amber-700" /> Live Championship
+              </div>
+              <h2 className="text-3xl font-black text-slate-900 tracking-tighter">Grand Prix Żółwi</h2>
             </div>
+          </div>
+
+          <div className="relative space-y-1">
+            {/* The Track Base */}
+            <div className="absolute inset-y-0 left-0 w-1 bg-slate-900 rounded-full z-20" /> {/* Start Line */}
+            <div className="absolute inset-y-0 right-0 w-2 bg-[repeating-linear-gradient(45deg,#000,#000_10px,#fff_10px,#fff_20px)] z-20 shadow-lg" /> {/* Finish Line */}
 
             {turtles.map((turtle, index) => {
               const isActive = turtle.isActive;
-              // Position: map -20% to 40% left. 
-              const normalizedPos = Math.max(0, Math.min(100, ((turtle.roi + 20) / 60) * 100));
-              const isLeader = index === 0 && isActive;
-              const isLoss = turtle.roi < 0 && isActive;
-
+              
+              // Dynamic scale calculation:
+              // We find the min and max ROIs to determine the track boundaries.
+              // We default to -20 and +40 to keep the view consistent for normal values.
+              const allRois = turtles.map(t => t.roi);
+              const minScale = Math.min(-20, ...allRois);
+              const maxScale = Math.max(40, ...allRois);
+              const range = maxScale - minScale;
+              
+              const progress = Math.max(0, Math.min(100, ((turtle.roi - minScale) / range) * 100));
+              const isPositive = turtle.roi >= 0;
+              
               return (
-                <div key={turtle.id} className="relative h-14 group/lane transition-all duration-300">
-                  <div className={`absolute inset-x-0 top-1/2 -translate-y-1/2 h-8 ${isLoss ? 'bg-rose-50 animate-pulse' : 'bg-slate-50/50'} rounded-xl border border-slate-100`} />
-                  <motion.div 
-                    animate={{ left: `${normalizedPos}%` }}
-                    style={{ x: '-50%' }}
-                    transition={{ 
-                      duration: 2.5, 
-                      type: 'spring',
-                      stiffness: 40,
-                      damping: 12
-                    }}
-                    className="absolute top-1/2 -translate-y-1/2 z-20 flex items-center gap-3"
-                  >
-                    <div className="relative">
-                      {!isActive && (
-                        <motion.div animate={{ opacity: [0.6, 1, 0.6], y: [0, -8, 0] }} transition={{ duration: 2, repeat: Infinity }} className="absolute -right-6 -top-8 text-slate-600 bg-white/80 backdrop-blur-sm px-1.5 py-0.5 rounded-full border border-slate-200">
-                          <Moon size={10} className="mr-0.5 fill-slate-300" />
-                          <span className="text-[14px] font-black tracking-widest leading-none">ZZZ</span>
-                        </motion.div>
-                      )}
-                      <div className="p-2 rounded-2xl shadow-lg bg-white border-2" style={{ borderColor: turtle.color, transform: isLoss ? 'scaleX(-1)' : 'none' }}>
-                        <Turtle size={28} style={{ color: turtle.color }} className={isActive ? 'animate-bounce' : 'opacity-40'} />
-                      </div>
+                <div key={`gp-${turtle.id}`} className="relative h-14 group/gp-lane border-y border-slate-100/50">
+                  {/* Lane Background */}
+                  <div className="absolute inset-0 bg-white flex items-center transition-colors group-hover/gp-lane:bg-slate-50/50">
+                    <div className="w-16 pl-4 h-full flex items-center justify-start border-r border-slate-200/50 bg-slate-50 text-[10px] font-black text-slate-300 italic group-hover/gp-lane:text-indigo-400 group-hover/gp-lane:bg-indigo-50/30 transition-colors">
+                      LANE {String(index + 1).padStart(2, '0')}
                     </div>
-                    <div className="hidden md:flex flex-col">
-                      <span className="text-[10px] font-black text-slate-800 leading-none">{turtle.name}</span>
-                      <span className={`text-[10px] font-bold ${!isActive ? 'text-slate-400' : turtle.roi >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                        {turtle.roi.toFixed(1)}%
-                      </span>
+                  </div>
+
+                  {/* Turtle Movable Unit */}
+                  <motion.div
+                    animate={{ left: `${progress}%` }}
+                    style={{ x: '-50%' }}
+                    transition={{ duration: 2.5, type: 'spring', stiffness: 35, damping: 15 }}
+                    className="absolute top-0 bottom-0 z-30 flex items-center gap-4 pl-16"
+                  >
+                    {/* Shadow / Tail effect */}
+                    <div className={`absolute -left-20 right-0 h-0.5 opacity-20 bg-gradient-to-r from-transparent to-current transition-opacity group-hover/gp-lane:opacity-40`} style={{ color: turtle.color }} />
+                    
+                    <div className="relative flex items-center">
+                       {/* Turtle Badge */}
+                       <div 
+                         className={`relative p-2.5 rounded-2xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] border-2 transition-all duration-500 group-hover/gp-lane:rotate-6 ${!isActive ? 'grayscale opacity-40' : ''}`}
+                         style={{ borderColor: turtle.color }}
+                       >
+                         {!isActive && (
+                           <div className="absolute -right-3 -top-3 bg-indigo-100 text-indigo-600 rounded-full p-1 border-2 border-white shadow-sm">
+                             <Moon size={10} className="fill-indigo-300" />
+                           </div>
+                         )}
+                         <Turtle size={24} style={{ color: turtle.color }} className={isActive ? 'animate-bounce' : ''} />
+                       </div>
+
+                       {/* Data Bubble */}
+                       <div className="ml-3 pointer-events-none transition-all duration-500 translate-y-0 group-hover/gp-lane:-translate-y-1">
+                         <div className="flex flex-col">
+                           <span className="text-xs font-black text-slate-900 tracking-tight flex items-center gap-2">
+                             {turtle.name}
+                             {isActive && (
+                               <img src={getFlagUrl(turtle.currentStock)} alt="" className="w-3 h-2.5 object-cover rounded shadow-sm" />
+                             )}
+                           </span>
+                           <span className={`text-[10px] font-bold ${isPositive ? 'text-emerald-500' : 'text-rose-500'} flex items-center gap-1`}>
+                             {isPositive ? '▲' : '▼'} {Math.abs(turtle.roi).toFixed(2)}%
+                           </span>
+                         </div>
+                       </div>
                     </div>
                   </motion.div>
                 </div>
               );
             })}
+          </div>
+
+          {/* Scale Legend */}
+          <div className="mt-12 pt-6 border-t border-slate-100 flex items-center justify-end">
+            <div className="flex items-center gap-3">
+               <span className="text-[10px] font-black text-slate-800 uppercase italic">Progresja Metaforyczna</span>
+               <div className="flex gap-0.5">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="w-1.5 h-1.5 rounded-full bg-slate-200" />
+                  ))}
+               </div>
+            </div>
           </div>
         </div>
       </div>
@@ -378,6 +416,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
                   <tr className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">
                     <th className="px-6 py-3">Data</th>
                     <th className="px-6 py-3">Żółw</th>
+                    <th className="px-6 py-3">Typ</th>
                     <th className="px-6 py-3">Symbol</th>
                     <th className="px-6 py-3">Ilość</th>
                     <th className="px-6 py-3 text-right">Koszt / Wartość</th>
@@ -389,6 +428,11 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
                     <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
                       <td className="px-6 py-4 text-xs font-mono text-slate-500">{t.lastPurchaseDate}</td>
                       <td className="px-6 py-4 text-sm font-bold text-slate-900">{t.sector}</td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${t.status === 'Otwarta' ? 'bg-blue-50 text-blue-700' : 'bg-orange-50 text-orange-700'}`}>
+                          {t.status === 'Otwarta' ? 'Kupno' : 'Sprzedaż'}
+                        </span>
+                      </td>
                       <td className="px-6 py-4 text-sm font-bold text-blue-600 text-left">{t.symbol}</td>
                       <td className="px-6 py-4 text-sm font-mono text-slate-600">{(t.quantity || 0).toFixed(4)}</td>
                       <td className="px-6 py-4 text-right">

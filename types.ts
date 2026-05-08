@@ -136,6 +136,7 @@ export interface TurtleTransactionRow {
   symbol: string;
   quantity: number;
   cost: number;
+  type: string;
 }
 
 // Union type for general usage in generic Tables/Charts

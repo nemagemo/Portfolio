@@ -67,13 +67,13 @@ const getColorClass = (val: number | null, themeMode: string = 'light') => {
   }
 
   // Standard Light Logic
-  if (val >= 10) return 'bg-emerald-500 text-white font-bold';
-  if (val >= 5) return 'bg-emerald-400 text-white font-semibold';
+  if (val >= 10) return 'bg-emerald-500 text-white font-semibold';
+  if (val >= 5) return 'bg-emerald-400 text-white font-medium';
   if (val >= 2) return 'bg-emerald-300 text-emerald-900';
   if (val > 0) return 'bg-emerald-100 text-emerald-800';
   
-  if (val <= -10) return 'bg-rose-500 text-white font-bold';
-  if (val <= -5) return 'bg-rose-400 text-white font-semibold';
+  if (val <= -10) return 'bg-rose-500 text-white font-semibold';
+  if (val <= -5) return 'bg-rose-400 text-white font-medium';
   if (val <= -2) return 'bg-rose-300 text-rose-900';
   return 'bg-rose-100 text-rose-800';
 };
@@ -177,12 +177,12 @@ export const ReturnsHeatmap: React.FC<HeatmapProps> = ({ data, themeMode = 'ligh
   const isComic = themeMode === 'comic';
   const isDark = themeMode === 'dark';
 
-  let headerClass = "text-slate-500 font-semibold";
+  let headerClass = "text-slate-500 font-medium";
   if (isNeon) headerClass = "text-cyan-400 font-mono tracking-wider";
   if (isComic) headerClass = "text-white font-black uppercase";
   if (isDark) headerClass = "text-slate-400 font-medium";
 
-  let rowYearClass = "text-slate-900 font-bold";
+  let rowYearClass = "text-slate-900 font-semibold";
   if (isNeon) rowYearClass = "text-cyan-100 font-bold font-mono";
   if (isComic) rowYearClass = "text-white font-black";
   if (isDark) rowYearClass = "text-slate-200 font-bold";
@@ -251,19 +251,19 @@ export const ReturnsHeatmap: React.FC<HeatmapProps> = ({ data, themeMode = 'ligh
               <td></td>
 
               {quarters.map((q, i) => (
-                 <td key={i} className="p-0.5 lg:p-1">
-                    <div className={`w-full h-full flex items-center justify-center rounded py-0.5 font-bold ${getColorClass(q, themeMode)}`}>
-                        {formatPercent(q)}
-                    </div>
-                 </td>
+                <td key={i} className="p-0.5 lg:p-1">
+                  <div className={`w-full h-full flex items-center justify-center rounded py-0.5 font-semibold ${getColorClass(q, themeMode)}`}>
+                    {formatPercent(q)}
+                  </div>
+                </td>
               ))}
 
               <td></td>
 
               <td className="p-0.5 lg:p-1">
-                 <div className={`w-full h-full flex items-center justify-center rounded py-0.5 font-black border ${getYearCellClass()} ${getColorClass(yRet, themeMode)}`}>
-                    {formatPercent(yRet)}
-                 </div>
+                <div className={`w-full h-full flex items-center justify-center rounded py-0.5 font-bold border ${getYearCellClass()} ${getColorClass(yRet, themeMode)}`}>
+                  {formatPercent(yRet)}
+                </div>
               </td>
             </tr>
           ))}
