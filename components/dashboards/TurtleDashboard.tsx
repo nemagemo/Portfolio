@@ -147,7 +147,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
             <motion.div whileHover={{ x: 10 }} className="flex items-center gap-4 text-right justify-end">
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Suma Wkładu</p>
-                <p className="text-2xl font-black text-slate-900">{totalCapital.toLocaleString('pl-PL')} zł</p>
+                <p className="text-2xl font-black text-slate-900">{totalCapital.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł</p>
               </div>
               <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl shadow-inner"><Wallet size={24} /></div>
             </motion.div>
@@ -155,7 +155,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
             <motion.div whileHover={{ x: 10 }} className="flex items-center gap-4 text-right justify-end">
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Wartość Portfela</p>
-                <p className="text-2xl font-black text-slate-900">{totalValue.toLocaleString('pl-PL', { minimumFractionDigits: 2 })} zł</p>
+                <p className="text-2xl font-black text-slate-900">{totalValue.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł</p>
               </div>
               <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl shadow-inner"><Target size={24} /></div>
             </motion.div>
@@ -196,7 +196,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Zysk Całkowity</p>
                 <p className={`text-2xl font-black ${totalProfit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                  {totalProfit >= 0 ? '+' : ''}{totalProfit.toLocaleString('pl-PL', { minimumFractionDigits: 2 })} zł
+                  {totalProfit >= 0 ? '+' : ''}{totalProfit.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł
                 </p>
               </div>
             </motion.div>
@@ -253,7 +253,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
                   {/* Lane Background */}
                   <div className="absolute inset-0 bg-white flex items-center transition-colors group-hover/gp-lane:bg-slate-50/50">
                     <div className="w-16 pl-4 h-full flex items-center justify-start border-r border-slate-200/50 bg-slate-50 text-[10px] font-black text-slate-300 italic group-hover/gp-lane:text-indigo-400 group-hover/gp-lane:bg-indigo-50/30 transition-colors">
-                      LANE {String(index + 1).padStart(2, '0')}
+                      TOR {String(index + 1).padStart(2, '0')}
                     </div>
                   </div>
 
@@ -327,8 +327,8 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
               <tr className="text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-50/30">
                 <th className="px-6 py-3">Poz.</th>
                 <th className="px-6 py-3">Żółw</th>
-                <th className="px-6 py-3">Portfel / Akcje</th>
-                <th className="px-6 py-3 text-right">Kapitał Liniowy</th>
+                <th className="px-6 py-3">Aktualna pozycja</th>
+                <th className="px-6 py-3 text-right">Kapitał Początkowy</th>
                 <th className="px-6 py-3 text-right">Wycena</th>
                 <th className="px-6 py-3 text-right">Zysk</th>
                 <th className="px-6 py-3 text-right">ROI</th>
@@ -436,7 +436,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
                       <td className="px-6 py-4 text-sm font-bold text-blue-600 text-left">{t.symbol}</td>
                       <td className="px-6 py-4 text-sm font-mono text-slate-600">{(t.quantity || 0).toFixed(4)}</td>
                       <td className="px-6 py-4 text-right">
-                        <span className="text-sm font-black text-slate-900">{t.purchaseValue.toLocaleString('pl-PL')} zł</span>
+                        <span className="text-sm font-black text-slate-900">{t.purchaseValue.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł</span>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <span className={`px-2 py-1 rounded text-[10px] font-bold ${t.status === 'Otwarta' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
