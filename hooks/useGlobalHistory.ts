@@ -9,7 +9,7 @@ import { PPK_DATA } from '../CSV/PPK';
 import { KRYPTO_DATA } from '../CSV/Krypto';
 import { IKE_DATA } from '../CSV/IKE';
 import { CASH_DATA } from '../CSV/Cash';
-import { TURTLE_TRANSACTIONS_DATA } from '../CSV/TurtleTransactions';
+import { TRANSACTIONS_DATA } from '../CSV/Transactions';
 import { TurtleTransactionRow } from '../types';
 
 interface UseGlobalHistoryProps {
@@ -42,7 +42,7 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
     const cryptoData = parseCSV(KRYPTO_DATA, 'CRYPTO', 'Offline').data as CryptoDataRow[];
     const ikeData = parseCSV(IKE_DATA, 'IKE', 'Offline').data as IKEDataRow[];
     const cashData = parseCSV(CASH_DATA, 'CASH', 'Offline').data as CashDataRow[];
-    const turtleTransactions = parseCSV(TURTLE_TRANSACTIONS_DATA, 'TURTLE', 'Offline').data as TurtleTransactionRow[];
+    const turtleTransactions = parseCSV(TRANSACTIONS_DATA, 'TURTLE', 'Offline').data as TurtleTransactionRow[];
 
     // Map Lookups for faster access by Date
     const createMap = (arr: any[]) => new Map<string, { inv: number, profit: number }>(

@@ -43,8 +43,6 @@ export const MobileNotice: React.FC<MobileNoticeProps> = ({ theme }) => {
 
   if (!shouldRender) return null;
 
-  const isNeon = (theme as string) === 'neon';
-
   return (
     <div 
       className={`
@@ -54,37 +52,25 @@ export const MobileNotice: React.FC<MobileNoticeProps> = ({ theme }) => {
       `}
     >
       <div 
-        className={`
-          flex items-start p-4 rounded-xl shadow-2xl border backdrop-blur-md relative
-          ${isNeon 
-            ? 'bg-black/80 border-cyan-500/50 text-cyan-50 shadow-[0_0_20px_rgba(6,182,212,0.2)]' 
-            : 'bg-white/95 border-slate-200 text-slate-800 shadow-slate-200/50'
-          }
-        `}
+        className="flex items-start p-4 rounded-xl shadow-2xl border backdrop-blur-md relative bg-white/95 border-slate-200 text-slate-800 shadow-slate-200/50"
       >
         {/* Icon */}
-        <div className={`p-2 rounded-lg mr-3 shrink-0 ${isNeon ? 'bg-cyan-900/30 text-cyan-400' : 'bg-slate-100 text-slate-600'}`}>
+        <div className="p-2 rounded-lg mr-3 shrink-0 bg-slate-100 text-slate-600">
           <Monitor size={20} />
         </div>
 
         {/* Content */}
         <div className="flex-1 mr-2">
-          <h4 className={`text-sm font-bold mb-1 ${isNeon ? 'text-cyan-300' : 'text-slate-900'}`}>
+          <h4 className="text-sm font-bold mb-1 text-slate-900">
             Tryb Mobilny
           </h4>
-          <p className={`text-xs leading-relaxed ${isNeon ? 'text-cyan-100/80' : 'text-slate-500'}`}>
+          <p className="text-xs leading-relaxed text-slate-500">
             Widzisz uproszczoną wersję OMF. Pełne wersja dostępna tylko na komputerze.
           </p>
           
           <button 
             onClick={handleDismiss}
-            className={`
-                mt-3 px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all w-full sm:w-auto
-                ${isNeon 
-                    ? 'bg-cyan-900/30 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-800/50' 
-                    : 'bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200'
-                }
-            `}
+            className="mt-3 px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all w-full sm:w-auto bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200"
           >
             Rozumiem
           </button>
@@ -93,10 +79,7 @@ export const MobileNotice: React.FC<MobileNoticeProps> = ({ theme }) => {
         {/* Close Button */}
         <button 
           onClick={handleDismiss}
-          className={`
-            absolute top-2 right-2 p-1 rounded-full transition-colors
-            ${isNeon ? 'text-cyan-700 hover:text-cyan-400 hover:bg-cyan-900/30' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100'}
-          `}
+          className="absolute top-2 right-2 p-1 rounded-full transition-colors text-slate-400 hover:text-slate-700 hover:bg-slate-100"
         >
           <X size={16} />
         </button>

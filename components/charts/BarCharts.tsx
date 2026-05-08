@@ -188,8 +188,6 @@ export const DividendChart: React.FC<DividendChartProps> = ({ data, themeMode = 
             dataKey="value" 
             name="Dywidendy" 
             fill={t.barProfitPos} 
-            stroke={(themeMode as string) === 'comic' ? '#000' : undefined} 
-            strokeWidth={(themeMode as string) === 'comic' ? 2 : 0}
             radius={[4, 4, 0, 0]}
           >
             <LabelList 

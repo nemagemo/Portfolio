@@ -109,7 +109,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">Strategia Żółwia</h1>
-          <p className="text-slate-500 mt-1">Eksperymentalny portfel 10 żółwi inwestujących po 100 zł (IKE).</p>
+          <p className="text-slate-500 mt-1">Eksperymentalny portfel oparty na strategii Żółwia.</p>
         </div>
       </div>
 

@@ -459,19 +459,21 @@ const parseTurtles = (lines: string[], source: 'Online' | 'Offline'): { data: An
   const data: TurtleTransactionRow[] = [];
   
   const headers = splitCSVLine(lines[0]).map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
-  const colMap: Record<string, number> = { date: -1, turtle: -1, symbol: -1, quantity: -1, cost: -1 };
+  const colMap: Record<string, number> = { date: -1, turtle: -1, symbol: -1, quantity: -1, cost: -1, portfel: -1, type: -1 };
   
   headers.forEach((h, index) => {
     if (h.includes('data')) colMap.date = index;
-    else if (h.includes('żółw') || h.includes('zolw') || h.includes('turtle')) colMap.turtle = index;
+    else if (h.includes('szczegóły') || h.includes('szczegoly') || h.includes('uwagi') || h.includes('żółw') || h.includes('turtle')) colMap.turtle = index;
+    else if (h.includes('portfel')) colMap.portfel = index;
+    else if (h.includes('typ')) colMap.type = index;
     else if (h.includes('symbol') || h.includes('ticker')) colMap.symbol = index;
     else if (h.includes('ilość') || h.includes('ilosc')) colMap.quantity = index;
     else if (h.includes('koszt')) colMap.cost = index;
   });
   
-  if (colMap.date === -1 || colMap.turtle === -1 || colMap.symbol === -1 || colMap.quantity === -1 || colMap.cost === -1) {
+  if (colMap.date === -1 || colMap.symbol === -1 || colMap.quantity === -1 || colMap.cost === -1) {
     report.isValid = false;
-    report.errors.push(`[TURTLE] Brak wymaganych kolumn: Data, Żółw, Symbol, Ilość, Koszt`);
+    report.errors.push(`[TURTLE] Brak wymaganych kolumn: Data, Symbol, Ilość, Koszt`);
     return { data: [], report };
   }
   report.checks.structure = true;
@@ -482,17 +484,24 @@ const parseTurtles = (lines: string[], source: 'Online' | 'Offline'): { data: An
     report.stats.totalRows++;
     const row = splitCSVLine(line).map(cell => cell.replace(/^"|"$/g, '').trim());
 
+    // Filter only Żółwie
+    if (colMap.portfel !== -1 && row[colMap.portfel] !== 'Żółwie') continue;
+
     const dateStr = row[colMap.date];
     const dateObj = new Date(dateStr);
     if (isNaN(dateObj.getTime())) continue;
 
+    const turtleVal = colMap.turtle !== -1 ? row[colMap.turtle] : 'Unknown';
+    const typeVal = colMap.type !== -1 ? row[colMap.type] : 'Kupno';
+
     data.push({
       date: dateStr,
       dateObj,
-      turtle: row[colMap.turtle],
+      turtle: turtleVal,
       symbol: row[colMap.symbol].toUpperCase(),
       quantity: parseFloatStr(row[colMap.quantity]),
-      cost: parseCurrency(row[colMap.cost])
+      cost: parseCurrency(row[colMap.cost]),
+      type: typeVal
     });
   }
 

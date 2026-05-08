@@ -10,7 +10,7 @@ interface HistoryRow {
 
 interface HeatmapProps {
   data: HistoryRow[];
-  themeMode?: 'light' | 'comic' | 'neon' | 'dark';
+  themeMode?: 'light';
 }
 
 const formatPercent = (val: number | null) => {
@@ -20,50 +20,15 @@ const formatPercent = (val: number | null) => {
 
 const calculateMonthlyReturn = (startVal: number, endVal: number, netFlow: number) => {
   const gain = endVal - startVal - netFlow;
-  // Modified Dietz approximation: assuming flows happen mid-month is standard, 
-  // but here we use Simple Dietz (start + flow) as denominator. 
-  // To be safe against massive ROI spikes on new accounts, ensure denom > 0.
-  
   const denominator = startVal + netFlow; 
   
   if (denominator <= 0) return 0;
   return (gain / denominator) * 100;
 };
 
-const getColorClass = (val: number | null, themeMode: string = 'light') => {
-  const isNeon = themeMode === 'neon';
-  const isComic = themeMode === 'comic';
-  const isDark = themeMode === 'dark';
-
+const getColorClass = (val: number | null) => {
   if (val === null || val === undefined) {
-      if (isNeon) return 'bg-[#111] text-[#333] font-mono';
-      if (isComic) return 'bg-black text-zinc-700 font-bold';
-      if (isDark) return 'bg-slate-800 text-slate-700';
       return 'bg-slate-50 text-slate-300';
-  }
-
-  if (isNeon) {
-      // Neon Logic: Revised to use Emerald/Rose palette for better text readability
-      if (val >= 10) return 'bg-[#064e3b] text-emerald-400 font-bold font-mono border border-emerald-500/30';
-      if (val >= 0) return 'bg-[#064e3b]/50 text-emerald-400 font-mono border border-emerald-500/20';
-      
-      // Negative: Use Rose/Pink for clear visibility on dark
-      if (val <= -10) return 'bg-[#881337] text-rose-400 font-bold font-mono border border-rose-500/30';
-      return 'bg-[#881337]/50 text-rose-400 font-mono border border-rose-500/20';
-  }
-
-  if (isComic) {
-      if (val >= 10) return 'bg-green-600 text-black font-black border-2 border-black';
-      if (val >= 0) return 'bg-green-800 text-white font-bold border border-white/20';
-      if (val <= -10) return 'bg-red-600 text-white font-black border-2 border-white';
-      return 'bg-red-900 text-white font-bold border border-white/20';
-  }
-
-  if (isDark) {
-      if (val >= 10) return 'bg-emerald-900 text-emerald-100 font-bold border border-emerald-800';
-      if (val >= 0) return 'bg-emerald-900/40 text-emerald-200 font-medium';
-      if (val <= -10) return 'bg-rose-900 text-rose-100 font-bold border border-rose-800';
-      return 'bg-rose-900/40 text-rose-200 font-medium';
   }
 
   // Standard Light Logic
@@ -78,7 +43,7 @@ const getColorClass = (val: number | null, themeMode: string = 'light') => {
   return 'bg-rose-100 text-rose-800';
 };
 
-export const ReturnsHeatmap: React.FC<HeatmapProps> = ({ data, themeMode = 'light' }) => {
+export const ReturnsHeatmap: React.FC<HeatmapProps> = ({ data }) => {
   const years = useMemo(() => {
     if (data.length === 0) return [];
     
@@ -94,16 +59,7 @@ export const ReturnsHeatmap: React.FC<HeatmapProps> = ({ data, themeMode = 'ligh
     const result = [];
     for (let y = endYear; y >= startYear; y--) {
       const months = [];
-      let yearStartVal = 0;
       let yearEndVal = 0;
-      let yearFlow = 0;
-
-      // Get Year Start Value (December of prev year)
-      const prevDecKey = `${y - 1}-12`;
-      const prevDec = dataMap.get(prevDecKey);
-      if (prevDec) {
-          yearStartVal = prevDec.totalValue ?? (prevDec.investment + prevDec.profit);
-      }
 
       for (let m = 1; m <= 12; m++) {
         const mStr = String(m).padStart(2, '0');
@@ -125,14 +81,11 @@ export const ReturnsHeatmap: React.FC<HeatmapProps> = ({ data, themeMode = 'ligh
            if (prev) {
                const prevVal = prev.totalValue ?? (prev.investment + prev.profit);
                const flow = curr.investment - prev.investment;
-               yearFlow += flow;
                ret = calculateMonthlyReturn(prevVal, currVal, flow);
            } else {
                // First month ever?
                if (curr.investment > 0) {
                    ret = (curr.profit / curr.investment) * 100;
-                   yearFlow += curr.investment;
-                   if (m === 12) yearEndVal = currVal; // Edge case single month year
                }
            }
         }
@@ -147,8 +100,6 @@ export const ReturnsHeatmap: React.FC<HeatmapProps> = ({ data, themeMode = 'ligh
           const m3 = months[q*3+2];
           
           let qRet: number | null = null;
-          // Simple compounding for approximation or linking if available
-          // Here we do simple linking: (1+r1)(1+r2)(1+r3) - 1
           if (m1 !== null || m2 !== null || m3 !== null) {
               let prod = 1;
               if (m1 !== null) prod *= (1 + m1/100);
@@ -161,8 +112,6 @@ export const ReturnsHeatmap: React.FC<HeatmapProps> = ({ data, themeMode = 'ligh
 
       // Calculate Year Return
       let yRet: number | null = null;
-      // If we have valid start and end points
-      // However, dataMap might be sparse. Let's use geometric linking of all available months.
       const validMonths = months.filter(m => m !== null) as number[];
       if (validMonths.length > 0) {
           yRet = (validMonths.reduce((acc, r) => acc * (1 + r/100), 1) - 1) * 100;
@@ -173,53 +122,15 @@ export const ReturnsHeatmap: React.FC<HeatmapProps> = ({ data, themeMode = 'ligh
     return result;
   }, [data]);
 
-  const isNeon = themeMode === 'neon';
-  const isComic = themeMode === 'comic';
-  const isDark = themeMode === 'dark';
-
-  let headerClass = "text-slate-500 font-medium";
-  if (isNeon) headerClass = "text-cyan-400 font-mono tracking-wider";
-  if (isComic) headerClass = "text-white font-black uppercase";
-  if (isDark) headerClass = "text-slate-400 font-medium";
-
-  let rowYearClass = "text-slate-900 font-semibold";
-  if (isNeon) rowYearClass = "text-cyan-100 font-bold font-mono";
-  if (isComic) rowYearClass = "text-white font-black";
-  if (isDark) rowYearClass = "text-slate-200 font-bold";
-
-  let borderClass = "border-b border-slate-200";
-  if (isNeon) borderClass = "border-b border-cyan-900/30";
-  if (isComic) borderClass = "border-b-2 border-white";
-  if (isDark) borderClass = "border-b border-slate-700";
-
-  let bgClass = "bg-white border-slate-100";
-  if (isNeon) bgClass = "bg-black/40 border-cyan-900/30";
-  if (isComic) bgClass = "bg-black border-2 border-white";
-  if (isDark) bgClass = "bg-slate-800 border-slate-700";
-
-  const getQuarterHeaderClass = () => {
-      if (isNeon) return 'text-purple-400 font-mono';
-      if (isComic) return 'text-yellow-400 font-black bg-black border border-white';
-      if (isDark) return 'text-slate-300 font-bold bg-slate-800';
-      return 'text-slate-500 font-bold bg-slate-50';
-  }
-
-  const getYearHeaderClass = () => {
-      if (isNeon) return 'text-yellow-400 font-bold font-mono';
-      if (isComic) return 'text-white font-black bg-red-600 border border-white';
-      if (isDark) return 'text-slate-100 font-bold bg-slate-800';
-      return 'text-slate-900 font-bold bg-slate-100';
-  }
-
-  const getYearCellClass = () => {
-      if (isNeon) return 'border-yellow-500/30';
-      if (isComic) return 'border-2 border-white';
-      if (isDark) return 'border-slate-600';
-      return 'border-slate-300';
-  }
+  const headerClass = "text-slate-500 font-medium";
+  const rowYearClass = "text-slate-900 font-semibold";
+  const borderClass = "border-b border-slate-200";
+  const getQuarterHeaderClass = () => 'text-slate-500 font-bold bg-slate-50';
+  const getYearHeaderClass = () => 'text-slate-900 font-bold bg-slate-100';
+  const getYearCellClass = () => 'border-slate-300';
 
   return (
-    <div className={`overflow-x-auto ${isNeon ? 'bg-black/20' : ''}`}>
+    <div className="overflow-x-auto">
       <table className="w-full border-collapse text-center">
         <thead>
           <tr className={`text-[9px] md:text-[10px] lg:text-xs ${borderClass}`}>
@@ -235,14 +146,14 @@ export const ReturnsHeatmap: React.FC<HeatmapProps> = ({ data, themeMode = 'ligh
             <th className={`p-1 md:py-1 lg:py-2 ${getYearHeaderClass()}`}>Y</th>
           </tr>
         </thead>
-        <tbody className={`text-[8px] md:text-[8px] lg:text-[10px]`}>
+        <tbody className="text-[8px] md:text-[8px] lg:text-[10px]">
           {years.map(({ year, months, quarters, yRet }) => (
-            <tr key={year} className={`h-6 lg:h-8 ${isNeon ? 'border-b border-cyan-900/10' : (isComic ? 'border-b border-white/20' : (isDark ? 'border-b border-slate-800' : 'border-b border-slate-50'))}`}>
+            <tr key={year} className="h-6 lg:h-8 border-b border-slate-50">
               <td className={`text-left p-1 ${rowYearClass}`}>{year}</td>
               
               {months.map((m, i) => (
                 <td key={i} className="p-0.5 lg:p-1">
-                  <div className={`w-full h-full flex items-center justify-center rounded py-0.5 ${getColorClass(m, themeMode)}`}>
+                  <div className={`w-full h-full flex items-center justify-center rounded py-0.5 ${getColorClass(m)}`}>
                     {formatPercent(m)}
                   </div>
                 </td>
@@ -252,7 +163,7 @@ export const ReturnsHeatmap: React.FC<HeatmapProps> = ({ data, themeMode = 'ligh
 
               {quarters.map((q, i) => (
                 <td key={i} className="p-0.5 lg:p-1">
-                  <div className={`w-full h-full flex items-center justify-center rounded py-0.5 font-semibold ${getColorClass(q, themeMode)}`}>
+                  <div className={`w-full h-full flex items-center justify-center rounded py-0.5 font-semibold ${getColorClass(q)}`}>
                     {formatPercent(q)}
                   </div>
                 </td>
@@ -261,7 +172,7 @@ export const ReturnsHeatmap: React.FC<HeatmapProps> = ({ data, themeMode = 'ligh
               <td></td>
 
               <td className="p-0.5 lg:p-1">
-                <div className={`w-full h-full flex items-center justify-center rounded py-0.5 font-bold border ${getYearCellClass()} ${getColorClass(yRet, themeMode)}`}>
+                <div className={`w-full h-full flex items-center justify-center rounded py-0.5 font-bold border ${getYearCellClass()} ${getColorClass(yRet)}`}>
                   {formatPercent(yRet)}
                 </div>
               </td>

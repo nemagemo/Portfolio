@@ -15,7 +15,7 @@ import { IKE_DATA } from '../CSV/IKE';
 import { OMF_OPEN_DATA } from '../CSV/OMFopen';
 import { OMF_CLOSED_DATA } from '../CSV/OMFclosed';
 import { CASH_DATA } from '../CSV/Cash';
-import { TURTLE_TRANSACTIONS_DATA } from '../CSV/TurtleTransactions';
+import { TRANSACTIONS_DATA } from '../CSV/Transactions';
 
 interface UseAssetPricingProps {
   portfolioType: PortfolioType;
@@ -64,7 +64,13 @@ export const useAssetPricing = ({ portfolioType, onlinePrices, historyPrices, di
 
         // --- Revaluation Logic for all rows ---
         omfOpenRows = omfOpenRows.map(row => {
-            if (row.status !== 'Otwarta' && row.status !== 'Gotówka') return row;
+            // Apply naming fix for Turtle PLN here so it propagates everywhere
+            let processedSymbol = row.symbol;
+            if (row.portfolio === 'Żółwie' && row.symbol === 'PLN') {
+                processedSymbol = 'PLN-Żółwie';
+            }
+
+            if (row.status !== 'Otwarta' && row.status !== 'Gotówka') return { ...row, symbol: processedSymbol };
 
             const symbolKey = row.symbol.toUpperCase();
             let finalPrice: number | undefined = undefined;
@@ -79,8 +85,14 @@ export const useAssetPricing = ({ portfolioType, onlinePrices, historyPrices, di
             // If we found a valid price (Online), recalculate current value.
             if (finalPrice !== undefined && finalPrice > 0) {
                 let newCurrentValue = 0;
+                // Fix: Only use price as value if it's NOT a cash asset or if quantity is specifically > 0
+                // For cash with 0 quantity, value should be 0.
                 if (row.quantity > 0) {
                     newCurrentValue = row.quantity * finalPrice;
+                } else if (row.type === 'Gotówka' || row.symbol === 'PLN') {
+                    // If it's cash and quantity is 0, it really is 0. 
+                    // Previous logic 'newCurrentValue = finalPrice' was turning 0 PLN into 1 PLN because price of PLN is 1.
+                    newCurrentValue = row.quantity * finalPrice; 
                 } else {
                     newCurrentValue = finalPrice;
                 }
@@ -99,6 +111,7 @@ export const useAssetPricing = ({ portfolioType, onlinePrices, historyPrices, di
 
                 return {
                     ...row,
+                    symbol: processedSymbol,
                     change24h, 
                     currentValue: newCurrentValue,
                     profit: newProfit,
@@ -108,7 +121,7 @@ export const useAssetPricing = ({ portfolioType, onlinePrices, historyPrices, di
             }
             
             // Fallback to CSV values if no pricing available
-            return { ...row, isLivePrice: false, change24h: undefined };
+            return { ...row, symbol: processedSymbol, isLivePrice: false, change24h: undefined };
         });
 
         const combinedData = [...omfOpenRows, ...omfClosedRows];

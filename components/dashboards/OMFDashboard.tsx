@@ -152,9 +152,8 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
         others.push(syntheticNode);
     }
     return others;
-  }, [activeAssets, bubbleChartFilter]);
+  }, [processedActiveAssets, bubbleChartFilter]);
 
-  const isNeon = (theme as string) === 'neon';
   if (!stats) return null;
 
   // Determine current displayed rate
@@ -167,43 +166,42 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
       
       {/* PORTFOLIO HEADER (Compact Style) */}
       <div className={`w-full p-3 sm:p-4 ${styles.cardContainer} relative overflow-hidden`}>
-        {isNeon && <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 relative z-10">
           <div className="lg:col-span-5 flex flex-col justify-center relative">
-            <h2 className={`text-[10px] uppercase tracking-widest font-bold mb-1 flex items-center ${isNeon ? 'text-cyan-600' : 'text-slate-400'}`}>
+            <h2 className="text-[10px] uppercase tracking-widest font-bold mb-1 flex items-center text-slate-400">
               <Wallet size={12} className="mr-1.5" /> Wartość Całkowita
             </h2>
             <div className="flex items-baseline relative z-10">
-              <span className={`text-3xl sm:text-4xl font-black tracking-tight ${isNeon ? 'text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-500' : 'text-slate-900'}`}>
+              <span className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
                 {(stats.totalValue || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
-              <span className={`text-lg ml-1.5 font-medium ${isNeon ? 'text-cyan-700' : 'text-slate-400'}`}>zł</span>
+              <span className="text-lg ml-1.5 font-medium text-slate-400">zł</span>
             </div>
             <div className="mt-2 flex items-center relative z-10">
-              <div className={`h-1 w-full overflow-hidden ${isNeon ? 'bg-slate-800 rounded-full' : 'bg-slate-100 rounded-full'}`}>
-                <div className={`h-full ${isNeon ? 'bg-blue-500 rounded-full' : 'bg-slate-400 rounded-full'}`} style={{ width: `${(stats.totalInvestment && stats.totalValue) ? Math.min(100, (stats.totalInvestment / stats.totalValue) * 100) : 0}%` }}></div>
+              <div className="h-1 w-full overflow-hidden bg-slate-100 rounded-full">
+                <div className="h-full bg-slate-400 rounded-full" style={{ width: `${(stats.totalInvestment && stats.totalValue) ? Math.min(100, (stats.totalInvestment / stats.totalValue) * 100) : 0}%` }}></div>
               </div>
             </div>
             <div className="flex justify-between mt-1 text-[10px] sm:text-xs font-medium font-mono relative z-10">
-              <span className={isNeon ? 'text-blue-400' : 'text-slate-500'}>Wkład: {(stats.totalInvestment || 0).toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</span>
-              <span className={isNeon ? 'text-cyan-600' : 'text-slate-400'}>{stats.totalInvestment && stats.totalValue ? ((stats.totalInvestment / stats.totalValue) * 100).toFixed(1) : 0}%</span>
+              <span className="text-slate-500">Wkład: {(stats.totalInvestment || 0).toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł</span>
+              <span className="text-slate-400">{stats.totalInvestment && stats.totalValue ? ((stats.totalInvestment / stats.totalValue) * 100).toFixed(1) : 0}%</span>
             </div>
           </div>
-          <div className={`lg:col-span-3 flex flex-col justify-center lg:border-l lg:border-r ${isNeon ? 'lg:border-cyan-900/30' : 'lg:border-slate-100'} lg:px-4`}>
-             <h2 className={`text-[10px] uppercase tracking-widest font-bold mb-1 ${isNeon ? 'text-cyan-600' : 'text-slate-400'}`}>Zysk Całkowity</h2>
-             <div className={`text-xl sm:text-2xl font-bold mb-0.5 ${(stats.totalProfit || 0) >= 0 ? (isNeon ? 'text-[#39ff14] drop-shadow-[0_0_5px_rgba(57,255,20,0.5)]' : 'text-emerald-600') : 'text-rose-500'}`}>
+          <div className={`lg:col-span-3 flex flex-col justify-center lg:border-l lg:border-r lg:border-slate-100 lg:px-4`}>
+             <h2 className="text-[10px] uppercase tracking-widest font-bold mb-1 text-slate-400">Zysk Całkowity</h2>
+             <div className={`text-xl sm:text-2xl font-bold mb-0.5 ${(stats.totalProfit || 0) >= 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
                 {(stats.totalProfit || 0) > 0 ? '+' : ''}{(stats.totalProfit || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł
              </div>
              
              {/* ROI and M/M Trend Badges */}
              <div className="flex items-center mt-1 flex-wrap gap-2">
-                <span className={`px-2 py-0.5 text-xs font-bold flex items-center ${(stats.currentRoi || 0) >= 0 ? (isNeon ? 'bg-green-900/30 text-green-400 border border-green-500/30 rounded' : 'bg-emerald-100 text-emerald-700 rounded') : 'bg-rose-100 text-rose-700 rounded'}`}>
+                <span className={`px-2 py-0.5 text-xs font-bold flex items-center ${(stats.currentRoi || 0) >= 0 ? 'bg-emerald-100 text-emerald-700 rounded' : 'bg-rose-100 text-rose-700 rounded'}`}>
                   {(stats.currentRoi || 0) >= 0 ? <TrendingUp size={12} className="mr-1"/> : <TrendingUp size={12} className="mr-1 rotate-180"/>}
                   {(stats.currentRoi || 0).toFixed(2)}% ROI
                 </span>
                 
                 {stats.profitTrend !== undefined && (
-                   <span className={`px-2 py-0.5 text-xs font-bold flex items-center ${(stats.profitTrend || 0) > 0 ? (isNeon ? 'bg-green-900/30 text-green-400 border border-green-500/30 rounded' : 'bg-emerald-100 text-emerald-700 rounded') : 'bg-rose-100 text-rose-700 rounded'}`}>
+                   <span className={`px-2 py-0.5 text-xs font-bold flex items-center ${(stats.profitTrend || 0) > 0 ? 'bg-emerald-100 text-emerald-700 rounded' : 'bg-rose-100 text-rose-700 rounded'}`}>
                       {(stats.profitTrend || 0) > 0 ? '▲' : '▼'} {Math.abs(stats.profitTrend || 0).toFixed(1)}% m/m
                    </span>
                 )}
@@ -215,7 +213,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
              <StatFlipCard 
                 theme={theme}
                 icon={IconCAGR}
-                colorClass={isNeon ? 'text-purple-400' : 'text-slate-400'}
+                colorClass="text-slate-400"
                 frontTitle="CAGR"
                 frontValue={`${stats.cagr?.toFixed(2)}%`}
                 frontSub="Średnio rocznie"
@@ -223,12 +221,12 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
                 backValue={`${stats.cagrTwr?.toFixed(2)}%`}
                 backSub="Średnio rocznie"
              />
-
+ 
              {/* LTM Flip Card */}
              <StatFlipCard 
                 theme={theme}
                 icon={IconLTM}
-                colorClass={isNeon ? 'text-amber-400' : 'text-slate-400'}
+                colorClass="text-slate-400"
                 frontTitle="LTM"
                 frontValue={`${stats.ltmRoi?.toFixed(2)}%`}
                 frontSub="Ost. 12 msc"
@@ -236,30 +234,30 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
                 backValue={`${stats.ltm?.toFixed(2)}%`}
                 backSub="Ost. 12 msc"
              />
-
-             <div className={`h-[76px] p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
+ 
+             <div className="h-[76px] p-2.5 border bg-slate-50 border-slate-100 rounded-lg">
                 <div className="flex justify-between items-start mb-0.5">
-                  <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-blue-400' : 'text-slate-400'}`}>Czas</div>
-                  <IconHourglass className={`w-4 h-4 ${isNeon ? 'text-blue-500/80' : 'text-blue-400/60'}`} />
+                  <div className="text-[10px] sm:text-xs uppercase font-bold text-slate-400">Czas</div>
+                  <IconHourglass className="w-4 h-4 text-blue-400/60" />
                 </div>
-                <div className={`text-lg sm:text-xl font-bold ${isNeon ? 'text-blue-300' : 'text-slate-700'}`}>{investmentDurationMonths} <span className="text-[10px] font-normal">msc</span></div>
-                <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-blue-500/60' : 'text-slate-400'}`}>od startu</div>
+                <div className="text-lg sm:text-xl font-bold text-slate-700">{investmentDurationMonths} <span className="text-[10px] font-normal">msc</span></div>
+                <div className="text-[9px] sm:text-[10px] text-slate-400">od startu</div>
              </div>
-             <div className={`h-[76px] p-2.5 border ${isNeon ? 'bg-black/40 border-cyan-900/30 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
+             <div className="h-[76px] p-2.5 border bg-slate-50 border-slate-100 rounded-lg">
                 <div className="flex justify-between items-start mb-0.5">
-                  <div className={`text-[10px] sm:text-xs uppercase font-bold ${isNeon ? 'text-cyan-400' : 'text-slate-400'}`}>Intraday</div>
-                  <IconPulse className={`w-4 h-4 ${isNeon ? 'text-cyan-500/80' : 'text-cyan-400/60'}`} />
+                  <div className="text-[10px] sm:text-xs uppercase font-bold text-slate-400">Intraday</div>
+                  <IconPulse className="w-4 h-4 text-cyan-400/60" />
                 </div>
-                <div className={`text-lg sm:text-xl font-bold flex items-center ${(stats.dailyTrend || 0) >= 0 ? (isNeon ? 'text-[#39ff14]' : 'text-emerald-600') : 'text-rose-500'}`}>
+                <div className={`text-lg sm:text-xl font-bold flex items-center ${(stats.dailyTrend || 0) >= 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
                    {(stats.dailyTrend || 0) >= 0 ? <ArrowUpRight size={16} className="mr-1"/> : <ArrowDownRight size={16} className="mr-1"/>}
                    {Math.abs(stats.dailyTrend || 0).toFixed(2)}%
                 </div>
-                <div className={`text-[9px] sm:text-[10px] ${isNeon ? 'text-cyan-500/60' : 'text-slate-400'}`}>Zmiana wartości</div>
+                <div className="text-[9px] sm:text-[10px] text-slate-400">Zmiana wartości</div>
              </div>
           </div>
         </div>
       </div>
-
+ 
       {/* Main Chart */}
       <div className={`${styles.cardContainer} p-3 sm:p-6`}>
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-0 space-y-4 md:space-y-0">
@@ -267,126 +265,126 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
             <h3 className={`text-lg font-bold ${styles.text} text-left`}>Historia Old Man Fund</h3>
             <p className={`text-sm ${styles.textSub} text-left`}>PPK + Krypto + IKE + Żółwie</p>
           </div>
-          <div className={`hidden md:flex items-center space-x-3 p-2 border ${isNeon ? 'bg-black/50 border-cyan-900/50 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-              <button onClick={() => setExcludePPK(!excludePPK)} disabled={showCPI || showProjection} className={`flex items-center justify-center w-20 px-2 py-1.5 transition-all ${excludePPK ? styles.toggleNoPPKActive : `bg-transparent ${isNeon ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`} rounded-md ${showCPI || showProjection ? 'opacity-50 cursor-not-allowed' : ''}`} title={excludePPK ? "Pokaż PPK" : "Ukryj PPK"}>
+          <div className="hidden md:flex items-center space-x-3 p-2 border bg-slate-50 border-slate-100 rounded-lg">
+              <button onClick={() => setExcludePPK(!excludePPK)} disabled={showCPI || showProjection} className={`flex items-center justify-center w-20 px-2 py-1.5 transition-all ${excludePPK ? styles.toggleNoPPKActive : `bg-transparent text-slate-500 hover:text-slate-700 border-slate-200 border`} rounded-md ${showCPI || showProjection ? 'opacity-50 cursor-not-allowed' : ''}`} title={excludePPK ? "Pokaż PPK" : "Ukryj PPK"}>
                 <NoPPKIcon className="w-full h-4" />
               </button>
-              <button onClick={() => setShowCPI(!showCPI)} disabled={excludePPK} className={`flex items-center px-3 py-1.5 text-xs font-bold transition-all ${showCPI ? styles.toggleCPIActive : `bg-transparent ${isNeon ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`} rounded-md ${excludePPK ? 'opacity-50 cursor-not-allowed' : ''}`}>CPI</button>
-              <div className={`w-px h-6 mx-1 ${isNeon ? 'bg-cyan-900/50' : 'bg-slate-200'}`}></div>
-              <button onClick={() => setShowProjection(!showProjection)} disabled={excludePPK} className={`flex items-center px-3 py-1.5 text-xs font-bold transition-all ${showProjection ? styles.toggleProjectionActive : `bg-transparent ${isNeon ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`} rounded-md ${excludePPK ? 'opacity-50 cursor-not-allowed' : ''}`}><Milestone size={14} className="mr-2" />Droga do Miliona</button>
+              <button onClick={() => setShowCPI(!showCPI)} disabled={excludePPK} className={`flex items-center px-3 py-1.5 text-xs font-bold transition-all ${showCPI ? styles.toggleCPIActive : `bg-transparent text-slate-500 hover:text-slate-700 border-slate-200 border`} rounded-md ${excludePPK ? 'opacity-50 cursor-not-allowed' : ''}`}>CPI</button>
+              <div className="w-px h-6 mx-1 bg-slate-200"></div>
+              <button onClick={() => setShowProjection(!showProjection)} disabled={excludePPK} className={`flex items-center px-3 py-1.5 text-xs font-bold transition-all ${showProjection ? styles.toggleProjectionActive : `bg-transparent text-slate-500 hover:text-slate-700 border-slate-200 border`} rounded-md ${excludePPK ? 'opacity-50 cursor-not-allowed' : ''}`}><Milestone size={14} className="mr-2" />Droga do Miliona</button>
               {showProjection && (
                 <div className="flex items-center space-x-2 animate-in fade-in slide-in-from-right-4 duration-300">
-                  <div className={`flex border p-0.5 ${isNeon ? 'bg-black border-cyan-900/50 rounded-md' : 'bg-white border-slate-200 rounded-md'}`}>
-                    <button onClick={() => setProjectionMethod('CAGR')} className={`px-2 py-1 text-[10px] font-medium ${projectionMethod === 'CAGR' ? (isNeon ? 'bg-cyan-900 text-cyan-300' : 'bg-slate-800 text-white') : (isNeon ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')} rounded`}>CAGR</button>
-                    <button onClick={() => setProjectionMethod('CAGR_TWR')} className={`px-2 py-1 text-[10px] font-medium ${projectionMethod === 'CAGR_TWR' ? (isNeon ? 'bg-cyan-900 text-cyan-300' : 'bg-slate-800 text-white') : (isNeon ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')} rounded`}>CAGR TWR</button>
+                  <div className="flex border p-0.5 bg-white border-slate-200 rounded-md">
+                    <button onClick={() => setProjectionMethod('CAGR')} className={`px-2 py-1 text-[10px] font-medium ${projectionMethod === 'CAGR' ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-100'} rounded`}>CAGR</button>
+                    <button onClick={() => setProjectionMethod('CAGR_TWR')} className={`px-2 py-1 text-[10px] font-medium ${projectionMethod === 'CAGR_TWR' ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-100'} rounded`}>CAGR TWR</button>
                   </div>
                   <span className={`text-[10px] font-mono ${styles.textSub}`}>+{currentRateValue.toFixed(2)}% m/m</span>
                 </div>
               )}
           </div>
         </div>
-        <GlobalSummaryChart data={chartDataWithProjection} showProjection={showProjection} showCPI={showCPI} themeMode={theme} />
+        <GlobalSummaryChart data={chartDataWithProjection} showProjection={showProjection} showCPI={showCPI} themeMode={theme as any} />
       </div>
-
+ 
       {/* Performance Chart */}
       <div className={`${styles.cardContainer} p-3 sm:p-6`}>
         <div className="flex items-center justify-between mb-0">
           <div><h3 className={`text-lg font-bold ${styles.text}`}>Stopa zwrotu w czasie</h3></div>
           <div className="flex items-center space-x-2">
             <div className="hidden md:flex space-x-1 sm:space-x-2">
-                <button onClick={() => setShowSP500(!showSP500)} className={`px-2 py-1 text-[10px] sm:text-xs font-medium rounded-md transition-all ${showSP500 ? 'bg-slate-700 text-white ring-2 ring-slate-700 ring-offset-1' : `border border-slate-300 ${(theme as string) === 'neon' ? 'bg-slate-700 text-slate-200' : 'bg-white text-slate-600'} hover:opacity-80`}`}>S&P 500</button>
-                <button onClick={() => setShowWIG20(!showWIG20)} className={`px-2 py-1 text-[10px] sm:text-xs font-medium rounded-md transition-all ${showWIG20 ? 'bg-purple-800 text-white ring-2 ring-purple-800 ring-offset-1' : `border border-slate-300 ${(theme as string) === 'neon' ? 'bg-slate-700 text-slate-200' : 'bg-white text-slate-600'} hover:opacity-80`}`}>WIG20</button>
+                <button onClick={() => setShowSP500(!showSP500)} className={`px-2 py-1 text-[10px] sm:text-xs font-medium rounded-md transition-all ${showSP500 ? 'bg-slate-700 text-white ring-2 ring-slate-700 ring-offset-1' : `border border-slate-300 bg-white text-slate-600 hover:opacity-80`}`}>S&P 500</button>
+                <button onClick={() => setShowWIG20(!showWIG20)} className={`px-2 py-1 text-[10px] sm:text-xs font-medium rounded-md transition-all ${showWIG20 ? 'bg-purple-800 text-white ring-2 ring-purple-800 ring-offset-1' : `border border-slate-300 bg-white text-slate-600 hover:opacity-80`}`}>WIG20</button>
             </div>
-            <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><TrendingUp className={isNeon ? 'text-purple-400' : 'text-purple-600'} size={20} /></div>
+            <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><TrendingUp className="text-purple-600" size={20} /></div>
           </div>
         </div>
         <div className="w-full">
-          <GlobalPerformanceChart data={globalHistory} themeMode={theme} showSP500={showSP500} showWIG20={showWIG20} />
+          <GlobalPerformanceChart data={globalHistory} themeMode={theme as any} showSP500={showSP500} showWIG20={showWIG20} />
         </div>
       </div>
-
+ 
       {/* Treemap ROI - Full Width - MOVED UP */}
       <div className={`${styles.cardContainer} p-6 hidden md:block`}>
         <div className="flex items-center justify-between mb-0">
           <div><h3 className={`text-lg font-bold ${styles.text}`}>Heatmap ROI</h3></div>
-          <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><LayoutTemplate className={isNeon ? 'text-cyan-400' : 'text-cyan-600'} size={20} /></div>
+          <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><LayoutTemplate className="text-cyan-600" size={20} /></div>
         </div>
-        <OMFTreemapChart data={omfStructureData} themeMode={theme} />
+        <OMFTreemapChart data={omfStructureData} themeMode={theme as any} />
       </div>
-
+ 
       {/* Bubble Risk Map (Intraday) - Full Width - MOVED UP */}
       <div className={`${styles.cardContainer} p-6 hidden md:block`}>
         <div className="flex items-center justify-between mb-0">
-          <div><h3 className={`text-lg font-bold ${styles.text}`}>Intraday</h3><p className={`text-[10px] sm:text-xs mt-1 ${isNeon ? 'text-slate-500' : 'text-slate-400'}`}>Gdy zmiana wynosi 0 lub jest bardzo duża, może to wskazywać na błąd synchronizacji danych.</p></div>
+          <div><h3 className={`text-lg font-bold ${styles.text}`}>Intraday</h3><p className={`text-[10px] sm:text-xs mt-1 text-slate-400`}>Gdy zmiana wynosi 0 lub jest bardzo duża, może to wskazywać na błąd synchronizacji danych.</p></div>
           <div className="flex space-x-2 items-center">
-            <div className={`flex items-center space-x-1 p-1 border ${isNeon ? 'bg-black/50 border-cyan-900/50 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-                <button onClick={() => setBubbleChartFilter('ALL')} className={`px-3 py-1 text-xs font-bold transition-all ${bubbleChartFilter === 'ALL' ? (isNeon ? 'bg-cyan-900 text-cyan-300' : 'bg-white text-slate-800 shadow-sm') : (isNeon ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')} rounded-md`}>Wszystkie</button>
-                <button onClick={() => setBubbleChartFilter('KRYPTO')} className={`px-3 py-1 text-xs font-bold transition-all ${bubbleChartFilter === 'KRYPTO' ? (isNeon ? 'bg-cyan-900 text-cyan-300' : 'bg-white text-slate-800 shadow-sm') : (isNeon ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')} rounded-md`}>Krypto</button>
-                <button onClick={() => setBubbleChartFilter('IKE')} className={`px-3 py-1 text-xs font-bold transition-all ${bubbleChartFilter === 'IKE' ? (isNeon ? 'bg-cyan-900 text-cyan-300' : 'bg-white text-slate-800 shadow-sm') : (isNeon ? 'text-cyan-700 hover:text-cyan-400' : 'text-slate-500 hover:bg-slate-100')} rounded-md`}>IKE</button>
+            <div className="flex items-center space-x-1 p-1 border bg-slate-50 border-slate-100 rounded-lg">
+                <button onClick={() => setBubbleChartFilter('ALL')} className={`px-3 py-1 text-xs font-bold transition-all ${bubbleChartFilter === 'ALL' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:bg-slate-100'} rounded-md`}>Wszystkie</button>
+                <button onClick={() => setBubbleChartFilter('KRYPTO')} className={`px-3 py-1 text-xs font-bold transition-all ${bubbleChartFilter === 'KRYPTO' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:bg-slate-100'} rounded-md`}>Krypto</button>
+                <button onClick={() => setBubbleChartFilter('IKE')} className={`px-3 py-1 text-xs font-bold transition-all ${bubbleChartFilter === 'IKE' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:bg-slate-100'} rounded-md`}>IKE</button>
             </div>
-            <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><ScatterChart className={isNeon ? 'text-amber-400' : 'text-amber-600'} size={20} /></div>
+            <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><ScatterChart className="text-amber-600" size={20} /></div>
           </div>
         </div>
-        <BubbleRiskChart data={filteredBubbleData} themeMode={theme} />
+        <BubbleRiskChart data={filteredBubbleData} themeMode={theme as any} />
       </div>
-
+ 
       {/* Monthly Returns - Hidden on Mobile */}
       <div className={`${styles.cardContainer} p-6 overflow-x-auto hidden md:block`}>
         <div className="flex items-center justify-between mb-0 min-w-[600px]">
           <div><h3 className={`text-lg font-bold ${styles.text}`}>Miesięczne Stopy Zwrotu</h3><p className={`text-sm ${styles.textSub}`}>Bez PPK</p></div>
-          <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><CalendarDays className={isNeon ? 'text-emerald-400' : 'text-emerald-600'} size={20} /></div>
+          <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><CalendarDays className="text-emerald-600" size={20} /></div>
         </div>
-        <ReturnsHeatmap data={heatmapHistoryData} themeMode={theme} />
+        <ReturnsHeatmap data={heatmapHistoryData} themeMode={theme as any} />
       </div>
-
+ 
       {/* Seasonality - Hidden on Mobile */}
       <div className={`${styles.cardContainer} p-6 hidden md:block`}>
         <div className="flex items-center justify-between mb-0">
           <div><h3 className={`text-lg font-bold ${styles.text}`}>Sezonowość</h3><p className={`text-sm ${styles.textSub}`}>Średnia stopa zwrotu w poszczególnych miesiącach</p></div>
-          <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><Snowflake className={isNeon ? 'text-blue-400' : 'text-blue-600'} size={20} /></div>
+          <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><Snowflake className="text-blue-600" size={20} /></div>
         </div>
-        <SeasonalityChart data={heatmapHistoryData} themeMode={theme} />
+        <SeasonalityChart data={heatmapHistoryData} themeMode={theme as any} />
       </div>
-
+ 
       {/* Drawdown Chart (Risk Analysis) */}
       <div className={`${styles.cardContainer} p-6 hidden md:block`}>
         <div className="flex items-center justify-between mb-0">
           <div><h3 className={`text-lg font-bold ${styles.text}`}>Drawdown</h3><p className={`text-sm ${styles.textSub}`}>Procentowy spadek od najwyższego historycznego szczytu</p></div>
           <div className="flex items-center space-x-2">
-             <div className={`flex items-center p-1 border ${isNeon ? 'bg-black/50 border-cyan-900/50 rounded-lg' : 'bg-slate-50 border-slate-100 rounded-lg'}`}>
-                <button onClick={() => setDrawdownExcludePPK(!drawdownExcludePPK)} className={`flex items-center justify-center w-20 px-2 py-1.5 transition-all ${drawdownExcludePPK ? styles.toggleNoPPKActive : `bg-transparent ${isNeon ? 'text-cyan-700 border-cyan-900/30 hover:text-cyan-400 hover:border-cyan-700' : 'text-slate-500 hover:text-slate-700 border-slate-200'} border`} rounded-md`} title={drawdownExcludePPK ? "Pokaż PPK" : "Ukryj PPK"}><NoPPKIcon className="w-full h-4" /></button>
+             <div className="flex items-center p-1 border bg-slate-50 border-slate-100 rounded-lg">
+                <button onClick={() => setDrawdownExcludePPK(!drawdownExcludePPK)} className={`flex items-center justify-center w-20 px-2 py-1.5 transition-all ${drawdownExcludePPK ? styles.toggleNoPPKActive : `bg-transparent text-slate-500 hover:text-slate-700 border-slate-200 border`} rounded-md`} title={drawdownExcludePPK ? "Pokaż PPK" : "Ukryj PPK"}><NoPPKIcon className="w-full h-4" /></button>
              </div>
-             <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><Activity className={isNeon ? 'text-rose-400' : 'text-rose-600'} size={20} /></div>
+             <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><Activity className="text-rose-600" size={20} /></div>
           </div>
         </div>
-        <DrawdownChart data={chartDrawdownData} themeMode={theme} />
+        <DrawdownChart data={chartDrawdownData} themeMode={theme as any} />
       </div>
-
+ 
       {/* Allocation History - Full Width */}
       <div className={`${styles.cardContainer} p-3 sm:p-6 lg:col-span-2`}>
         <div className="flex items-center justify-between mb-0">
           <div><h3 className={`text-lg font-bold ${styles.text}`}>Historia Alokacji</h3><p className={`text-sm ${styles.textSub}`}>Udział portfeli w czasie</p></div>
-          <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><PieChart className={isNeon ? 'text-blue-400' : 'text-blue-600'} size={20} /></div>
+          <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><PieChart className="text-blue-600" size={20} /></div>
         </div>
-        <PortfolioAllocationHistoryChart data={globalHistory} themeMode={theme} />
+        <PortfolioAllocationHistoryChart data={globalHistory} themeMode={theme as any} />
       </div>
-
+ 
       {/* Active Positions Table - Hidden on Mobile */}
       <div className={`${styles.cardContainer} overflow-hidden hidden md:block`}>
-        <div className={`px-6 py-4 border-b flex justify-between items-center cursor-pointer transition-colors ${isNeon ? 'bg-black/20 border-cyan-900/30 hover:bg-cyan-950/10' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`} onClick={() => setIsActivePositionsExpanded(!isActivePositionsExpanded)}>
-          <div className="flex items-center space-x-2"><h3 className={`text-lg font-bold ${styles.text}`}>Aktywne Pozycje</h3>{isActivePositionsExpanded ? <ChevronUp size={20} className={isNeon ? 'text-cyan-600' : 'text-slate-400'}/> : <ChevronDown size={20} className={isNeon ? 'text-cyan-600' : 'text-slate-400'}/>}</div>
-          <span className={`text-xs font-medium px-2 py-1 transition-all ${isNeon ? 'rounded-full bg-emerald-900/40 text-emerald-400 border border-emerald-700/50' : 'rounded-full bg-emerald-100 text-emerald-700'}`}>{processedActiveAssets.length} pozycji</span>
+        <div className={`px-6 py-4 border-b flex justify-between items-center cursor-pointer transition-colors bg-slate-50 border-slate-200 hover:bg-slate-100`} onClick={() => setIsActivePositionsExpanded(!isActivePositionsExpanded)}>
+          <div className="flex items-center space-x-2"><h3 className={`text-lg font-bold ${styles.text}`}>Aktywne Pozycje</h3>{isActivePositionsExpanded ? <ChevronUp size={20} className="text-slate-400"/> : <ChevronDown size={20} className="text-slate-400"/>}</div>
+          <span className="text-xs font-medium px-2 py-1 transition-all rounded-full bg-emerald-100 text-emerald-700">{processedActiveAssets.length} pozycji</span>
         </div>
-        {isActivePositionsExpanded && (<HistoryTable data={processedActiveAssets} type="OMF" omfVariant="active" themeMode={theme} />)}
+        {isActivePositionsExpanded && (<HistoryTable data={processedActiveAssets} type="OMF" omfVariant="active" themeMode={theme as any} />)}
       </div>
-
+ 
       {/* Closed Positions Table - Hidden on Mobile */}
       <div className={`${styles.cardContainer} overflow-hidden hidden md:block`}>
-        <div className={`px-6 py-4 border-b flex justify-between items-center cursor-pointer transition-colors ${isNeon ? 'bg-black/20 border-cyan-900/30 hover:bg-cyan-950/10' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`} onClick={() => setIsClosedHistoryExpanded(!isClosedHistoryExpanded)}>
-          <div className="flex items-center space-x-2"><h3 className={`text-lg font-bold ${styles.text}`}>Zamknięte Pozycje</h3>{isClosedHistoryExpanded ? <ChevronUp size={20} className={isNeon ? 'text-cyan-600' : 'text-slate-400'}/> : <ChevronDown size={20} className={isNeon ? 'text-cyan-600' : 'text-slate-400'}/>}</div>
-          <span className={`text-xs font-medium px-2 py-1 transition-all ${isNeon ? 'rounded-full bg-slate-800 text-slate-400 border border-slate-700' : 'rounded-full bg-slate-200 text-slate-600'}`}>{closedAssets.length} pozycji</span>
+        <div className={`px-6 py-4 border-b flex justify-between items-center cursor-pointer transition-colors bg-slate-50 border-slate-200 hover:bg-slate-100`} onClick={() => setIsClosedHistoryExpanded(!isClosedHistoryExpanded)}>
+          <div className="flex items-center space-x-2"><h3 className={`text-lg font-bold ${styles.text}`}>Zamknięte Pozycje</h3>{isClosedHistoryExpanded ? <ChevronUp size={20} className="text-slate-400"/> : <ChevronDown size={20} className="text-slate-400"/>}</div>
+          <span className="text-xs font-medium px-2 py-1 transition-all rounded-full bg-slate-200 text-slate-600">{closedAssets.length} pozycji</span>
         </div>
-        {isClosedHistoryExpanded && (<HistoryTable data={closedAssets} type="OMF" omfVariant="closed" themeMode={theme} />)}
+        {isClosedHistoryExpanded && (<HistoryTable data={closedAssets} type="OMF" omfVariant="closed" themeMode={theme as any} />)}
       </div>
     </div>
   );

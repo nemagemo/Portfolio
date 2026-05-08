@@ -43,16 +43,13 @@ const TreemapContent = (props: any) => {
   const showText = width > 40 && height > 30;
   const padding = 5;
 
-  const isNeon = themeMode === 'neon';
-  const strokeColor = isNeon ? '#000' : '#fff';
-  const strokeWidth = themeMode === 'comic' ? 2 : 2;
+  const strokeColor = '#fff';
+  const strokeWidth = 2;
 
-  const symbolColor = isNeon ? '#cffafe' : '#fff'; 
+  const symbolColor = '#fff'; 
   const roiColor = '#fff'; 
   
-  const textShadow = isNeon 
-    ? '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 2px 2px 2px rgba(0,0,0,0.8)' 
-    : '0 2px 4px rgba(0,0,0,0.9)';
+  const textShadow = '0 2px 4px rgba(0,0,0,0.9)';
 
   return (
     <g>
@@ -74,7 +71,7 @@ const TreemapContent = (props: any) => {
           textAnchor="start"
           fill={symbolColor}
           fontSize={fontSizeName}
-          fontWeight="700"
+          fontWeight="600"
           style={{ 
             textShadow: textShadow, 
             pointerEvents: 'none',
@@ -91,7 +88,7 @@ const TreemapContent = (props: any) => {
           textAnchor="end"
           fill={roiColor}
           fontSize={fontSizeRoi}
-          fontWeight={isNeon ? "700" : "500"} 
+          fontWeight="500" 
           style={{ 
             textShadow: textShadow, 
             pointerEvents: 'none', 
@@ -121,9 +118,9 @@ export const OMFTreemapChart: React.FC<OMFTreemapChartProps> = ({ data, themeMod
           dataKey="value"
           nameKey="name"
           aspectRatio={4 / 3}
-          stroke={(themeMode as string) === 'neon' ? '#000' : "#fff"}
+          stroke="#fff"
           fill="#8884d8"
-          content={(props) => <TreemapContent {...props} themeMode={themeMode as ThemeMode} />}
+          content={(props) => <TreemapContent {...props} themeMode={themeMode} />}
         >
           <Tooltip 
             content={({ active, payload }) => {
@@ -161,12 +158,11 @@ interface BubbleRiskChartProps {
 }
 
 const renderBubbleLabel = (props: any) => {
-  const { cx, cy, value, themeMode } = props;
+  const { cx, cy, value } = props;
   if (cx === undefined || cy === undefined) return null;
 
-  const isNeon = themeMode === 'neon';
-  // Use pure black for light theme or bright cyan for neon
-  const color = isNeon ? '#a5f3fc' : '#111827';
+  // Use pure black for light theme
+  const color = '#111827';
   
   return (
     <text 
@@ -180,10 +176,9 @@ const renderBubbleLabel = (props: any) => {
       pointerEvents="none"
       style={{
         // White "halo" stroke for readability in light mode
-        stroke: isNeon ? 'none' : '#ffffff',
-        strokeWidth: isNeon ? 0 : 3,
+        stroke: '#ffffff',
+        strokeWidth: 3,
         paintOrder: 'stroke',
-        filter: isNeon ? 'drop-shadow(0px 0px 2px rgba(0,0,0,0.8))' : 'none'
       }}
     >
       {value}
