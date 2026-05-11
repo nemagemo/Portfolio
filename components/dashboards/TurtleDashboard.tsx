@@ -50,7 +50,34 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
     const turtleNames = ['Karol', 'Marek', 'Ania', 'Piotr', 'Kasia', 'Tomek', 'Magda', 'Robert', 'Ewa', 'Jacek'];
     const turtleColors = ['#22c55e', '#3b82f6', '#ef4444', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b', '#06b6d4', '#10b981', '#f97316'];
     
-    // 3. Aggregate data per turtle
+    // 3. Calculate fixed track assignments
+    const allAssets = [...turtleActive, ...turtleClosed];
+    const turtleFirstDates = turtleNames.map(name => {
+      const assets = allAssets.filter(a => a.sector === name);
+      // We look for any lastPurchaseDate in all assets for this turtle
+      const dates = assets
+        .map(a => new Date(a.lastPurchaseDate).getTime())
+        .filter(t => !isNaN(t));
+      const firstDate = dates.length > 0 ? Math.min(...dates) : Infinity;
+      return { name, firstDate };
+    });
+
+    // Special rule: Karol is always Track 1
+    // Others are sorted by first transaction date, then by name order if no date
+    const othersSorted = turtleFirstDates
+      .filter(t => t.name !== 'Karol')
+      .sort((a, b) => {
+        if (a.firstDate !== b.firstDate) return a.firstDate - b.firstDate;
+        return turtleNames.indexOf(a.name) - turtleNames.indexOf(b.name);
+      });
+
+    const trackMap = new Map<string, number>();
+    trackMap.set('Karol', 1);
+    othersSorted.forEach((t, i) => {
+      trackMap.set(t.name, i + 2);
+    });
+
+    // 4. Aggregate data per turtle
     return turtleNames.map((name, idx) => {
       const myActive = turtleActive.filter(a => a.sector === name);
       const myClosed = turtleClosed.filter(a => a.sector === name);
@@ -74,10 +101,6 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
       const closedProfit = myClosed.reduce((sum, a) => sum + a.profit, 0);
       const totalProfit = activeProfit + closedProfit;
       
-      // Each turtle started with 100 zł ONLY IF they have any activity
-      // User says: "Poza karolem pozostałe żółwie na razie nic nie mają ani gotowki ani akcji."
-      // So if no active/closed assets (excluding the placeholder cash), initial is 0.
-      
       const hasActivity = myActive.some(a => a.currentValue > 0 || a.purchaseValue > 0) || myClosed.length > 0;
       const initialCapital = hasActivity ? 100 : 0;
       const totalEquity = initialCapital + totalProfit;
@@ -85,7 +108,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
 
       return {
         id: idx + 1,
-        name: hasActivity ? name : '?',
+        name: hasActivity ? name : (name === 'Karol' ? 'Karol' : '?'), // Keep Karol's name visible
         initialCapital,
         currentValue: totalEquity,
         color: turtleColors[idx % turtleColors.length],
@@ -93,15 +116,41 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
         countryCode: 'PL', 
         roi,
         profit: totalProfit,
-        isActive: hasActivity && isActive
+        isActive: hasActivity && isActive,
+        trackNumber: trackMap.get(name) || (idx + 1)
       };
-    }).sort((a, b) => b.roi - a.roi || b.initialCapital - a.initialCapital);
+    }).sort((a, b) => {
+      // Prioritize turtles with activity (initialCapital > 0)
+      if (a.initialCapital > 0 && b.initialCapital > 0) {
+        return b.profit - a.profit || b.roi - a.roi;
+      }
+      if (a.initialCapital > 0) return -1;
+      if (b.initialCapital > 0) return 1;
+      return 0;
+    });
   }, [activeAssets, closedAssets]);
 
   const totalCapital = turtles.reduce((sum, t) => sum + t.initialCapital, 0);
   const totalValue = turtles.reduce((sum, t) => sum + t.currentValue, 0);
   const totalProfit = totalValue - totalCapital;
   const totalRoi = totalCapital > 0 ? (totalProfit / totalCapital) * 100 : 0;
+
+  const profitLeader = useMemo(() => {
+    const activeOnes = turtles.filter(t => t.initialCapital > 0);
+    if (activeOnes.length === 0) return '-';
+    // The sorting in the main memo already handles this, but let's be explicit if needed.
+    // Since turtles is already sorted by profit for those with capital, turtles[0] is the leader.
+    return activeOnes[0].name;
+  }, [turtles]);
+
+  const trackScale = useMemo(() => {
+    const allRois = turtles.map(t => t.roi);
+    const minScale = Math.min(-20, ...allRois);
+    const maxScale = Math.max(40, ...allRois);
+    const range = maxScale - minScale;
+    const zeroPos = Math.max(0, Math.min(100, ((0 - minScale) / range) * 100));
+    return { minScale, maxScale, range, zeroPos };
+  }, [turtles]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -204,8 +253,8 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
             <motion.div whileHover={{ x: -10 }} className="flex items-center gap-4 text-left justify-start">
               <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl shadow-inner"><Trophy size={24} /></div>
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lider Zysku</p>
-                <p className="text-2xl font-black text-slate-900">{turtles[0]?.name || '-'}</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lider</p>
+                <p className="text-2xl font-black text-slate-900">{profitLeader}</p>
               </div>
             </motion.div>
           </div>
@@ -231,21 +280,18 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
 
           <div className="relative space-y-1">
             {/* The Track Base */}
-            <div className="absolute inset-y-0 left-0 w-1 bg-slate-900 rounded-full z-20" /> {/* Start Line */}
-            <div className="absolute inset-y-0 right-0 w-2 bg-[repeating-linear-gradient(45deg,#000,#000_10px,#fff_10px,#fff_20px)] z-20 shadow-lg" /> {/* Finish Line */}
+            <div className="absolute inset-y-0 left-0 w-1 bg-slate-200 rounded-full z-10" />
+            <div className="absolute inset-y-0 right-0 w-2 bg-[repeating-linear-gradient(45deg,#000,#000_10px,#fff_10px,#fff_20px)] z-20 shadow-lg" />
 
-            {turtles.map((turtle, index) => {
+            {/* START Line (0% ROI) */}
+            <div 
+              className="absolute inset-y-0 border-l-2 border-slate-900/30"
+              style={{ left: `${trackScale.zeroPos}%`, zIndex: 10 }}
+            />
+
+            {turtles.slice().sort((a, b) => a.trackNumber - b.trackNumber).map((turtle) => {
               const isActive = turtle.isActive;
-              
-              // Dynamic scale calculation:
-              // We find the min and max ROIs to determine the track boundaries.
-              // We default to -20 and +40 to keep the view consistent for normal values.
-              const allRois = turtles.map(t => t.roi);
-              const minScale = Math.min(-20, ...allRois);
-              const maxScale = Math.max(40, ...allRois);
-              const range = maxScale - minScale;
-              
-              const progress = Math.max(0, Math.min(100, ((turtle.roi - minScale) / range) * 100));
+              const progress = Math.max(0, Math.min(100, ((turtle.roi - trackScale.minScale) / trackScale.range) * 100));
               const isPositive = turtle.roi >= 0;
               
               return (
@@ -253,7 +299,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
                   {/* Lane Background */}
                   <div className="absolute inset-0 bg-white flex items-center transition-colors group-hover/gp-lane:bg-slate-50/50">
                     <div className="w-16 pl-4 h-full flex items-center justify-start border-r border-slate-200/50 bg-slate-50 text-[10px] font-black text-slate-300 italic group-hover/gp-lane:text-indigo-400 group-hover/gp-lane:bg-indigo-50/30 transition-colors">
-                      TOR {String(index + 1).padStart(2, '0')}
+                      TOR {String(turtle.trackNumber).padStart(2, '0')}
                     </div>
                   </div>
 
@@ -262,7 +308,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
                     animate={{ left: `${progress}%` }}
                     style={{ x: '-50%' }}
                     transition={{ duration: 2.5, type: 'spring', stiffness: 35, damping: 15 }}
-                    className="absolute top-0 bottom-0 z-30 flex items-center gap-4 pl-16"
+                    className="absolute top-0 bottom-0 z-40 flex items-center gap-4 pl-16"
                   >
                     {/* Shadow / Tail effect */}
                     <div className={`absolute -left-20 right-0 h-0.5 opacity-20 bg-gradient-to-r from-transparent to-current transition-opacity group-hover/gp-lane:opacity-40`} style={{ color: turtle.color }} />
