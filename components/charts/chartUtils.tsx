@@ -25,6 +25,7 @@ import { PLNLogo } from '../../logos/PLNLogo';
 import { ResztaKryptoLogo } from '../../logos/ResztaKryptoLogo';
 import { ETFBS80TRLogo } from '../../logos/ETFBS80TRLogo';
 import { ETHLogo } from '../../logos/ETHLogo';
+import { LINKLogo } from '../../logos/LINKLogo';
 import { AnyDataRow } from '../../types';
 
 export type ThemeMode = 'light';
@@ -192,7 +193,8 @@ const LOGO_MAP: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
   PLN: PLNLogo,
   'Reszta Krypto': ResztaKryptoLogo,
   ETFBS80TR: ETFBS80TRLogo,
-  ETH: ETHLogo
+  ETH: ETHLogo,
+  LINK: LINKLogo
 };
 
 interface AssetLogoProps {
