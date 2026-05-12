@@ -41,6 +41,11 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
     return 'https://flagcdn.com/w40/us.png'; // Fallback
   };
 
+  const cleanSymbol = (symbol: string) => {
+    if (!symbol) return '';
+    return symbol.split('.')[0];
+  };
+
   const turtles: TurtleState[] = useMemo(() => {
     // 1. Filter assets belonging to "Żółwie"
     const turtleActive = activeAssets.filter(a => a.portfolio === 'Żółwie');
@@ -53,7 +58,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
     // 3. Calculate fixed track assignments
     const allAssets = [...turtleActive, ...turtleClosed];
     const turtleFirstDates = turtleNames.map(name => {
-      const assets = allAssets.filter(a => a.sector === name);
+      const assets = allAssets.filter(a => a.sector?.trim().toLowerCase() === name.toLowerCase());
       // We look for any lastPurchaseDate in all assets for this turtle
       const dates = assets
         .map(a => new Date(a.lastPurchaseDate).getTime())
@@ -79,8 +84,8 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
 
     // 4. Aggregate data per turtle
     return turtleNames.map((name, idx) => {
-      const myActive = turtleActive.filter(a => a.sector === name);
-      const myClosed = turtleClosed.filter(a => a.sector === name);
+      const myActive = turtleActive.filter(a => a.sector?.trim().toLowerCase() === name.toLowerCase());
+      const myClosed = turtleClosed.filter(a => a.sector?.trim().toLowerCase() === name.toLowerCase());
       
       let currentValue = 0;
       let purchaseValue = 0;
@@ -280,9 +285,9 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
 
           <div className="relative space-y-1">
             {/* The Track Base - Overlay layer for lines */}
-            <div className="absolute inset-y-0 left-16 right-0 z-10 pointer-events-none">
+            <div className="absolute inset-y-0 left-16 right-0 z-40 pointer-events-none">
               <div className="absolute inset-y-0 left-0 w-1 bg-slate-200 rounded-full" />
-              <div className="absolute inset-y-0 right-0 w-2 bg-[repeating-linear-gradient(45deg,#000,#000_10px,#fff_10px,#fff_20px)] shadow-lg" />
+              <div className="absolute inset-y-0 right-0 w-4 bg-[repeating-linear-gradient(45deg,#000,#000_10px,#fff_10px,#fff_20px)] shadow-xl opacity-80" />
               
               {/* START Line (0% ROI) */}
               <div 
@@ -410,7 +415,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
                             <div className="w-8 h-6 rounded bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200">
                               <img src={getFlagUrl(turtle.currentStock)} alt="flag" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                             </div>
-                            <span className="text-xs font-bold text-slate-900 tracking-tight">{turtle.currentStock}</span>
+                            <span className="text-xs font-bold text-slate-900 tracking-tight">{cleanSymbol(turtle.currentStock)}</span>
                           </>
                         ) : (
                           <div className="flex items-center gap-1.5 px-1.5 py-0.5 bg-indigo-50 border border-indigo-100 rounded-full shadow-inner ring-4 ring-indigo-50/10">
@@ -486,7 +491,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
                           {t.status === 'Otwarta' ? 'Kupno' : 'Sprzedaż'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm font-bold text-blue-600 text-left">{t.symbol}</td>
+                      <td className="px-6 py-4 text-sm font-bold text-blue-600 text-left">{cleanSymbol(t.symbol)}</td>
                       <td className="px-6 py-4 text-sm font-mono text-slate-600">{(t.quantity || 0).toFixed(4)}</td>
                       <td className="px-6 py-4 text-right">
                         <span className="text-sm font-black text-slate-900">{t.purchaseValue.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł</span>

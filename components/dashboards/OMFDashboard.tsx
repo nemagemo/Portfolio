@@ -96,9 +96,9 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
   }, [drawdownHistoryData, drawdownExcludePPK]);
 
   const filteredBubbleData = useMemo(() => {
-    let baseData = processedActiveAssets;
+    let baseData = processedActiveAssets.filter(a => a.symbol !== 'PLN-Żółwie');
     if (bubbleChartFilter !== 'ALL') {
-        baseData = processedActiveAssets.filter(a => a.portfolio.toUpperCase().includes(bubbleChartFilter));
+        baseData = baseData.filter(a => a.portfolio.toUpperCase().includes(bubbleChartFilter));
     }
     if (bubbleChartFilter === 'KRYPTO') return baseData;
 
