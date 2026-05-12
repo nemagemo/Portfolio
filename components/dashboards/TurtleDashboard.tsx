@@ -47,7 +47,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
     const turtleClosed = closedAssets.filter(a => a.portfolio === 'Żółwie');
     
     // 2. Fixed list of 10 turtles
-    const turtleNames = ['Karol', 'Marek', 'Ania', 'Piotr', 'Kasia', 'Tomek', 'Magda', 'Robert', 'Ewa', 'Jacek'];
+    const turtleNames = ['Karol', 'Janusz', 'Ania', 'Piotr', 'Kasia', 'Tomek', 'Magda', 'Robert', 'Ewa', 'Jacek'];
     const turtleColors = ['#22c55e', '#3b82f6', '#ef4444', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b', '#06b6d4', '#10b981', '#f97316'];
     
     // 3. Calculate fixed track assignments
@@ -279,15 +279,17 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
           </div>
 
           <div className="relative space-y-1">
-            {/* The Track Base */}
-            <div className="absolute inset-y-0 left-0 w-1 bg-slate-200 rounded-full z-10" />
-            <div className="absolute inset-y-0 right-0 w-2 bg-[repeating-linear-gradient(45deg,#000,#000_10px,#fff_10px,#fff_20px)] z-20 shadow-lg" />
-
-            {/* START Line (0% ROI) */}
-            <div 
-              className="absolute inset-y-0 border-l-2 border-slate-900/30"
-              style={{ left: `${trackScale.zeroPos}%`, zIndex: 10 }}
-            />
+            {/* The Track Base - Overlay layer for lines */}
+            <div className="absolute inset-y-0 left-16 right-0 z-10 pointer-events-none">
+              <div className="absolute inset-y-0 left-0 w-1 bg-slate-200 rounded-full" />
+              <div className="absolute inset-y-0 right-0 w-2 bg-[repeating-linear-gradient(45deg,#000,#000_10px,#fff_10px,#fff_20px)] shadow-lg" />
+              
+              {/* START Line (0% ROI) */}
+              <div 
+                className="absolute inset-y-0 border-l-2 border-slate-900/30"
+                style={{ left: `${trackScale.zeroPos}%` }}
+              />
+            </div>
 
             {turtles.slice().sort((a, b) => a.trackNumber - b.trackNumber).map((turtle) => {
               const isActive = turtle.isActive;
@@ -296,53 +298,58 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
               
               return (
                 <div key={`gp-${turtle.id}`} className="relative h-14 group/gp-lane border-y border-slate-100/50">
-                  {/* Lane Background */}
-                  <div className="absolute inset-0 bg-white flex items-center transition-colors group-hover/gp-lane:bg-slate-50/50">
-                    <div className="w-16 pl-4 h-full flex items-center justify-start border-r border-slate-200/50 bg-slate-50 text-[10px] font-black text-slate-300 italic group-hover/gp-lane:text-indigo-400 group-hover/gp-lane:bg-indigo-50/30 transition-colors">
-                      TOR {String(turtle.trackNumber).padStart(2, '0')}
-                    </div>
+                  {/* Lane Label (Fixed on the left) */}
+                  <div className="absolute inset-y-0 left-0 w-16 z-20 flex items-center justify-start pl-4 border-r border-slate-200/50 bg-slate-50 text-[10px] font-black text-slate-300 italic group-hover/gp-lane:text-indigo-400 group-hover/gp-lane:bg-indigo-50/30 transition-colors">
+                    TOR {String(turtle.trackNumber).padStart(2, '0')}
                   </div>
 
-                  {/* Turtle Movable Unit */}
-                  <motion.div
-                    animate={{ left: `${progress}%` }}
-                    style={{ x: '-50%' }}
-                    transition={{ duration: 2.5, type: 'spring', stiffness: 35, damping: 15 }}
-                    className="absolute top-0 bottom-0 z-40 flex items-center gap-4 pl-16"
-                  >
-                    {/* Shadow / Tail effect */}
-                    <div className={`absolute -left-20 right-0 h-0.5 opacity-20 bg-gradient-to-r from-transparent to-current transition-opacity group-hover/gp-lane:opacity-40`} style={{ color: turtle.color }} />
+                  {/* Movable Area */}
+                  <div className="absolute inset-y-0 left-16 right-0 z-30">
+                    <div className="absolute inset-0 bg-white group-hover/gp-lane:bg-slate-50/50 transition-colors" />
                     
-                    <div className="relative flex items-center">
-                       {/* Turtle Badge */}
-                       <div 
-                         className={`relative p-2.5 rounded-2xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] border-2 transition-all duration-500 group-hover/gp-lane:rotate-6 ${!isActive ? 'grayscale opacity-40' : ''}`}
-                         style={{ borderColor: turtle.color }}
-                       >
-                         {!isActive && (
-                           <div className="absolute -right-3 -top-3 bg-indigo-100 text-indigo-600 rounded-full p-1 border-2 border-white shadow-sm">
-                             <Moon size={10} className="fill-indigo-300" />
-                           </div>
-                         )}
-                         <Turtle size={24} style={{ color: turtle.color }} className={isActive ? 'animate-bounce' : ''} />
-                       </div>
+                    {/* Turtle Movable Unit */}
+                    <motion.div
+                      animate={{ left: `${progress}%` }}
+                      transition={{ duration: 2.5, type: 'spring', stiffness: 35, damping: 15 }}
+                      className="absolute top-0 bottom-0 z-50 flex items-center"
+                    >
+                      <div className="relative flex items-center">
+                        {/* THE CENTERING WRAPPER: Centers the badge on the coordinate */}
+                        <div className="absolute left-0 -translate-x-1/2 flex items-center justify-center">
+                          {/* Shadow / Tail effect */}
+                          <div className={`absolute -left-20 right-0 h-0.5 opacity-20 bg-gradient-to-r from-transparent to-current transition-opacity group-hover/gp-lane:opacity-40`} style={{ color: turtle.color }} />
+                          
+                          {/* Turtle Badge */}
+                          <div 
+                            className={`relative p-2.5 rounded-2xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] border-2 transition-all duration-500 group-hover/gp-lane:rotate-6 ${!isActive ? 'grayscale opacity-40' : ''}`}
+                            style={{ borderColor: turtle.color }}
+                          >
+                            {!isActive && (
+                              <div className="absolute -right-3 -top-3 bg-indigo-100 text-indigo-600 rounded-full p-1 border-2 border-white shadow-sm">
+                                <Moon size={10} className="fill-indigo-300" />
+                              </div>
+                            )}
+                            <Turtle size={24} style={{ color: turtle.color }} className={isActive ? 'animate-bounce' : ''} />
+                          </div>
+                        </div>
 
-                       {/* Data Bubble */}
-                       <div className="ml-3 pointer-events-none transition-all duration-500 translate-y-0 group-hover/gp-lane:-translate-y-1">
-                         <div className="flex flex-col">
-                           <span className="text-xs font-black text-slate-900 tracking-tight flex items-center gap-2">
-                             {turtle.name}
-                             {isActive && (
-                               <img src={getFlagUrl(turtle.currentStock)} alt="" className="w-3 h-2.5 object-cover rounded shadow-sm" />
-                             )}
-                           </span>
-                           <span className={`text-[10px] font-bold ${isPositive ? 'text-emerald-500' : 'text-rose-500'} flex items-center gap-1`}>
-                             {isPositive ? '▲' : '▼'} {Math.abs(turtle.roi).toFixed(2)}%
-                           </span>
-                         </div>
-                       </div>
-                    </div>
-                  </motion.div>
+                        {/* Data Bubble (Offset to clear the badge) */}
+                        <div className="ml-8 pointer-events-none transition-all duration-500 translate-y-0 group-hover/gp-lane:-translate-y-1">
+                          <div className="flex flex-col">
+                            <span className="text-xs font-black text-slate-900 tracking-tight flex items-center gap-2">
+                              {turtle.name}
+                              {isActive && (
+                                <img src={getFlagUrl(turtle.currentStock)} alt="" className="w-3 h-2.5 object-cover rounded shadow-sm" />
+                              )}
+                            </span>
+                            <span className={`text-[10px] font-bold ${isPositive ? 'text-emerald-500' : 'text-rose-500'} flex items-center gap-1`}>
+                              {isPositive ? '▲' : '▼'} {Math.abs(turtle.roi).toFixed(2)}%
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </div>
                 </div>
               );
             })}

@@ -51,6 +51,8 @@ Otwarta,Krypto,Krypto,BTC,,,0,2026-02-15,"0,00278901","804,33 zł","711,71 zł",
 Otwarta,Krypto,Krypto,ALGO,,,0,2026-03-24,"889,110000","400,81 zł","300,70 zł","100,11 zł","33,29%"
 Otwarta,Żółwie,Akcje,STNG,MHY7962G1054,Karol,1,2026-05-06,"0,326200","99,31 zł","100,00 zł","-0,69 zł","-0,69%"
 Otwarta,Żółwie,Gotówka,PLN,,Karol,0,2026-05-06,"0","0,00 zł","0,00 zł","0,00 zł","0,00%"
-Otwarta,Gotówka,Gotówka,PLN,,,382,2026-02-17,"986,550000","986,55 zł","986,55 zł","0,00 zł","0,00%"`;
+Otwarta,Żółwie,Akcje,HWBK,,Janusz,0,2026-05-12,"0,7543","100,00 zł","100,00 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Gotówka,PLN,,Janusz,0,2026-05-12,"0","0,00 zł","0,00 zł","0,00 zł","0,00%"
+Otwarta,Gotówka,Gotówka,PLN,,,382,2026-02-17,"886,550000","886,55 zł","886,55 zł","0,00 zł","0,00%"`;
 
-export const OMF_LAST_UPDATED = '2026-05-07';
+export const OMF_LAST_UPDATED = '2026-05-12';

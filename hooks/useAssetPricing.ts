@@ -56,7 +56,7 @@ export const useAssetPricing = ({ portfolioType, onlinePrices, historyPrices, di
 
   useEffect(() => {
     try {
-      if (portfolioType === 'OMF') {
+      if (portfolioType === 'OMF' || portfolioType === 'TURTLE') {
         const openRes = parseCSV(csvSources.OMF_OPEN, 'OMF', 'Offline');
         let omfOpenRows = openRes.data as OMFDataRow[];
         const closedRes = parseCSV(csvSources.OMF_CLOSED, 'OMF', 'Offline');
