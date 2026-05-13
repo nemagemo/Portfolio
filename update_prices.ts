@@ -57,10 +57,6 @@ for (let i = 1; i < openLines.length; i++) {
     let newPrice = pricesNum[symbol];
     if (newPrice !== undefined) {
       let newCurrentVal = amount * newPrice;
-      if (symbol === 'PPK') {
-        newCurrentVal = 45.059700 * newPrice; // Special handling for PPK amount from previous code iteration or we can use `amount` directly if it's correct. 
-        // Checking CSV: PPK amount is 45.059700
-      }
       
       const profit = newCurrentVal - purchaseVal;
       const roi = purchaseVal !== 0 ? (profit / purchaseVal) * 100 : 0;
@@ -77,7 +73,7 @@ for (let i = 1; i < openLines.length; i++) {
 let finalOpenContent = openContent.replace(dataMatchOpen[1], openLines.join('\n'));
 let updatedOpenMatch = finalOpenContent.match(/export const OMF_LAST_UPDATED = '.*?';/);
 if (updatedOpenMatch) {
-  finalOpenContent = finalOpenContent.replace(updatedOpenMatch[0], `export const OMF_LAST_UPDATED = '2026-05-02';`);
+  finalOpenContent = finalOpenContent.replace(updatedOpenMatch[0], `export const OMF_LAST_UPDATED = '2026-05-13';`);
 }
 fs.writeFileSync('./CSV/OMFopen.ts', finalOpenContent, 'utf-8');
 console.log('Prices updated in OMFopen.ts');
