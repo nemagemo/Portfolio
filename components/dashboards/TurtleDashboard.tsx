@@ -35,8 +35,8 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
     if (t.endsWith('.US')) return 'https://flagcdn.com/w40/us.png';
     if (t.endsWith('.L')) return 'https://flagcdn.com/w40/gb.png';
     if (t.endsWith('.DE')) return 'https://flagcdn.com/w40/de.png';
-    // Check common polish stocks if no prefix
-    const polishSymbols = ['CDR', 'LPP', 'KRU', 'PKO', 'ALE', 'ACP', 'DNP', 'ORL'];
+    // Check common polish symbols
+    const polishSymbols = ['CDR', 'LPP', 'KRU', 'PKO', 'ALE', 'ACP', 'DNP', 'ORL', 'BHW', 'PEO', 'PZU', 'KGH', 'PKN'];
     if (polishSymbols.includes(t)) return 'https://flagcdn.com/w40/pl.png';
     return 'https://flagcdn.com/w40/us.png'; // Fallback
   };
@@ -286,8 +286,13 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
           <div className="relative space-y-1">
             {/* The Track Base - Overlay layer for lines */}
             <div className="absolute inset-y-0 left-16 right-0 z-40 pointer-events-none">
-              <div className="absolute inset-y-0 left-0 w-1 bg-slate-200 rounded-full" />
-              <div className="absolute inset-y-0 right-0 w-4 bg-[repeating-linear-gradient(45deg,#000,#000_10px,#fff_10px,#fff_20px)] shadow-xl opacity-80" />
+              <div className="absolute inset-y-0 left-0 w-1 bg-slate-200/50 rounded-full" />
+              
+              {/* FINISH Line (The Meta) - Checkerboard lane on the right, across whole height */}
+              <div className="absolute inset-y-0 right-0 w-8 z-10">
+                <div className="absolute inset-0 bg-[repeating-conic-gradient(#000_0%_25%,#fff_0%_50%)] bg-[length:16px_16px] opacity-20 shadow-inner" />
+                <div className="absolute inset-y-0 left-0 w-px bg-slate-300/50" />
+              </div>
               
               {/* START Line (0% ROI) */}
               <div 

@@ -201,7 +201,7 @@ export const AssetsTable: React.FC<AssetsTableProps> = ({ data, variant = 'activ
 
               return (
                 <tr key={`${r.symbol}-${index}`} className={getRowClass(index)}>
-                  <td className={`px-1 py-1.5 md:px-1 md:py-2 lg:px-4 lg:py-3 ${getTextClass(true)}`}>{r.symbol}</td>
+                  <td className={`px-1 py-1.5 md:px-1 md:py-2 lg:px-4 lg:py-3 ${getTextClass(true)}`}>{r.symbol.split('.')[0]}</td>
                   <td className="px-1 py-1.5 md:px-1 md:py-2 lg:px-4 lg:py-3 text-slate-500">{r.lastPurchaseDate}</td>
                   
                   {variant !== 'closed' && (
