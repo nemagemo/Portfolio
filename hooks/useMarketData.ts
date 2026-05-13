@@ -94,7 +94,10 @@ export const useMarketData = (): MarketDataState => {
            if (idx === 0 && line.toLowerCase().includes('symbol')) return;
            const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
            if (parts.length >= 2) {
-              const symbol = parts[0].trim().replace(/^"|"$/g, '').toUpperCase();
+              const symbol = parts[0].trim()
+                .replace(/^"|"$/g, '')
+                .replace(/[\u00A0\u1680\u180e\u2000-\u200b\u202f\u205f\u3000\ufeff]/g, '') // Remove weird spaces
+                .toUpperCase();
               const priceStr = parts[1].trim().replace(/^"|"$/g, '');
               const price = parseCurrency(priceStr);
               if (!isNaN(price) && price > 0) {

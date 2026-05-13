@@ -73,15 +73,13 @@ export const useAssetPricing = ({ portfolioType, onlinePrices, historyPrices, di
             if (row.status !== 'Otwarta' && row.status !== 'Gotówka') return { ...row, symbol: processedSymbol };
 
             const symbolKey = row.symbol.toUpperCase();
+            
             let finalPrice: number | undefined = undefined;
-            let isLivePrice = false;
-
-            // Priority 1: Online Price (Google Sheets)
             if (onlinePrices && onlinePrices[symbolKey] > 0) {
                 finalPrice = onlinePrices[symbolKey];
-                isLivePrice = true;
-            } 
-            
+            }
+            const isLivePrice = finalPrice !== undefined;
+
             // If we found a valid price (Online), recalculate current value.
             if (finalPrice !== undefined && finalPrice > 0) {
                 let newCurrentValue = 0;
