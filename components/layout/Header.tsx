@@ -114,7 +114,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button onClick={() => handlePortfolioChange('PPK')} className={`flex items-center md:px-2 md:py-1 md:text-[10px] lg:px-4 lg:py-1.5 lg:text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'PPK' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><Building2 size={16} className="md:mr-1 lg:mr-2 hidden sm:block" />PPK</button>
           <button onClick={() => handlePortfolioChange('CRYPTO')} className={`flex items-center md:px-2 md:py-1 md:text-[10px] lg:px-4 lg:py-1.5 lg:text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'CRYPTO' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><Bitcoin size={16} className="md:mr-1 lg:mr-2 hidden sm:block" />Krypto</button>
           <button onClick={() => handlePortfolioChange('IKE')} className={`flex items-center md:px-2 md:py-1 md:text-[10px] lg:px-4 lg:py-1.5 lg:text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'IKE' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><LineChart size={16} className="md:mr-1 lg:mr-2 hidden sm:block" />IKE</button>
-          <button onClick={() => handlePortfolioChange('TURTLE')} className={`flex items-center md:px-2 md:py-1 md:text-[10px] lg:px-4 lg:py-1.5 lg:text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'TURTLE' ? styles.buttonActive : styles.buttonInactive} rounded-md`}><Turtle size={16} /></button>
+          <button onClick={() => handlePortfolioChange('TURTLE')} className={`flex items-center md:px-2 md:py-1 md:text-[10px] lg:px-4 lg:py-1.5 lg:text-sm font-medium transition-all whitespace-nowrap ${portfolioType === 'TURTLE' ? styles.buttonActive : styles.buttonInactive} rounded-md`} title="Ranking Żółwi"><Turtle size={16} /></button>
         </div>
 
         {/* RIGHT: Status & Hamburger */}
@@ -176,7 +176,7 @@ export const Header: React.FC<HeaderProps> = ({
                     <LineChart size={20} className="mb-1" /> IKE
                  </button>
                  <button onClick={() => handlePortfolioChange('TURTLE')} className={`flex flex-col items-center justify-center p-3 rounded-lg text-sm font-medium ${portfolioType === 'TURTLE' ? styles.buttonActive : styles.buttonInactive}`}>
-                    <Turtle size={20} className="mb-1" /> Żółw
+                    <Turtle size={20} className="mb-1" /> Żółwie
                  </button>
               </div>
            </div>

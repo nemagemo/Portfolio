@@ -127,6 +127,8 @@ export const App: React.FC = () => {
               theme={theme} 
               activeAssets={omfActiveAssets} 
               closedAssets={omfClosedAssets} 
+              onlinePrices={onlinePrices}
+              historyPrices={historyPrices}
             />
         ) : (
           <StandardDashboard 

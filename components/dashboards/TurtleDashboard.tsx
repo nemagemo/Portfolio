@@ -1,14 +1,18 @@
 
 import React, { useMemo } from 'react';
 import { motion } from 'motion/react';
-import { Turtle, TrendingUp, Trophy, Info, Target, Wallet, Moon } from 'lucide-react';
+import { Turtle, TrendingUp, Trophy, Info, Target, Wallet, Moon, Activity } from 'lucide-react';
 import { Theme, themeStyles } from '../../theme/styles';
 import { OMFDataRow } from '../../types';
+import { usePortfolioData } from '../../hooks/usePortfolioData';
+import { CryptoValueChart, ROIChart } from '../Charts';
 
 interface TurtleDashboardProps {
   theme: Theme;
   activeAssets: OMFDataRow[];
   closedAssets: OMFDataRow[];
+  onlinePrices: Record<string, number> | null;
+  historyPrices: Record<string, number> | null;
 }
 
 interface TurtleState {
@@ -24,8 +28,21 @@ interface TurtleState {
   isActive: boolean;
 }
 
-export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeAssets, closedAssets }) => {
+export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ 
+  theme, 
+  activeAssets, 
+  closedAssets,
+  onlinePrices,
+  historyPrices
+}) => {
   const styles = themeStyles[theme];
+
+  // Fetch history data for Turtle portfolio
+  const { data: historyData } = usePortfolioData({
+    portfolioType: 'TURTLES_HISTORY',
+    onlinePrices,
+    historyPrices
+  });
 
   // Helper to get flag URL
   const getFlagUrl = (ticker: string) => {
@@ -36,7 +53,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
     if (t.endsWith('.L')) return 'https://flagcdn.com/w40/gb.png';
     if (t.endsWith('.DE')) return 'https://flagcdn.com/w40/de.png';
     // Check common polish symbols
-    const polishSymbols = ['CDR', 'LPP', 'KRU', 'PKO', 'ALE', 'ACP', 'DNP', 'ORL', 'BHW', 'PEO', 'PZU', 'KGH', 'PKN'];
+    const polishSymbols = ['ARH', 'LPP', 'KRU', 'PKO', 'ALE', 'ACP', 'DNP', 'ORL', 'SEK', 'PEO', 'PZU', 'KGH', 'PKN'];
     if (polishSymbols.includes(t)) return 'https://flagcdn.com/w40/pl.png';
     return 'https://flagcdn.com/w40/us.png'; // Fallback
   };
@@ -378,6 +395,41 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
                </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* History Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* 1. Value Composition */}
+        <div className={`p-6 ${styles.cardBg} ${styles.cardBorder} rounded-2xl border border-slate-200 shadow-sm`}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+              <TrendingUp size={20} className="text-blue-600" /> Wartość Portfela
+            </h3>
+            <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}>
+              <Wallet size={20} className="text-blue-600" />
+            </div>
+          </div>
+          <CryptoValueChart 
+            data={historyData} 
+            themeMode={theme as any} 
+          />
+        </div>
+
+        {/* 2. ROI Analysis */}
+        <div className={`p-6 ${styles.cardBg} ${styles.cardBorder} rounded-2xl border border-slate-200 shadow-sm`}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+              <Activity size={20} className="text-purple-600" /> Stopa zwrotu w czasie
+            </h3>
+            <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}>
+              <TrendingUp size={20} className="text-purple-600" />
+            </div>
+          </div>
+          <ROIChart 
+            data={historyData} 
+            themeMode={theme as any} 
+          />
         </div>
       </div>
 

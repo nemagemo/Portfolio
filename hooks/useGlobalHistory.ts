@@ -10,6 +10,7 @@ import { KRYPTO_DATA } from '../CSV/Krypto';
 import { IKE_DATA } from '../CSV/IKE';
 import { CASH_DATA } from '../CSV/Cash';
 import { TRANSACTIONS_DATA } from '../CSV/Transactions';
+import { TURTLES_HISTORY_DATA } from '../CSV/TurtlesHistory';
 import { TurtleTransactionRow } from '../types';
 
 interface UseGlobalHistoryProps {
@@ -43,6 +44,7 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
     const ikeData = parseCSV(IKE_DATA, 'IKE', 'Offline').data as IKEDataRow[];
     const cashData = parseCSV(CASH_DATA, 'CASH', 'Offline').data as CashDataRow[];
     const turtleTransactions = parseCSV(TRANSACTIONS_DATA, 'TURTLE', 'Offline').data as TurtleTransactionRow[];
+    const turtlesHistory = parseCSV(TURTLES_HISTORY_DATA, 'TURTLES_HISTORY', 'Offline').data as CryptoDataRow[];
 
     // Map Lookups for faster access by Date
     const createMap = (arr: any[]) => new Map<string, { inv: number, profit: number }>(
@@ -51,22 +53,29 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
     const ppkMap = createMap(ppkData);
     const cryptoMap = createMap(cryptoData);
     const ikeMap = createMap(ikeData);
+    const turtleHistoryMap = createMap(turtlesHistory);
     const cashMap = new Map(cashData.map(r => [r.date, r.value]));
 
-    // Aggregate Turtle Transactions by month (bucket by date string)
-    const turtleHistMap = new Map<string, { inv: number, profit: number }>();
+    // Aggregate Turtle Transactions and merge with monthly snapshot
+    const turtleHistMapCombined = new Map<string, { inv: number, profit: number }>(turtleHistoryMap);
     turtleTransactions.forEach(t => {
-        const dateKey = t.date; // Use the exact date or bucket it
-        const current = turtleHistMap.get(dateKey) || { inv: 0, profit: 0 };
-        turtleHistMap.set(dateKey, { inv: current.inv + t.cost, profit: 0 });
+        const dateKey = t.date; 
+        // If we already have this specific date in history, we don't double add transactions
+        // (Assuming history points already include current transactions up to that date)
+        if (!turtleHistMapCombined.has(dateKey)) {
+            const current = turtleHistMapCombined.get(dateKey) || { inv: 0, profit: 0 };
+            turtleHistMapCombined.set(dateKey, { inv: current.inv + t.cost, profit: 0 });
+        }
     });
 
     // --- LIVE TOTALS & SNOWBALL LOGIC ---
     // Calculate the current state from OMF snapshots.
-    const closedProfits = { IKE: 0, CRYPTO: 0 };
+    const closedProfits = { IKE: 0, CRYPTO: 0, TURTLE: 0 };
     omfClosedAssets.forEach(a => {
-        if (a.portfolio.toUpperCase().includes('IKE')) closedProfits.IKE += a.profit;
-        if (a.portfolio.toUpperCase().includes('KRYPTO')) closedProfits.CRYPTO += a.profit;
+        const p = a.portfolio.toUpperCase();
+        if (p.includes('IKE')) closedProfits.IKE += a.profit;
+        if (p.includes('KRYPTO')) closedProfits.CRYPTO += a.profit;
+        if (p.includes('ŻÓŁWIE')) closedProfits.TURTLE += a.profit;
     });
 
     const liveTotals = { PPK: {inv:0, val:0}, CRYPTO: {inv:0, val:0}, IKE: {inv:0, val:0}, TURTLE: {inv:0, val:0}, CASH: {inv:0, val:0} };
@@ -91,10 +100,11 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
 
     const liveNetInvIKE = liveTotals.IKE.inv - closedProfits.IKE - totalActiveDividendsIKE;
     const liveNetInvCrypto = liveTotals.CRYPTO.inv - closedProfits.CRYPTO;
+    const liveNetInvTurtle = liveTotals.TURTLE.inv - closedProfits.TURTLE;
 
     // Dates Union & Sorting - Force Monthly Bucketing
     const monthsMap = new Map<string, string>(); // YYYY-MM -> Latest YYYY-MM-DD
-    [...ppkMap.keys(), ...cryptoMap.keys(), ...ikeMap.keys(), ...cashMap.keys(), ...turtleHistMap.keys()].forEach(date => {
+    [...ppkMap.keys(), ...cryptoMap.keys(), ...ikeMap.keys(), ...cashMap.keys(), ...turtleHistMapCombined.keys()].forEach(date => {
         const monthKey = date.substring(0, 7); // "YYYY-MM"
         const existing = monthsMap.get(monthKey);
         if (!existing || date > existing) {
@@ -126,6 +136,13 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
             ikeMap.set(lastDate, { 
                 inv: liveNetInvIKE, 
                 profit: liveProfitIKE 
+            });
+        }
+        if (liveTotals.TURTLE.val > 0) {
+            const liveProfitTurtle = liveTotals.TURTLE.val - liveNetInvTurtle;
+            turtleHistMapCombined.set(lastDate, { 
+                inv: liveNetInvTurtle, 
+                profit: liveProfitTurtle 
             });
         }
     }
@@ -179,7 +196,7 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
         if (ppkMap.has(date)) lastPPK = ppkMap.get(date)!;
         if (cryptoMap.has(date)) lastCrypto = cryptoMap.get(date)!;
         if (ikeMap.has(date)) lastIKE = ikeMap.get(date)!;
-        if (turtleHistMap.has(date)) lastTurtle = turtleHistMap.get(date)!;
+        if (turtleHistMapCombined.has(date)) lastTurtle = turtleHistMapCombined.get(date)!;
 
         const currentPPKInv = excludePPK ? 0 : lastPPK.inv;
         const currentPPKProfit = excludePPK ? 0 : lastPPK.profit;

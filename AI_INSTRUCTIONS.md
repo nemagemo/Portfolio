@@ -181,7 +181,7 @@ Aplikacja stosuje hybrydowy model wyceny w czasie rzeczywistym:
     *   Zaktualizuj datę `OMF_LAST_UPDATED`.
 4.  **Synchronizacja Historii (Weryfikacja TRIPLE CHECK wymagana):**
     *   Na podstawie nowych wartości w `OMFopen.ts`, zsumuj wartość każdego portfela (PPK, IKE, Krypto) oraz pobierz wartość Gotówki.
-    *   Zaktualizuj wartości oraz datę w **ostatnim wierszu** plików `CSV/PPK.ts`, `CSV/IKE.ts`, `CSV/Krypto.ts` **oraz `CSV/Cash.ts`**, aby wszystkie wykresy historyczne kończyły się tą samą datą i wartościami odpowiadającymi aktualnemu stanowi ("Teraz"). Zapobiegnie to rozjeżdżaniu się osi czasu na wykresach (np. "dwa razy listopad").
+    *   Zaktualizuj wartości oraz datę w **ostatnim wierszu** plików `CSV/PPK.ts`, `CSV/IKE.ts`, `CSV/Krypto.ts`, `CSV/TurtlesHistory.ts` **oraz `CSV/Cash.ts`**, aby wszystkie wykresy historyczne kończyły się tą samą datą i wartościami odpowiadającymi aktualnemu stanowi ("Teraz"). Zapobiegnie to rozjeżdżaniu się osi czasu na wykresach (np. "dwa razy listopad").
 
 ### Polecenie: `ZamknijMiesiac`
 **Wyzwalacz:** "Zamknij miesiąc [data]" lub po prostu "Zamknij miesiąc".
@@ -202,7 +202,7 @@ Aplikacja stosuje hybrydowy model wyceny w czasie rzeczywistym:
     *   Oblicz `Wkład` (Net Invested) używając formuły TRIPLE CHECK (z uwzględnieniem dywidend).
     *   Wylicz `Zysk` = `Obecna wartość` - `Wkład`.
     *   Wylicz `ROI`.
-    *   Sformatuj i dopisz nowe wiersze do `CSV/IKE.ts` i `CSV/Krypto.ts`.
+    *   Sformatuj i dopisz nowe wiersze do `CSV/IKE.ts`, `CSV/Krypto.ts` i `CSV/TurtlesHistory.ts`.
 4.  **Snapshot Gotówki:**
     *   Pobierz wartość gotówki (PLN) z pliku `OMFopen.ts`.
     *   Sformatuj i dopisz nowy wiersz do `CSV/Cash.ts`.

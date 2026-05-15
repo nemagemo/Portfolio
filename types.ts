@@ -9,7 +9,7 @@
  * 2. 'AnyDataRow' is a discriminated union used for generic components like HistoryTable.
  */
 
-export type PortfolioType = 'PPK' | 'CRYPTO' | 'IKE' | 'OMF' | 'CASH' | 'DIVIDENDS' | 'TURTLE';
+export type PortfolioType = 'PPK' | 'CRYPTO' | 'IKE' | 'OMF' | 'CASH' | 'DIVIDENDS' | 'TURTLE' | 'TURTLES_HISTORY';
 
 /**
  * Represents a single month of PPK data.

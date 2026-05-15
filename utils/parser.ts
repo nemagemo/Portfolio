@@ -542,6 +542,7 @@ export const parseCSV = (csvText: string, type: PortfolioType, source: 'Online' 
       return parseDividends(lines, source);
     case 'TURTLE':
       return parseTurtles(lines, source);
+    case 'TURTLES_HISTORY':
     case 'IKE':
     case 'CRYPTO':
       return parseStandard(lines, type, source);

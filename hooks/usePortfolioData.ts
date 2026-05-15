@@ -68,10 +68,11 @@ export const usePortfolioData = ({
     // Filter assets belonging to the current portfolio view
     const currentAssets = omfActiveAssets.filter(a => {
         if (portfolioType === 'CRYPTO') return a.portfolio.toUpperCase().includes('KRYPTO');
+        if (portfolioType === 'TURTLES_HISTORY') return a.portfolio === 'Żółwie';
         return a.portfolio === portfolioType;
     });
 
-    if (currentAssets.length === 0) return rawData;
+    if (currentAssets.length === 0 && portfolioType !== 'TURTLES_HISTORY') return rawData;
 
     // Calculate Live Totals
     const liveTotalValue = currentAssets.reduce((sum, a) => sum + a.currentValue, 0);
@@ -137,13 +138,18 @@ export const usePortfolioData = ({
         }
 
     } else {
-        // IKE & CRYPTO
+        // IKE, CRYPTO & TURTLES_HISTORY
         const r = lastRow as CryptoDataRow | IKEDataRow;
         
         // For Investment (Cost Basis), we generally stick to the CSV history for stability
         // unless we have a reliable way to calculate it from Open+Closed assets on the fly.
         // Using the last CSV row's investment is the safest bet for "Live View" without full re-calc.
-        const liveInvestment = r.investment; 
+        
+        // Special case for Turtles: if it's the first time and investment is 0 in CSV but we have assets
+        let liveInvestment = r.investment;
+        if (portfolioType === 'TURTLES_HISTORY' && liveInvestment === 0 && liveTotalValue > 0) {
+            liveInvestment = currentAssets.reduce((sum, a) => sum + a.purchaseValue, 0);
+        }
         
         const newProfit = liveTotalValue - liveInvestment;
         const newRoi = liveInvestment > 0 ? (newProfit / liveInvestment) * 100 : 0;
