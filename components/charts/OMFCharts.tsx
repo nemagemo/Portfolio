@@ -62,7 +62,7 @@ const TreemapContent = (props: any) => {
         stroke={strokeColor}
         strokeWidth={strokeWidth}
       />
-      {name && <AssetLogo name={name} x={x} y={y} width={width} height={height} />}
+      {name && <AssetLogo name={name} x={x} y={y} width={width} height={height} fill={symbolColor} />}
       
       {showText && name && (
         <text
@@ -88,7 +88,7 @@ const TreemapContent = (props: any) => {
           textAnchor="end"
           fill={roiColor}
           fontSize={fontSizeRoi}
-          fontWeight="500" 
+          fontWeight="300" 
           style={{ 
             textShadow: textShadow, 
             pointerEvents: 'none', 

@@ -52,7 +52,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
     const turtleClosed = closedAssets.filter(a => a.portfolio === 'Żółwie');
     
     // 2. Fixed list of 10 turtles
-    const turtleNames = ['Karol', 'Janusz', 'Ania', 'Piotr', 'Kasia', 'Tomek', 'Magda', 'Robert', 'Ewa', 'Jacek'];
+    const turtleNames = ['Karol', 'Janusz', 'Grażyna', 'Dobrawa', 'Kasia', 'Tomek', 'Magda', 'Robert', 'Ewa', 'Jacek'];
     const turtleColors = ['#22c55e', '#3b82f6', '#ef4444', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b', '#06b6d4', '#10b981', '#f97316'];
     
     // 3. Calculate fixed track assignments
@@ -107,7 +107,9 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
       const totalProfit = activeProfit + closedProfit;
       
       const hasActivity = myActive.some(a => a.currentValue > 0 || a.purchaseValue > 0) || myClosed.length > 0;
-      const initialCapital = hasActivity ? 100 : 0;
+      
+      // Calculate real capital based on purchase values
+      const initialCapital = myActive.reduce((sum, a) => sum + a.purchaseValue, 0) + myClosed.reduce((sum, a) => sum + a.purchaseValue, 0);
       const totalEquity = initialCapital + totalProfit;
       const roi = initialCapital > 0 ? (totalProfit / initialCapital) * 100 : 0;
 
@@ -433,7 +435,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ theme, activeA
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-right font-mono text-xs text-slate-500">{turtle.initialCapital.toFixed(0)} zł</td>
+                    <td className="px-6 py-4 text-right font-mono text-xs text-slate-500">{turtle.initialCapital.toFixed(2)} zł</td>
                     <td className="px-6 py-4 text-right font-bold text-slate-700">{turtle.currentValue.toFixed(2)} zł</td>
                     <td className={`px-6 py-4 text-right font-bold ${turtle.profit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                       {turtle.profit.toFixed(2)} zł

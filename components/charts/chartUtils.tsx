@@ -26,6 +26,8 @@ import { ResztaKryptoLogo } from '../../logos/ResztaKryptoLogo';
 import { ETFBS80TRLogo } from '../../logos/ETFBS80TRLogo';
 import { ETHLogo } from '../../logos/ETHLogo';
 import { LINKLogo } from '../../logos/LINKLogo';
+import { SEKLogo } from '../../logos/SEKLogo';
+import { TurtleLogo } from '../../logos/TurtleLogo';
 import { AnyDataRow } from '../../types';
 
 export type ThemeMode = 'light';
@@ -194,7 +196,9 @@ const LOGO_MAP: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
   'Reszta Krypto': ResztaKryptoLogo,
   ETFBS80TR: ETFBS80TRLogo,
   ETH: ETHLogo,
-  LINK: LINKLogo
+  LINK: LINKLogo,
+  SEK: SEKLogo,
+  'Żółwie': TurtleLogo
 };
 
 interface AssetLogoProps {
@@ -203,9 +207,10 @@ interface AssetLogoProps {
   y: number;
   width: number;
   height: number;
+  fill?: string;
 }
 
-export const AssetLogo: React.FC<AssetLogoProps> = ({ name, x, y, width, height }) => {
+export const AssetLogo: React.FC<AssetLogoProps> = ({ name, x, y, width, height, fill }) => {
   const LogoComponent = LOGO_MAP[name];
   
   if (!width || !height || width <= 0 || height <= 0) return null;
@@ -224,6 +229,7 @@ export const AssetLogo: React.FC<AssetLogoProps> = ({ name, x, y, width, height 
     width: size,
     height: size,
     opacity: 0.8, 
+    fill: fill || "white",
     stroke: "none", 
     style: { pointerEvents: 'none' as const }
   };

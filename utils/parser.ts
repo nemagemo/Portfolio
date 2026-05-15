@@ -197,9 +197,21 @@ const parsePPK = (lines: string[], source: 'Online' | 'Offline'): { data: AnyDat
     const employer = parseCurrency(row[columnMap.employer]);
     const state = columnMap.state !== -1 ? parseCurrency(row[columnMap.state]) : 0;
     const fundProfit = columnMap.fundProfit !== -1 ? parseCurrency(row[columnMap.fundProfit]) : 0;
-    const totalUserProfit = columnMap.totalUserProfit !== -1 ? parseCurrency(row[columnMap.totalUserProfit]) : 0;
-    const tax = columnMap.tax !== -1 ? -Math.abs(parseCurrency(row[columnMap.tax])) : 0;
-    const roi = columnMap.roi !== -1 ? parsePercent(row[columnMap.roi]) : 0;
+    
+    // AGENTS.md Rules Implementation:
+    // -------------------------------
+    // 1. Total Profit (Całkowity Zysk) = Fund Profit + Employer + State
+    const totalUserProfit = fundProfit + employer + state;
+    
+    // 2. ROI = Total Profit / Employee Contribution
+    const roi = employee > 0 ? (totalUserProfit / employee) * 100 : 0;
+    
+    // 3. Tax = -12% of Employer Contribution
+    const tax = -(employer * 0.12);
+    
+    // 4. Exit ROI = ((Fund Profit * 0.81) + (Employer * 0.70)) / Employee
+    const exitGain = (fundProfit * 0.81) + (employer * 0.70);
+    const calculatedExitRoi = employee > 0 ? (exitGain / employee) * 100 : 0;
 
     if (isNaN(employee) || isNaN(employer)) {
       report.errors.push(`Wiersz ${i + 1}: Błąd parsowania wartości liczbowych.`);
@@ -213,15 +225,12 @@ const parsePPK = (lines: string[], source: 'Online' | 'Offline'): { data: AnyDat
     }
     
     const totalValue = parseFloat((employee + employer + state + fundProfit).toFixed(2));
-    const userProfit = totalUserProfit;
-    const exitGain = (fundProfit * 0.81) + (employer * 0.70);
-    const calculatedExitRoi = employee > 0 ? (exitGain / employee) * 100 : 0;
 
     data.push({
       date: dateStr, dateObj,
       employeeContribution: employee, employerContribution: employer, stateContribution: state,
       fundProfit: fundProfit,
-      profit: userProfit, 
+      profit: totalUserProfit, 
       tax, roi, 
       exitRoi: calculatedExitRoi,
       totalValue: totalValue

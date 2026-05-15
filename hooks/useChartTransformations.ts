@@ -20,16 +20,17 @@ export const useChartTransformations = ({
     const groups: Record<string, any[]> = {};
     let cryptoRestVal = 0, cryptoRestPurch = 0;
     let aggregatedCashVal = 0;
-    let turtleCashVal = 0;
+    let turtleVal = 0, turtlePurch = 0;
 
     omfActiveAssets.forEach(a => {
-      // Aggregate Turtle Cash separately
-      if (a.portfolio === 'Żółwie' && a.type === 'Gotówka') {
-        turtleCashVal += a.currentValue;
+      // 1. ALL assets from Żółwie portfolio should be grouped into ONE tile (as requested)
+      if (a.portfolio === 'Żółwie') {
+        turtleVal += a.currentValue;
+        turtlePurch += a.purchaseValue;
         return;
       }
 
-      // AGGREGATION LOGIC: Sum PLN and PLN-IKE into one variable
+      // 2. AGGREGATION LOGIC: Sum PLN and PLN-IKE into one variable
       if (a.symbol === 'PLN' || a.symbol === 'PLN-IKE') {
         aggregatedCashVal += a.currentValue;
         return;
@@ -53,10 +54,16 @@ export const useChartTransformations = ({
        groups['Krypto'].push({ name: 'Reszta Krypto', value: cryptoRestVal, roi: aggRoi, portfolio: 'Krypto' });
     }
 
-    // Add Aggregated "PLN-Żółwie" Tile
-    if (turtleCashVal > 0) {
+    // Add Aggregated "Żółwie" Tile (All assets grouped as requested)
+    if (turtleVal > 0) {
+        const turtleRoi = turtlePurch > 0 ? ((turtleVal - turtlePurch) / turtlePurch) * 100 : 0;
         if (!groups['Żółwie']) groups['Żółwie'] = [];
-        groups['Żółwie'].push({ name: 'PLN-Żółwie', value: turtleCashVal, roi: 0, portfolio: 'Żółwie' });
+        groups['Żółwie'].push({ 
+          name: 'Żółwie', 
+          value: turtleVal, 
+          roi: turtleRoi, 
+          portfolio: 'Żółwie' 
+        });
     }
 
     // Add Aggregated "PLN" Tile to "Gotówka" Group

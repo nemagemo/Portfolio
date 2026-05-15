@@ -53,6 +53,10 @@ Otwarta,Żółwie,Akcje,STNG,MHY7962G1054,Karol,1,2026-05-06,"0,326200","98,93 z
 Otwarta,Żółwie,Gotówka,PLN,,Karol,0,2026-05-06,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Akcje,HWBK,,Janusz,0,2026-05-12,"0,7543","99,38 zł","100,00 zł","-0,62 zł","-0,62%"
 Otwarta,Żółwie,Gotówka,PLN,,Janusz,0,2026-05-12,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
-Otwarta,Gotówka,Gotówka,PLN,,,382,2026-02-17,"886,550000","886,55 zł","886,55 zł","0,00 zł","0,00%"`;
+Otwarta,Żółwie,Akcje,SEK,,Grażyna,0,2026-05-15,"9,000000","94,50 zł","94,50 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Gotówka,PLN,,Grażyna,0,2026-05-15,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Akcje,ARH,,Dobrawa,0,2026-05-15,"1,9011","100,00 zł","100,00 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Gotówka,PLN,,Dobrawa,0,2026-05-15,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
+Otwarta,Gotówka,Gotówka,PLN,,,382,2026-05-15,"692,050000","692,05 zł","692,05 zł","0,00 zł","0,00%"`;
 
-export const OMF_LAST_UPDATED = '2026-05-13';
+export const OMF_LAST_UPDATED = '2026-05-15';
