@@ -69,6 +69,7 @@ export const usePortfolioData = ({
     const currentAssets = omfActiveAssets.filter(a => {
         if (portfolioType === 'CRYPTO') return a.portfolio.toUpperCase().includes('KRYPTO');
         if (portfolioType === 'TURTLES_HISTORY') return a.portfolio === 'Żółwie';
+        if (portfolioType === 'IKE') return a.portfolio === 'IKE' || a.portfolio === 'Żółwie';
         return a.portfolio === portfolioType;
     });
 

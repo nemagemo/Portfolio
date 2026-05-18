@@ -162,8 +162,22 @@ Aplikacja stosuje hybrydowy model wyceny w czasie rzeczywistym:
 **Procedura:**
 1.  Analiza języka naturalnego użytkownika.
 2.  Edycja `CSV/OMFopen.ts` (Kupno/Sprzedaż częściowa) lub przeniesienie do `CSV/OMFclosed.ts` (Sprzedaż całkowita).
-3.  Synchronizacja historii w `CSV/PPK.ts`, `CSV/Krypto.ts`, `CSV/IKE.ts`.
-4.  Logowanie w `CSV/Transactions.ts`.
+3.  **Dla portfeli IKE/Krypto/PPK:** Synchronizacja historii w `CSV/PPK.ts`, `CSV/Krypto.ts`, `CSV/IKE.ts`.
+4.  **Dla portfela Żółwie:** NIE INGERUJ w pliki historyczne (`TurtlesHistory.ts`) ani inne portfele (IKE, Krypto, Cash). Skup się tylko na `OMFopen.ts` i `Transactions.ts`.
+5.  Logowanie w `CSV/Transactions.ts`.
+6.  **Zasada:** Jeśli użytkownik dodaje zakup w jednym portfelu, nie dotykaj plików snapshotów/historii innych portfeli, chyba że wyraźnie o to poprosi (np. "zamknij miesiąc").
+
+---
+
+## Nowe Nazewnictwo Żółwi (Turtles)
+Żółwie mają teraz imiona zamiast numerów:
+*   Żółw nr 1 -> Janusz (wcześniej Karol? Sprawdź CSV przed edycją)
+*   Żółw nr 2 -> Janusz
+*   Żółw nr 3 -> Karol
+*   Żółw nr 4 -> Karol
+*   ...
+*   **Żółw nr 5 -> Mieszko** (od 18.05.2026)
+Zawsze sprawdzaj kolumnę "Sektor" (używaną jako pole dla imienia żółwia w portfelu Żółwie) w `OMFopen.ts`, aby dopisać transakcję do właściwej osoby.
 
 ### Polecenie: `AktualizujCeny`
 **Wyzwalacz:** Komenda "AktualizujCeny" ORAZ **obowiązkowo** dołączony plik/tekst z aktualnymi cenami.
@@ -182,6 +196,7 @@ Aplikacja stosuje hybrydowy model wyceny w czasie rzeczywistym:
 4.  **Synchronizacja Historii (Weryfikacja TRIPLE CHECK wymagana):**
     *   Na podstawie nowych wartości w `OMFopen.ts`, zsumuj wartość każdego portfela (PPK, IKE, Krypto) oraz pobierz wartość Gotówki.
     *   Zaktualizuj wartości oraz datę w **ostatnim wierszu** plików `CSV/PPK.ts`, `CSV/IKE.ts`, `CSV/Krypto.ts`, `CSV/TurtlesHistory.ts` **oraz `CSV/Cash.ts`**, aby wszystkie wykresy historyczne kończyły się tą samą datą i wartościami odpowiadającymi aktualnemu stanowi ("Teraz"). Zapobiegnie to rozjeżdżaniu się osi czasu na wykresach (np. "dwa razy listopad").
+    *   **ZASADA JEDNEJ LINII NA MIESIĄC:** Jeśli w pliku historycznym (IKE, PPK, Krypto, Cash, TurtlesHistory) istnieje już wpis z tego samego miesiąca co aktualizowana data, **nie twórz nowej linii**. Nadpisz istniejącą linię najnowszymi danymi. Jedyne odstępstwo to sytuacja, gdy użytkownik wyraźnie poleci rozpoczęcie nowego miesiąca.
 
 ### Polecenie: `ZamknijMiesiac`
 **Wyzwalacz:** "Zamknij miesiąc [data]" lub po prostu "Zamknij miesiąc".
@@ -199,7 +214,12 @@ Aplikacja stosuje hybrydowy model wyceny w czasie rzeczywistym:
     *   Sformatuj i dopisz nowy wiersz do `CSV/PPK.ts`.
 3.  **Snapshot IKE i Krypto:**
     *   Pobierz sumę `Obecna wartość` wszystkich aktywów danego portfela z `OMFopen.ts`.
-    *   Oblicz `Wkład` (Net Invested) używając formuły TRIPLE CHECK (z uwzględnieniem dywidend).
+    *   **ZASADA STABILNEGO WKŁADU (Kapitał Zewnętrzny):**
+        *   `Gotówka` = Suma pozycji typu "Gotówka" w `OMFopen.ts` dla tego portfela.
+        *   `Wartość Zakupu Otwartych` = Suma kolumny "Wartość zakupu" dla pozycji "Otwarta" w `OMFopen.ts`.
+        *   `Zysk Zamknięty` = Suma kolumny "Zysk/Strata" w `OMFclosed.ts` dla tego portfela.
+        *   `Dywidendy` = Suma z `Dividends.ts` (dla IKE).
+        *   **FORMUŁA WYKŁADU:** `Wkład = (Wartość Zakupu Otwartych + Gotówka) - (Zysk Zamknięty + Dywidendy)`.
     *   Wylicz `Zysk` = `Obecna wartość` - `Wkład`.
     *   Wylicz `ROI`.
     *   Sformatuj i dopisz nowe wiersze do `CSV/IKE.ts`, `CSV/Krypto.ts` i `CSV/TurtlesHistory.ts`.
@@ -237,9 +257,9 @@ Aplikacja stosuje hybrydowy model wyceny w czasie rzeczywistym:
 
 **KRYTYCZNE:** Przed każdą edycją plików historycznych (`IKE.ts`, `Krypto.ts`) AI musi wykonać weryfikację krzyżową.
 
-1.  **Weryfikacja 1 (Snowball Math):**
-    *   Oblicz teoretyczny wkład własny:
-    *   `Wkład = (Suma Wartości Zakupu Otwartych) - (Suma Zysków Zamkniętych) - (Suma Aktywnych Dywidend)`
+1.  **Weryfikacja 1 (External Capital Math):**
+    *   Oblicz teoretyczny kapitał zewnętrzny:
+    *   `Wkład = (PurchaseValueOpen + Cash) - (RealizedProfits + Dividends)`
 2.  **Weryfikacja 2 (History Consistency):**
     *   Sprawdź, czy wartość wpisywana do pliku historycznego jako "Wkład" zgadza się z wynikiem z punktu 1.
 3.  **Akcja Naprawcza:**

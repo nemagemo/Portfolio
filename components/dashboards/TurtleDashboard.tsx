@@ -53,7 +53,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
     if (t.endsWith('.L')) return 'https://flagcdn.com/w40/gb.png';
     if (t.endsWith('.DE')) return 'https://flagcdn.com/w40/de.png';
     // Check common polish symbols
-    const polishSymbols = ['ARH', 'LPP', 'KRU', 'PKO', 'ALE', 'ACP', 'DNP', 'ORL', 'SEK', 'PEO', 'PZU', 'KGH', 'PKN'];
+    const polishSymbols = ['ARH', 'LPP', 'KRU', 'PKO', 'ALE', 'VRG', 'DNP', 'ORL', 'SEK', 'PEO', 'PZU', 'KGH', 'PKN'];
     if (polishSymbols.includes(t)) return 'https://flagcdn.com/w40/pl.png';
     return 'https://flagcdn.com/w40/us.png'; // Fallback
   };
@@ -69,7 +69,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
     const turtleClosed = closedAssets.filter(a => a.portfolio === 'Żółwie');
     
     // 2. Fixed list of 10 turtles
-    const turtleNames = ['Karol', 'Janusz', 'Grażyna', 'Dobrawa', 'Kasia', 'Tomek', 'Magda', 'Robert', 'Ewa', 'Jacek'];
+    const turtleNames = ['Karol', 'Janusz', 'Grażyna', 'Dobrawa', 'Mieszko', 'Tomek', 'Magda', 'Robert', 'Ewa', 'Jacek'];
     const turtleColors = ['#22c55e', '#3b82f6', '#ef4444', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b', '#06b6d4', '#10b981', '#f97316'];
     
     // 3. Calculate fixed track assignments

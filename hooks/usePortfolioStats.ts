@@ -278,12 +278,12 @@ export const usePortfolioStats = ({
         if (portfolioType === 'IKE') {
             const closedRaw = parseCSV(OMF_CLOSED_DATA, 'OMF', 'Offline').data as OMFDataRow[];
             const closedIkeProfit = closedRaw
-                .filter(r => r.portfolio === 'IKE')
+                .filter(r => r.portfolio === 'IKE' || r.portfolio === 'Żółwie')
                 .reduce((acc, curr) => acc + curr.profit, 0);
             
             const capitalGainsTaxSaved = closedIkeProfit > 0 ? closedIkeProfit * 0.19 : 0;
             const totalIkeDividends = dividends
-                .filter(d => d.portfolio === 'IKE')
+                .filter(d => d.portfolio === 'IKE' || d.portfolio === 'Żółwie')
                 .reduce((acc, d) => acc + d.value, 0);
             const dividendTaxSaved = totalIkeDividends * 0.19;
 
@@ -291,7 +291,7 @@ export const usePortfolioStats = ({
         }
 
         const ikeOpenProfit = omfActiveAssets
-            .filter(a => a.portfolio === 'IKE' && a.status === 'Otwarta')
+            .filter(a => (a.portfolio === 'IKE' || a.portfolio === 'Żółwie') && a.status === 'Otwarta')
             .reduce((acc, curr) => acc + curr.profit, 0);
         const unrealizedTaxSaved = portfolioType === 'IKE' && ikeOpenProfit > 0 ? ikeOpenProfit * 0.19 : 0;
 
