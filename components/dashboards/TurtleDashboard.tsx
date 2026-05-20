@@ -286,14 +286,14 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
       </div>
 
       {/* Turtle Grand Prix - New Horizontal Race Design */}
-      <div className={`${styles.cardBg} ${styles.cardBorder} p-12 rounded-[40px] shadow-2xl border border-slate-200 overflow-hidden relative`}>
+      <div className={`${styles.cardBg} ${styles.cardBorder} p-6 md:px-10 md:pt-8 md:pb-6 rounded-3xl shadow-xl border border-slate-200 overflow-hidden relative`}>
         {/* Stadium Background Elements */}
         <div className="absolute inset-0 bg-slate-50/30" />
         <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 blur-[100px] rounded-full" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/5 blur-[100px] rounded-full" />
         
         <div className="relative z-10">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-4">
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-[10px] font-black uppercase tracking-widest mb-3">
                 <Trophy size={12} className="fill-amber-700" /> Live Championship
@@ -385,9 +385,8 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
           </div>
 
           {/* Scale Legend */}
-          <div className="mt-12 pt-6 border-t border-slate-100 flex items-center justify-end">
+          <div className="mt-4 flex items-center justify-end">
             <div className="flex items-center gap-3">
-               <span className="text-[10px] font-black text-slate-800 uppercase italic">Progresja Metaforyczna</span>
                <div className="flex gap-0.5">
                   {[...Array(5)].map((_, i) => (
                     <div key={i} className="w-1.5 h-1.5 rounded-full bg-slate-200" />

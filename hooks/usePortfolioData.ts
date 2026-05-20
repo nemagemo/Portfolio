@@ -150,6 +150,12 @@ export const usePortfolioData = ({
         let liveInvestment = r.investment;
         if (portfolioType === 'TURTLES_HISTORY' && liveInvestment === 0 && liveTotalValue > 0) {
             liveInvestment = currentAssets.reduce((sum, a) => sum + a.purchaseValue, 0);
+        } else if (portfolioType === 'IKE') {
+            const turtleActive = omfActiveAssets.filter(a => a.portfolio === 'Żółwie');
+            const turtleClosed = omfClosedAssets.filter(a => a.portfolio === 'Żółwie');
+            const turtleClosedProfit = turtleClosed.reduce((sum, a) => sum + a.profit, 0);
+            const turtleInvestment = turtleActive.reduce((sum, a) => sum + a.purchaseValue, 0) - turtleClosedProfit;
+            liveInvestment += turtleInvestment;
         }
         
         const newProfit = liveTotalValue - liveInvestment;

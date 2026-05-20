@@ -290,10 +290,7 @@ export const usePortfolioStats = ({
             taxSaved = capitalGainsTaxSaved + dividendTaxSaved;
         }
 
-        const ikeOpenProfit = omfActiveAssets
-            .filter(a => (a.portfolio === 'IKE' || a.portfolio === 'Żółwie') && a.status === 'Otwarta')
-            .reduce((acc, curr) => acc + curr.profit, 0);
-        const unrealizedTaxSaved = portfolioType === 'IKE' && ikeOpenProfit > 0 ? ikeOpenProfit * 0.19 : 0;
+        const unrealizedTaxSaved = portfolioType === 'IKE' && row.profit > 0 ? row.profit * 0.19 : 0;
 
         return {
             totalValue: row.totalValue,
