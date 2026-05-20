@@ -163,7 +163,7 @@ Aplikacja stosuje hybrydowy model wyceny w czasie rzeczywistym:
 1.  Analiza języka naturalnego użytkownika.
 2.  Edycja `CSV/OMFopen.ts` (Kupno/Sprzedaż częściowa) lub przeniesienie do `CSV/OMFclosed.ts` (Sprzedaż całkowita).
 3.  **Dla portfeli IKE/Krypto/PPK:** Synchronizacja historii w `CSV/PPK.ts`, `CSV/Krypto.ts`, `CSV/IKE.ts`.
-4.  **Dla portfela Żółwie:** NIE INGERUJ w pliki historyczne (`TurtlesHistory.ts`) ani inne portfele (IKE, Krypto, Cash). Skup się tylko na `OMFopen.ts` i `Transactions.ts`.
+4.  **Dla portfela Żółwie:** Po dodaniu transakcji, zaktualizuj i przelicz plik historyczny `CSV/TurtlesHistory.ts` na podstawie aktualnego stanu aktywów Żółwi w `OMFopen.ts` i `OMFclosed.ts`, zachowując **ZASADĘ JEDNEJ LINII NA MIESIĄC** (nadpisz istniejącą linię z bieżącego miesiąca najnowszymi zsumowanymi wartościami wkładu, zysku i ROI, używając daty pierwszego dnia miesiąca `YYYY-MM-01` dla spójności skali czasowej).
 5.  Logowanie w `CSV/Transactions.ts`.
 6.  **Zasada:** Jeśli użytkownik dodaje zakup w jednym portfelu, nie dotykaj plików snapshotów/historii innych portfeli, chyba że wyraźnie o to poprosi (np. "zamknij miesiąc").
 

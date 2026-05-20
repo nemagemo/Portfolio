@@ -4,7 +4,7 @@ import {
   AreaChart, Area, LineChart, Line, ComposedChart,
   ResponsiveContainer, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ReferenceLine
 } from 'recharts';
-import { ChartProps, CHART_THEMES, formatDate, getTooltipStyle, useChartConfig } from './chartUtils';
+import { ChartProps, CHART_THEMES, formatDate, formatFullDate, formatMonthYear, getTooltipStyle, useChartConfig } from './chartUtils';
 import { ThemeMode } from './chartUtils';
 
 export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjection, themeMode = 'light' }) => {
@@ -83,6 +83,32 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjecti
     return ticks;
   }, [chartData, isPPK]);
 
+  const maxChartVal = useMemo(() => {
+    if (chartData.length === 0) return 0;
+    return Math.max(...chartData.map(d => {
+      const r = d as any;
+      return Math.max(
+        Math.abs(r.totalValue || 0),
+        Math.abs(r.employeeContribution || 0),
+        Math.abs(r.employerContribution || 0),
+        Math.abs(r.stateContribution || 0),
+        Math.abs(r.fundProfit || 0),
+        Math.abs(r.investment || 0),
+        Math.abs(r.netValue || 0),
+        Math.abs(r.exitValue || 0),
+        Math.abs(r.projectedValue || 0),
+        Math.abs(r.projectedTotalValue || 0)
+      );
+    }));
+  }, [chartData]);
+
+  const yAxisTickFormatter = useMemo(() => {
+    if (maxChartVal < 5000) {
+      return (val: number) => `${val} zł`;
+    }
+    return (val: number) => `${(val / 1000).toFixed(0)}k`;
+  }, [maxChartVal]);
+
   return (
     <div className="h-96 w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -108,7 +134,7 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjecti
             padding={config.xAxisPadding}
           />
           <YAxis 
-            tickFormatter={(val) => `${(val/1000).toFixed(0)}k`} 
+            tickFormatter={yAxisTickFormatter} 
             stroke={t.axis} 
             fontSize={10}
             ticks={customTicks}
@@ -130,7 +156,7 @@ export const ValueCompositionChart: React.FC<ChartProps> = ({ data, showProjecti
               };
               return [`${value.toLocaleString('pl-PL')} zł`, nameMap[name] || name];
             }}
-            labelFormatter={formatDate}
+            labelFormatter={formatMonthYear}
             contentStyle={getTooltipStyle(themeMode as ThemeMode, config.isMobile)}
           />
           <Legend 
@@ -250,7 +276,7 @@ export const ROIChart: React.FC<ChartProps> = ({ data, showExitRoi = true, showT
               `${value.toFixed(2)}%`, 
               (name === 'exitRoi' || name === 'Exit ROI') ? 'Exit ROI' : ((name === 'twr' || name === 'TWR') ? 'TWR' : 'ROI')
             ]}
-            labelFormatter={formatDate}
+            labelFormatter={formatMonthYear}
             contentStyle={getTooltipStyle(themeMode as ThemeMode, config.isMobile)}
           />
           <Legend 
@@ -330,7 +356,7 @@ export const DrawdownChart: React.FC<{ data: any[], themeMode?: ThemeMode }> = (
           />
           <Tooltip 
             formatter={(value: number) => [`${value.toFixed(2)}%`, 'Obsunięcie (Drawdown)']}
-            labelFormatter={formatDate}
+            labelFormatter={formatMonthYear}
             contentStyle={getTooltipStyle(themeMode as ThemeMode, config.isMobile)}
           />
           <ReferenceLine y={0} stroke={t.axis} strokeWidth={1} />
@@ -357,6 +383,25 @@ export const CryptoValueChart: React.FC<ChartProps> = ({ data, showTaxComparison
   const t = CHART_THEMES[themeMode || 'light'];
   const config = useChartConfig();
 
+  const maxVal = useMemo(() => {
+    if (data.length === 0) return 0;
+    return Math.max(...data.map(d => {
+      const r = d as any;
+      return Math.max(
+        Math.abs(r.totalValue || 0),
+        Math.abs(r.investment || 0),
+        Math.abs(r.taxedTotalValue || 0)
+      );
+    }));
+  }, [data]);
+
+  const yAxisTickFormatter = useMemo(() => {
+    if (maxVal < 5000) {
+      return (val: number) => `${val} zł`;
+    }
+    return (val: number) => `${(val / 1000).toFixed(0)}k`;
+  }, [maxVal]);
+
   return (
     <div className="h-80 w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -382,7 +427,7 @@ export const CryptoValueChart: React.FC<ChartProps> = ({ data, showTaxComparison
             padding={config.xAxisPadding}
           />
           <YAxis 
-            tickFormatter={(val) => `${(val/1000).toFixed(0)}k`} 
+            tickFormatter={yAxisTickFormatter} 
             stroke={t.axis} 
             fontSize={10}
           />
@@ -404,7 +449,7 @@ export const CryptoValueChart: React.FC<ChartProps> = ({ data, showTaxComparison
                }
                return [`${value.toLocaleString('pl-PL')} zł`, labels[name] || name];
             }}
-            labelFormatter={formatDate}
+            labelFormatter={formatMonthYear}
             contentStyle={getTooltipStyle(themeMode as ThemeMode, config.isMobile)}
           />
           <Legend 
@@ -457,6 +502,26 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection,
   const t = CHART_THEMES[themeMode || 'light'];
   const config = useChartConfig();
 
+  const maxVal = useMemo(() => {
+    if (data.length === 0) return 0;
+    return Math.max(...data.map(d => {
+      const r = d as any;
+      return Math.max(
+        Math.abs(r.totalValue || 0),
+        Math.abs(r.investment || 0),
+        Math.abs(r.projectedValue || 0),
+        Math.abs(r.realTotalValue || 0)
+      );
+    }));
+  }, [data]);
+
+  const yAxisTickFormatter = useMemo(() => {
+    if (maxVal < 5000) {
+      return (val: number) => `${val} zł`;
+    }
+    return (val: number) => `${(val / 1000).toFixed(0)}k`;
+  }, [maxVal]);
+
   return (
     <div className="h-96 w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -482,7 +547,7 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection,
             padding={config.xAxisPadding}
           />
           <YAxis 
-            tickFormatter={(val) => `${(val/1000).toFixed(0)}k`} 
+            tickFormatter={yAxisTickFormatter} 
             stroke={t.axis} 
             fontSize={10}
           />
@@ -496,7 +561,7 @@ export const GlobalSummaryChart: React.FC<ChartProps> = ({ data, showProjection,
                 };
                 return [`${value.toLocaleString('pl-PL')} zł`, labels[name] || name];
             }}
-            labelFormatter={formatDate}
+            labelFormatter={formatMonthYear}
             contentStyle={getTooltipStyle(themeMode as ThemeMode, config.isMobile)}
           />
           <Legend 
@@ -606,7 +671,7 @@ export const GlobalPerformanceChart: React.FC<GlobalPerformanceChartProps> = ({
                  if (typeof value !== 'number') return [value, name];
                  return [`${value.toFixed(2)}%`, labels[name] || name];
               }}
-              labelFormatter={formatDate}
+              labelFormatter={formatMonthYear}
               contentStyle={getTooltipStyle(themeMode as ThemeMode, config.isMobile)}
             />
             <Legend 
@@ -703,7 +768,7 @@ export const PortfolioAllocationHistoryChart: React.FC<ChartProps> = ({ data, th
           />
           <Tooltip 
             formatter={(value: number) => [`${value.toFixed(2)}%`]} 
-            labelFormatter={formatDate}
+            labelFormatter={formatMonthYear}
             contentStyle={getTooltipStyle(themeMode as ThemeMode, config.isMobile)}
           />
           <Legend 

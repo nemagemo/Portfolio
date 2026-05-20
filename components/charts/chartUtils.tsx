@@ -102,7 +102,23 @@ export const formatCurrency = (value: number | undefined) => `${(value || 0).toL
 export const formatDate = (dateStr: string) => {
   if (!dateStr) return '';
   const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
   return date.toLocaleDateString('pl-PL', { month: 'short', year: '2-digit' });
+};
+
+export const formatFullDate = (dateStr: string) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
+  return date.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+};
+
+export const formatMonthYear = (dateStr: string) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
+  const formatted = date.toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' });
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1);
 };
 
 // Helper to get tooltip content style based on theme and mobile status

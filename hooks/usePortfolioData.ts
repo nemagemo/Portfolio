@@ -146,10 +146,12 @@ export const usePortfolioData = ({
         // unless we have a reliable way to calculate it from Open+Closed assets on the fly.
         // Using the last CSV row's investment is the safest bet for "Live View" without full re-calc.
         
-        // Special case for Turtles: if it's the first time and investment is 0 in CSV but we have assets
+        // Special case for Turtles: calculate investment dynamically
         let liveInvestment = r.investment;
-        if (portfolioType === 'TURTLES_HISTORY' && liveInvestment === 0 && liveTotalValue > 0) {
-            liveInvestment = currentAssets.reduce((sum, a) => sum + a.purchaseValue, 0);
+        if (portfolioType === 'TURTLES_HISTORY') {
+            const turtleClosed = omfClosedAssets.filter(a => a.portfolio === 'Żółwie');
+            const turtleClosedProfit = turtleClosed.reduce((sum, a) => sum + a.profit, 0);
+            liveInvestment = currentAssets.reduce((sum, a) => sum + a.purchaseValue, 0) - turtleClosedProfit;
         } else if (portfolioType === 'IKE') {
             const turtleActive = omfActiveAssets.filter(a => a.portfolio === 'Żółwie');
             const turtleClosed = omfClosedAssets.filter(a => a.portfolio === 'Żółwie');
@@ -185,7 +187,7 @@ export const usePortfolioData = ({
 
     return enhancedData;
 
-  }, [portfolioType, rawData, omfActiveAssets]);
+  }, [portfolioType, rawData, omfActiveAssets, omfClosedAssets]);
 
   // 3. Build Global History (Timeline)
   const globalHistoryData = useGlobalHistory({
