@@ -69,7 +69,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
     const turtleClosed = closedAssets.filter(a => a.portfolio === 'Żółwie');
     
     // 2. Fixed list of 10 turtles
-    const turtleNames = ['Karol', 'Janusz', 'Grażyna', 'Dobrawa', 'Mieszko', 'Tomek', 'Magda', 'Robert', 'Ewa', 'Jacek'];
+    const turtleNames = ['Karol', 'Janusz', 'Grażyna', 'Dobrawa', 'Mieszko', 'Bogna', 'Magda', 'Robert', 'Ewa', 'Jacek'];
     const turtleColors = ['#22c55e', '#3b82f6', '#ef4444', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b', '#06b6d4', '#10b981', '#f97316'];
     
     // 3. Calculate fixed track assignments
@@ -384,16 +384,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
             })}
           </div>
 
-          {/* Scale Legend */}
-          <div className="mt-4 flex items-center justify-end">
-            <div className="flex items-center gap-3">
-               <div className="flex gap-0.5">
-                  {[...Array(5)].map((_, i) => (
-                    <div key={i} className="w-1.5 h-1.5 rounded-full bg-slate-200" />
-                  ))}
-               </div>
-            </div>
-          </div>
+
         </div>
       </div>
 
