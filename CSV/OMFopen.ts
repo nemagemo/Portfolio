@@ -61,9 +61,11 @@ Otwarta,Żółwie,Akcje,VRG,,Mieszko,0,2026-05-18,"18,000000","97,20 zł","97,92
 Otwarta,Żółwie,Gotówka,PLN,,Mieszko,0,2026-05-18,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Akcje,COST,,Bogna,0,2026-05-20,"0,024800","99,71 zł","99,71 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Gotówka,PLN,,Bogna,0,2026-05-20,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
-Otwarta,Gotówka,Gotówka,PLN,,,382,2026-05-15,"494,420000","494,42 zł","494,42 zł","0,00 zł","0,00%"`;
+Otwarta,Żółwie,Akcje,ATRO,,Oktawian,0,2026-05-21,"0,327700","100,22 zł","100,22 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Gotówka,PLN,,Oktawian,0,2026-05-21,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
+Otwarta,Gotówka,Gotówka,PLN,,,382,2026-05-15,"394,200000","394,20 zł","394,20 zł","0,00 zł","0,00%"`;
 
 
 
 
-export const OMF_LAST_UPDATED = '2026-05-20';
+export const OMF_LAST_UPDATED = '2026-05-21';

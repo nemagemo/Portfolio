@@ -26,6 +26,8 @@ interface TurtleState {
   roi: number;
   profit: number;
   isActive: boolean;
+  trackNumber: number;
+  isDanger: boolean;
 }
 
 export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({ 
@@ -69,9 +71,23 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
     const turtleClosed = closedAssets.filter(a => a.portfolio === 'Żółwie');
     
     // 2. Fixed list of 10 turtles
-    const turtleNames = ['Karol', 'Janusz', 'Grażyna', 'Dobrawa', 'Mieszko', 'Bogna', 'Magda', 'Robert', 'Ewa', 'Jacek'];
+    const turtleNames = ['Karol', 'Janusz', 'Grażyna', 'Dobrawa', 'Mieszko', 'Bogna', 'Oktawian', 'Robert', 'Ewa', 'Jacek'];
     const turtleColors = ['#22c55e', '#3b82f6', '#ef4444', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b', '#06b6d4', '#10b981', '#f97316'];
     
+    // 2.5 Calculate the total value of "Żółwie" portfolio to check 1.5% threshold
+    let totalTurtlesValue = 0;
+    turtleNames.forEach(name => {
+      const myActive = turtleActive.filter(a => a.sector?.trim().toLowerCase() === name.toLowerCase());
+      const myClosed = turtleClosed.filter(a => a.sector?.trim().toLowerCase() === name.toLowerCase());
+      
+      const activeProfit = myActive.reduce((sum, a) => sum + a.profit, 0);
+      const closedProfit = myClosed.reduce((sum, a) => sum + a.profit, 0);
+      const totalProfit = activeProfit + closedProfit;
+      
+      const initialCapital = myActive.reduce((sum, a) => sum + a.purchaseValue, 0) + myClosed.reduce((sum, a) => sum + a.purchaseValue, 0);
+      totalTurtlesValue += (initialCapital + totalProfit);
+    });
+
     // 3. Calculate fixed track assignments
     const allAssets = [...turtleActive, ...turtleClosed];
     const turtleFirstDates = turtleNames.map(name => {
@@ -130,6 +146,14 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
       const totalEquity = initialCapital + totalProfit;
       const roi = initialCapital > 0 ? (totalProfit / initialCapital) * 100 : 0;
 
+      // Check if loss on any position is > 1.5% of the total turtles portfolio value
+      const hasLargeLoss = myActive.some(a => {
+        const lossOnPosition = a.profit < 0 ? -a.profit : 0;
+        return totalTurtlesValue > 0 && lossOnPosition > 0.015 * totalTurtlesValue;
+      });
+
+      const isDanger = hasLargeLoss;
+
       return {
         id: idx + 1,
         name: hasActivity ? name : (name === 'Karol' ? 'Karol' : '?'), // Keep Karol's name visible
@@ -141,7 +165,8 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
         roi,
         profit: totalProfit,
         isActive: hasActivity && isActive,
-        trackNumber: trackMap.get(name) || (idx + 1)
+        trackNumber: trackMap.get(name) || (idx + 1),
+        isDanger
       };
     }).sort((a, b) => {
       // Prioritize turtles with activity (initialCapital > 0)
@@ -326,15 +351,15 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
               const isPositive = turtle.roi >= 0;
               
               return (
-                <div key={`gp-${turtle.id}`} className="relative h-14 group/gp-lane border-y border-slate-100/50">
+                <div key={`gp-${turtle.id}`} className={`relative h-14 group/gp-lane border-y ${turtle.isDanger ? 'border-red-200' : 'border-slate-100/50'}`}>
                   {/* Lane Label (Fixed on the left) */}
-                  <div className="absolute inset-y-0 left-0 w-16 z-20 flex items-center justify-start pl-4 border-r border-slate-200/50 bg-slate-50 text-[10px] font-black text-slate-300 italic group-hover/gp-lane:text-indigo-400 group-hover/gp-lane:bg-indigo-50/30 transition-colors">
+                  <div className={`absolute inset-y-0 left-0 w-16 z-20 flex items-center justify-start pl-4 border-r ${turtle.isDanger ? 'border-red-200 bg-red-100/40 text-red-500 font-bold' : 'border-slate-200/50 bg-slate-50 text-slate-300'} text-[10px] font-black italic group-hover/gp-lane:text-indigo-400 group-hover/gp-lane:bg-indigo-50/30 transition-colors`}>
                     TOR {String(turtle.trackNumber).padStart(2, '0')}
                   </div>
 
                   {/* Movable Area */}
                   <div className="absolute inset-y-0 left-16 right-0 z-30">
-                    <div className="absolute inset-0 bg-white group-hover/gp-lane:bg-slate-50/50 transition-colors" />
+                    <div className={`absolute inset-0 ${turtle.isDanger ? 'bg-gradient-to-r from-red-50/30 to-rose-50/50 group-hover/gp-lane:bg-red-100/20' : 'bg-white group-hover/gp-lane:bg-slate-50/50'} transition-colors`} />
                     
                     {/* Turtle Movable Unit */}
                     <motion.div
@@ -445,16 +470,21 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
               {turtles.map((turtle, index) => {
                 const isActive = turtle.isActive;
                 return (
-                  <tr key={turtle.id} className={`hover:bg-slate-50 ${!isActive ? 'opacity-60' : ''}`}>
+                  <tr key={turtle.id} className={`transition-all duration-300 ${turtle.isDanger ? 'bg-red-50/50 hover:bg-red-100/40 text-red-900 border-l-4 border-l-red-500' : 'hover:bg-slate-50'} ${!isActive ? 'opacity-60' : ''}`}>
                     <td className="px-6 py-4">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${isActive && index < 3 ? 'bg-amber-100 text-amber-700' : 'text-slate-400'}`}>
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${isActive && index < 3 && !turtle.isDanger ? 'bg-amber-100 text-amber-700' : turtle.isDanger ? 'bg-red-100 text-red-700' : 'text-slate-400'}`}>
                         {index + 1}
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <Turtle size={18} style={{ color: turtle.color }} className={!isActive ? 'grayscale opacity-70' : ''} />
-                        <span className="font-semibold text-slate-700">{turtle.name}</span>
+                        <Turtle size={18} style={{ color: turtle.isDanger ? '#ef4444' : turtle.color }} className={`${!isActive ? 'grayscale opacity-70' : ''} ${turtle.isDanger ? 'animate-pulse' : ''}`} />
+                        <span className={`font-semibold ${turtle.isDanger ? 'text-red-700 font-black' : 'text-slate-700'}`}>{turtle.name}</span>
+                        {turtle.isDanger && (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-red-100 text-red-700 text-[8px] font-black rounded-full uppercase tracking-wider animate-pulse border border-red-200">
+                            WYSOKIE RYZYKO
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4">
