@@ -170,14 +170,18 @@ Aplikacja stosuje hybrydowy model wyceny w czasie rzeczywistym:
 ---
 
 ## Nowe Nazewnictwo Żółwi (Turtles)
-Żółwie mają teraz imiona zamiast numerów:
-*   Żółw nr 1 -> Janusz (wcześniej Karol? Sprawdź CSV przed edycją)
-*   Żółw nr 2 -> Janusz
-*   Żółw nr 3 -> Karol
-*   Żółw nr 4 -> Karol
-*   ...
-*   **Żółw nr 5 -> Mieszko** (od 18.05.2026)
-Zawsze sprawdzaj kolumnę "Sektor" (używaną jako pole dla imienia żółwia w portfelu Żółwie) w `OMFopen.ts`, aby dopisać transakcję do właściwej osoby.
+Żółwie mają przypisane imiona rzymskich cesarzy oraz "Ogon" na pozycji nr 7:
+*   Żółw nr 1 -> Oktawian
+*   Żółw nr 2 -> Tyberiusz
+*   Żółw nr 3 -> Kaligula
+*   Żółw nr 4 -> Klaudiusz
+*   Żółw nr 5 -> Neron
+*   Żółw nr 6 -> Galba
+*   Żółw nr 7 -> Ogon
+*   Żółw nr 8 -> Witeliusz
+*   Żółw nr 9 -> Wespazjan
+*   Żółw nr 10 -> Tytus
+Zawsze sprawdzaj kolumnę "Sektor" (używaną jako pole dla imienia żółwia w portfelu Żółwie) w `OMFopen.ts` i `Transactions.ts`, aby dopisać transakcję do właściwej osoby.
 
 ### Polecenie: `AktualizujCeny`
 **Wyzwalacz:** Komenda "AktualizujCeny" ORAZ **obowiązkowo** dołączony plik/tekst z aktualnymi cenami.

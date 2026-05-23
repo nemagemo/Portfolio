@@ -49,23 +49,25 @@ Otwarta,Krypto,Krypto,KAVA,,,719,2024-01-06,"9,283358","1,93 zł","30,14 zł","-
 Otwarta,Krypto,Krypto,5IRE,,,688,2024-04-14,"80,090420","0,01 zł","56,89 zł","-56,88 zł","-99,98%"
 Otwarta,Krypto,Krypto,BTC,,,0,2026-02-15,"0,00278901","781,92 zł","711,71 zł","70,21 zł","9,87%"
 Otwarta,Krypto,Krypto,ALGO,,,0,2026-03-24,"889,110000","346,99 zł","300,70 zł","46,29 zł","15,39%"
-Otwarta,Żółwie,Akcje,STNG,MHY7962G1054,Karol,1,2026-05-06,"0,326200","97,80 zł","100,00 zł","-2,20 zł","-2,20%"
-Otwarta,Żółwie,Gotówka,PLN,,Karol,0,2026-05-06,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
-Otwarta,Żółwie,Akcje,HWBK,,Janusz,0,2026-05-12,"0,7543","97,10 zł","100,00 zł","-2,90 zł","-2,90%"
-Otwarta,Żółwie,Gotówka,PLN,,Janusz,0,2026-05-12,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
-Otwarta,Żółwie,Akcje,SEK,,Grażyna,0,2026-05-15,"9,000000","99,45 zł","94,50 zł","4,95 zł","5,24%"
-Otwarta,Żółwie,Gotówka,PLN,,Grażyna,0,2026-05-15,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
-Otwarta,Żółwie,Akcje,ARH,,Dobrawa,0,2026-05-15,"1,9011","98,86 zł","100,00 zł","-1,14 zł","-1,14%"
-Otwarta,Żółwie,Gotówka,PLN,,Dobrawa,0,2026-05-15,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
-Otwarta,Żółwie,Akcje,VRG,,Mieszko,0,2026-05-18,"18,000000","97,20 zł","97,92 zł","-0,72 zł","-0,74%"
-Otwarta,Żółwie,Gotówka,PLN,,Mieszko,0,2026-05-18,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
-Otwarta,Żółwie,Akcje,COST,,Bogna,0,2026-05-20,"0,024800","99,71 zł","99,71 zł","0,00 zł","0,00%"
-Otwarta,Żółwie,Gotówka,PLN,,Bogna,0,2026-05-20,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
-Otwarta,Żółwie,Akcje,ATRO,,Oktawian,0,2026-05-21,"0,327700","100,22 zł","100,22 zł","0,00 zł","0,00%"
-Otwarta,Żółwie,Gotówka,PLN,,Oktawian,0,2026-05-21,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
-Otwarta,Gotówka,Gotówka,PLN,,,382,2026-05-15,"394,200000","394,20 zł","394,20 zł","0,00 zł","0,00%"`;
+Otwarta,Żółwie,Akcje,STNG,MHY7962G1054,Oktawian,1,2026-05-06,"0,326200","97,80 zł","100,00 zł","-2,20 zł","-2,20%"
+Otwarta,Żółwie,Gotówka,PLN,,Oktawian,0,2026-05-06,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Akcje,HWBK,,Tyberiusz,0,2026-05-12,"0,7543","97,10 zł","100,00 zł","-2,90 zł","-2,90%"
+Otwarta,Żółwie,Gotówka,PLN,,Tyberiusz,0,2026-05-12,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Akcje,SEK,,Kaligula,0,2026-05-15,"9,000000","99,45 zł","94,50 zł","4,95 zł","5,24%"
+Otwarta,Żółwie,Gotówka,PLN,,Kaligula,0,2026-05-15,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Akcje,ARH,,Klaudiusz,0,2026-05-15,"1,9011","98,86 zł","100,00 zł","-1,14 zł","-1,14%"
+Otwarta,Żółwie,Gotówka,PLN,,Klaudiusz,0,2026-05-15,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Akcje,VRG,,Neron,0,2026-05-18,"18,000000","97,20 zł","97,92 zł","-0,72 zł","-0,74%"
+Otwarta,Żółwie,Gotówka,PLN,,Neron,0,2026-05-18,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Akcje,COST,,Galba,0,2026-05-20,"0,024800","99,71 zł","99,71 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Gotówka,PLN,,Galba,0,2026-05-20,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Akcje,ATRO,,Ogon,0,2026-05-21,"0,327700","100,22 zł","100,22 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Gotówka,PLN,,Ogon,0,2026-05-21,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Akcje,CMP,,Witeliusz,0,2026-05-22,"2,000000","124,00 zł","124,00 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Gotówka,PLN,,Witeliusz,0,2026-05-22,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
+Otwarta,Gotówka,Gotówka,PLN,,,382,2026-05-15,"270,200000","270,20 zł","270,20 zł","0,00 zł","0,00%"`;
 
 
 
 
-export const OMF_LAST_UPDATED = '2026-05-21';
+export const OMF_LAST_UPDATED = '2026-05-22';

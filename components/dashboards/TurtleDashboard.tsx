@@ -71,7 +71,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
     const turtleClosed = closedAssets.filter(a => a.portfolio === 'Żółwie');
     
     // 2. Fixed list of 10 turtles
-    const turtleNames = ['Karol', 'Janusz', 'Grażyna', 'Dobrawa', 'Mieszko', 'Bogna', 'Oktawian', 'Robert', 'Ewa', 'Jacek'];
+    const turtleNames = ['Oktawian', 'Tyberiusz', 'Kaligula', 'Klaudiusz', 'Neron', 'Galba', 'Ogon', 'Witeliusz', 'Wespazjan', 'Tytus'];
     const turtleColors = ['#22c55e', '#3b82f6', '#ef4444', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b', '#06b6d4', '#10b981', '#f97316'];
     
     // 2.5 Calculate the total value of "Żółwie" portfolio to check 1.5% threshold
@@ -100,17 +100,17 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
       return { name, firstDate };
     });
 
-    // Special rule: Karol is always Track 1
+    // Special rule: Oktawian is always Track 1
     // Others are sorted by first transaction date, then by name order if no date
     const othersSorted = turtleFirstDates
-      .filter(t => t.name !== 'Karol')
+      .filter(t => t.name !== 'Oktawian')
       .sort((a, b) => {
         if (a.firstDate !== b.firstDate) return a.firstDate - b.firstDate;
         return turtleNames.indexOf(a.name) - turtleNames.indexOf(b.name);
       });
 
     const trackMap = new Map<string, number>();
-    trackMap.set('Karol', 1);
+    trackMap.set('Oktawian', 1);
     othersSorted.forEach((t, i) => {
       trackMap.set(t.name, i + 2);
     });
@@ -156,7 +156,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
 
       return {
         id: idx + 1,
-        name: hasActivity ? name : (name === 'Karol' ? 'Karol' : '?'), // Keep Karol's name visible
+        name: hasActivity ? name : (name === 'Oktawian' ? 'Oktawian' : '?'), // Keep Oktawian's name visible
         initialCapital,
         currentValue: totalEquity,
         color: turtleColors[idx % turtleColors.length],
