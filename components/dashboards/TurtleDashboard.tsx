@@ -71,7 +71,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
     const turtleClosed = closedAssets.filter(a => a.portfolio === 'Żółwie');
     
     // 2. Fixed list of 10 turtles
-    const turtleNames = ['Oktawian', 'Tyberiusz', 'Kaligula', 'Klaudiusz', 'Neron', 'Galba', 'Ogon', 'Witeliusz', 'Wespazjan', 'Tytus'];
+    const turtleNames = ['Oktawian', 'Tyberiusz', 'Kaligula', 'Klaudiusz', 'Neron', 'Galba', 'Oton', 'Witeliusz', 'Wespazjan', 'Tytus'];
     const turtleColors = ['#22c55e', '#3b82f6', '#ef4444', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b', '#06b6d4', '#10b981', '#f97316'];
     
     // 2.5 Calculate the total value of "Żółwie" portfolio to check 1.5% threshold

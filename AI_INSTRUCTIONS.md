@@ -170,14 +170,14 @@ Aplikacja stosuje hybrydowy model wyceny w czasie rzeczywistym:
 ---
 
 ## Nowe Nazewnictwo Żółwi (Turtles)
-Żółwie mają przypisane imiona rzymskich cesarzy oraz "Ogon" na pozycji nr 7:
+Żółwie mają przypisane imiona rzymskich cesarzy na wszystkich pozycjach (w tym Oton na pozycji nr 7):
 *   Żółw nr 1 -> Oktawian
 *   Żółw nr 2 -> Tyberiusz
 *   Żółw nr 3 -> Kaligula
 *   Żółw nr 4 -> Klaudiusz
 *   Żółw nr 5 -> Neron
 *   Żółw nr 6 -> Galba
-*   Żółw nr 7 -> Ogon
+*   Żółw nr 7 -> Oton
 *   Żółw nr 8 -> Witeliusz
 *   Żółw nr 9 -> Wespazjan
 *   Żółw nr 10 -> Tytus
