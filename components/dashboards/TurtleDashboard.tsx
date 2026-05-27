@@ -171,7 +171,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
     }).sort((a, b) => {
       // Prioritize turtles with activity (initialCapital > 0)
       if (a.initialCapital > 0 && b.initialCapital > 0) {
-        return b.profit - a.profit || b.roi - a.roi;
+        return b.roi - a.roi || b.profit - a.profit;
       }
       if (a.initialCapital > 0) return -1;
       if (b.initialCapital > 0) return 1;
