@@ -68,9 +68,11 @@ Otwarta,Żółwie,Akcje,CMP,,Witeliusz,0,2026-05-22,"2,000000","124,00 zł","124
 Otwarta,Żółwie,Gotówka,PLN,,Witeliusz,0,2026-05-22,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Akcje,RPI,,Wespazjan,0,2026-05-27,"2,581200","100,01 zł","100,01 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Gotówka,PLN,,Wespazjan,0,2026-05-27,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
-Otwarta,Gotówka,Gotówka,PLN,,,382,2026-05-15,"181,330000","181,33 zł","181,33 zł","0,00 zł","0,00%"`;
+Otwarta,Żółwie,Akcje,UNP,,Tytus,0,2026-05-28,"0,101300","99,89 zł","99,89 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Gotówka,PLN,,Tytus,0,2026-05-28,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
+Otwarta,Gotówka,Gotówka,PLN,,,382,2026-05-15,"81,440000","81,44 zł","81,44 zł","0,00 zł","0,00%"`;
 
 
 
 
-export const OMF_LAST_UPDATED = '2026-05-27';
+export const OMF_LAST_UPDATED = '2026-05-28';

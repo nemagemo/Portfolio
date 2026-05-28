@@ -32,4 +32,5 @@ export const TRANSACTIONS_DATA = `Data,Portfel,Typ,Symbol,Ilość,Koszt,Waluta,S
 2026-05-20,Żółwie,Kupno,COST,"0,0248","99,71 zł",PLN,Galba
 2026-05-21,Żółwie,Kupno,ATRO,"0,3277","100,22 zł",PLN,Oton
 2026-05-22,Żółwie,Kupno,CMP,"2","124,00 zł",PLN,Witeliusz
-2026-05-27,Żółwie,Kupno,RPI,"2,5812","100,01 zł",PLN,Wespazjan`;
+2026-05-27,Żółwie,Kupno,RPI,"2,5812","100,01 zł",PLN,Wespazjan
+2026-05-28,Żółwie,Kupno,UNP,"0,101300","99,89 zł",PLN,Tytus`;
