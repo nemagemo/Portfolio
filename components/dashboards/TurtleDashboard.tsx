@@ -1,7 +1,7 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
-import { Turtle, TrendingUp, Trophy, Info, Target, Wallet, Moon, Activity } from 'lucide-react';
+import { Turtle, TrendingUp, Trophy, Info, Target, Wallet, Moon, Activity, Flag, ChevronDown, ChevronUp } from 'lucide-react';
 import { Theme, themeStyles } from '../../theme/styles';
 import { OMFDataRow } from '../../types';
 import { usePortfolioData } from '../../hooks/usePortfolioData';
@@ -38,6 +38,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
   historyPrices
 }) => {
   const styles = themeStyles[theme];
+  const [isGPInfoExpanded, setIsGPInfoExpanded] = useState(false);
 
   // Fetch history data for Turtle portfolio
   const { data: historyData } = usePortfolioData({
@@ -186,6 +187,9 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
   const totalProfit = totalValue - totalCapital;
   const totalRoi = totalCapital > 0 ? (totalProfit / totalCapital) * 100 : 0;
 
+  const targetValue = 10000;
+  const progressPercent = Math.min(100, (totalValue / targetValue) * 100);
+
   const profitLeader = useMemo(() => {
     const activeOnes = turtles.filter(t => t.initialCapital > 0);
     if (activeOnes.length === 0) return '-';
@@ -326,6 +330,87 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
                 <Trophy size={12} className="fill-amber-700" /> Live Championship
               </div>
               <h2 className="text-3xl font-black text-slate-900 tracking-tighter">Grand Prix Żółwi</h2>
+            </div>
+          </div>
+
+          {/* Grand Prix Race Tracker Alert/Progress */}
+          <div className="mb-8 p-6 bg-slate-900 text-white rounded-3xl shadow-xl border border-slate-800 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-slate-900/40 to-transparent pointer-events-none" />
+            <div className="absolute -right-12 -bottom-12 w-48 h-48 bg-emerald-500/10 blur-3xl rounded-full" />
+            
+            <div className="relative z-10 space-y-4">
+              {/* Header with Title and Rules toggle in the upper area */}
+              <div className="flex items-center justify-between">
+                <span className="px-2.5 py-1 bg-emerald-500 text-slate-950 text-[10px] font-black rounded-md tracking-wider uppercase">
+                  Etap: Wyścig #1
+                </span>
+                <button
+                  onClick={() => setIsGPInfoExpanded(!isGPInfoExpanded)}
+                  className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-400 transition-all font-semibold cursor-pointer py-1 px-2.5 rounded hover:bg-slate-800/50"
+                >
+                  <Info size={13} />
+                  <span>Zasady Grand Prix</span>
+                  {isGPInfoExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                </button>
+              </div>
+
+              {/* Dynamiczny Tor Postępu - Full Width (od brzegu do brzegu) */}
+              <div className="w-full bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50 space-y-3">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-300">
+                  <span className="flex items-center gap-1.5">
+                    <Flag size={14} className="text-slate-400" />
+                    Bieżący Dystans: <span className="text-white text-sm font-black">{totalValue.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł</span>
+                  </span>
+                  <span className="text-emerald-400 font-extrabold text-sm">{progressPercent.toFixed(1)}%</span>
+                </div>
+                
+                {/* Visual road progress track */}
+                <div className="relative h-7 bg-slate-950 rounded-full border border-slate-800 p-0.5 overflow-hidden flex items-center">
+                  <div className="absolute inset-0 bg-[linear-gradient(45deg,#1e293b_25%,transparent_25%,transparent_50%,#1e293b_50%,#1e293b_75%,transparent_75%,transparent)] bg-[length:16px_16px] opacity-30" />
+                  
+                  {/* Progress fill */}
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progressPercent}%` }}
+                    transition={{ duration: 1.5, ease: "easeOut" }}
+                    className="h-full bg-gradient-to-r from-teal-500 via-emerald-500 to-emerald-400 rounded-full flex items-center justify-end px-1.5 relative shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+                  >
+                    <div className="h-4 w-4 bg-white rounded-full flex items-center justify-center shadow-lg border border-emerald-500 animate-pulse">
+                      <Turtle size={10} className="text-emerald-600 rotate-12" />
+                    </div>
+                  </motion.div>
+                  
+                  {/* Flag indicator at finish */}
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-slate-800/80 px-2 py-0.5 rounded-md border border-slate-700 pointer-events-none">
+                    <Flag size={10} className="text-amber-400 fill-amber-400 animate-bounce" />
+                    <span className="text-[8px] font-black tracking-wider text-slate-300 uppercase">10k META</span>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center text-[9px] font-bold text-slate-500 uppercase tracking-wider">
+                  <span>Start: 0,00 zł</span>
+                  <span className="text-emerald-500/80">Pozostało: {(10000 - totalValue > 0 ? 10000 - totalValue : 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł</span>
+                </div>
+              </div>
+
+              {/* Zasady Grand Prix - Dropping / Expanding BELOW the track */}
+              {isGPInfoExpanded && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4, height: 0 }}
+                  animate={{ opacity: 1, y: 0, height: "auto" }}
+                  transition={{ duration: 0.2 }}
+                  className="p-4 bg-slate-800/35 border border-slate-800 rounded-2xl space-y-1.5 overflow-hidden"
+                >
+                  <h3 className="text-xs font-black tracking-wider uppercase text-emerald-400">
+                    Misja 10 000,00 PLN
+                  </h3>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    Żółwie dobierają, kupują lub sprzedają pozycje w ramach aktualnego <strong className="text-slate-200">Wyścigu #1</strong>. 
+                    Po osiągnięciu wyceny całego portfela <span className="text-emerald-400 font-bold">10 000,00 zł</span> rozpocznie się <strong className="text-slate-200">Wyścig #2</strong>. 
+                    Nowo otwierane pozycje będą odtąd klasyfikowane w kolejnej edycji zmagań.
+                  </p>
+                </motion.div>
+              )}
             </div>
           </div>
 
