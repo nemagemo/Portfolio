@@ -334,46 +334,46 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
           </div>
 
           {/* Grand Prix Race Tracker Alert/Progress */}
-          <div className="mb-8 p-6 bg-slate-900 text-white rounded-3xl shadow-xl border border-slate-800 relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-slate-900/40 to-transparent pointer-events-none" />
-            <div className="absolute -right-12 -bottom-12 w-48 h-48 bg-emerald-500/10 blur-3xl rounded-full" />
+          <div className="mb-8 p-6 bg-slate-50 text-slate-850 rounded-3xl shadow-sm border border-slate-200/80 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 via-slate-50/10 to-transparent pointer-events-none" />
+            <div className="absolute -right-12 -bottom-12 w-48 h-48 bg-emerald-500/5 blur-3xl rounded-full" />
             
             <div className="relative z-10 space-y-4">
               {/* Header with Title and Rules toggle in the upper area */}
               <div className="flex items-center justify-between">
-                <span className="px-2.5 py-1 bg-emerald-500 text-slate-950 text-[10px] font-black rounded-md tracking-wider uppercase">
+                <span className="px-2.5 py-1 bg-emerald-500 text-white text-[10px] font-black rounded-md tracking-wider uppercase">
                   Etap: Wyścig #1
                 </span>
                 <button
                   onClick={() => setIsGPInfoExpanded(!isGPInfoExpanded)}
-                  className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-400 transition-all font-semibold cursor-pointer py-1 px-2.5 rounded hover:bg-slate-800/50"
+                  className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-emerald-600 hover:bg-slate-100 transition-all font-semibold cursor-pointer py-1 px-2.5 rounded"
                 >
-                  <Info size={13} />
+                  <Info size={13} className="text-slate-400" />
                   <span>Zasady Grand Prix</span>
                   {isGPInfoExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
                 </button>
               </div>
 
               {/* Dynamiczny Tor Postępu - Full Width (od brzegu do brzegu) */}
-              <div className="w-full bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50 space-y-3">
-                <div className="flex items-center justify-between text-xs font-bold text-slate-300">
-                  <span className="flex items-center gap-1.5">
-                    <Flag size={14} className="text-slate-400" />
-                    Bieżący Dystans: <span className="text-white text-sm font-black">{totalValue.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł</span>
+              <div className="w-full bg-white p-4 rounded-2xl border border-slate-200/85 shadow-xs space-y-3">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-600">
+                  <span className="flex items-center gap-1.5 text-slate-700">
+                    <Flag size={14} className="text-slate-500" />
+                    Bieżący Dystans: <span className="text-slate-900 text-sm font-black">{totalValue.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł</span>
                   </span>
-                  <span className="text-emerald-400 font-extrabold text-sm">{progressPercent.toFixed(1)}%</span>
+                  <span className="text-emerald-600 font-extrabold text-sm">{progressPercent.toFixed(1)}%</span>
                 </div>
                 
                 {/* Visual road progress track */}
-                <div className="relative h-7 bg-slate-950 rounded-full border border-slate-800 p-0.5 overflow-hidden flex items-center">
-                  <div className="absolute inset-0 bg-[linear-gradient(45deg,#1e293b_25%,transparent_25%,transparent_50%,#1e293b_50%,#1e293b_75%,transparent_75%,transparent)] bg-[length:16px_16px] opacity-30" />
+                <div className="relative h-7 bg-slate-100 rounded-full border border-slate-200/70 p-0.5 overflow-hidden flex items-center">
+                  <div className="absolute inset-0 bg-[linear-gradient(45deg,#f1f5f9_25%,transparent_25%,transparent_50%,#f1f5f9_50%,#f1f5f9_75%,transparent_75%,transparent)] bg-[length:16px_16px] opacity-60" />
                   
                   {/* Progress fill */}
                   <motion.div 
                     initial={{ width: 0 }}
                     animate={{ width: `${progressPercent}%` }}
                     transition={{ duration: 1.5, ease: "easeOut" }}
-                    className="h-full bg-gradient-to-r from-teal-500 via-emerald-500 to-emerald-400 rounded-full flex items-center justify-end px-1.5 relative shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+                    className="h-full bg-gradient-to-r from-teal-500 via-emerald-500 to-emerald-400 rounded-full flex items-center justify-end px-1.5 relative shadow-[0_0_15px_rgba(16,185,129,0.2)]"
                   >
                     <div className="h-4 w-4 bg-white rounded-full flex items-center justify-center shadow-lg border border-emerald-500 animate-pulse">
                       <Turtle size={10} className="text-emerald-600 rotate-12" />
@@ -381,15 +381,15 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
                   </motion.div>
                   
                   {/* Flag indicator at finish */}
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-slate-800/80 px-2 py-0.5 rounded-md border border-slate-700 pointer-events-none">
-                    <Flag size={10} className="text-amber-400 fill-amber-400 animate-bounce" />
-                    <span className="text-[8px] font-black tracking-wider text-slate-300 uppercase">10k META</span>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-white/95 px-2 py-0.5 rounded-md border border-slate-200 shadow-xs pointer-events-none">
+                    <Flag size={10} className="text-amber-500 fill-amber-500 animate-bounce" />
+                    <span className="text-[8px] font-black tracking-wider text-slate-700 uppercase">10k META</span>
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center text-[9px] font-bold text-slate-500 uppercase tracking-wider">
+                <div className="flex justify-between items-center text-[9px] font-bold text-slate-400 uppercase tracking-wider">
                   <span>Start: 0,00 zł</span>
-                  <span className="text-emerald-500/80">Pozostało: {(10000 - totalValue > 0 ? 10000 - totalValue : 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł</span>
+                  <span className="text-emerald-600 font-extrabold">Pozostało: {(10000 - totalValue > 0 ? 10000 - totalValue : 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł</span>
                 </div>
               </div>
 
@@ -399,14 +399,14 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
                   initial={{ opacity: 0, y: -4, height: 0 }}
                   animate={{ opacity: 1, y: 0, height: "auto" }}
                   transition={{ duration: 0.2 }}
-                  className="p-4 bg-slate-800/35 border border-slate-800 rounded-2xl space-y-1.5 overflow-hidden"
+                  className="p-4 bg-white border border-slate-200/80 rounded-2xl space-y-1.5 overflow-hidden shadow-xs"
                 >
-                  <h3 className="text-xs font-black tracking-wider uppercase text-emerald-400">
+                  <h3 className="text-xs font-black tracking-wider uppercase text-emerald-600">
                     Misja 10 000,00 PLN
                   </h3>
-                  <p className="text-xs text-slate-300 leading-relaxed">
-                    Żółwie dobierają, kupują lub sprzedają pozycje w ramach aktualnego <strong className="text-slate-200">Wyścigu #1</strong>. 
-                    Po osiągnięciu wyceny całego portfela <span className="text-emerald-400 font-bold">10 000,00 zł</span> rozpocznie się <strong className="text-slate-200">Wyścig #2</strong>. 
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Żółwie dobierają, kupują lub sprzedają pozycje w ramach aktualnego <strong className="text-slate-800 font-bold">Wyścigu #1</strong>. 
+                    Po osiągnięciu wyceny całego portfela <span className="text-emerald-600 font-bold">10 000,00 zł</span> rozpocznie się <strong className="text-slate-800 font-bold">Wyścigu #2</strong>. 
                     Nowo otwierane pozycje będą odtąd klasyfikowane w kolejnej edycji zmagań.
                   </p>
                 </motion.div>
