@@ -434,7 +434,10 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
 
             {turtles.slice().sort((a, b) => a.trackNumber - b.trackNumber).map((turtle) => {
               const isActive = turtle.isActive;
-              const progress = Math.max(0, Math.min(100, ((turtle.roi - trackScale.minScale) / trackScale.range) * 100));
+              let progress = Math.max(0, Math.min(100, ((turtle.roi - trackScale.minScale) / trackScale.range) * 100));
+              if (totalValue < 10000) {
+                progress = Math.min(92, progress);
+              }
               const isPositive = turtle.roi >= 0;
               
               return (
