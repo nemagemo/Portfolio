@@ -43,80 +43,82 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
     const cryptoData = parseCSV(KRYPTO_DATA, 'CRYPTO', 'Offline').data as CryptoDataRow[];
     const ikeData = parseCSV(IKE_DATA, 'IKE', 'Offline').data as IKEDataRow[];
     const cashData = parseCSV(CASH_DATA, 'CASH', 'Offline').data as CashDataRow[];
-    const turtleTransactions = parseCSV(TRANSACTIONS_DATA, 'TURTLE', 'Offline').data as TurtleTransactionRow[];
     const turtlesHistory = parseCSV(TURTLES_HISTORY_DATA, 'TURTLES_HISTORY', 'Offline').data as CryptoDataRow[];
 
-    // Map Lookups for faster access by Date
-    const createMap = (arr: any[]) => new Map<string, { inv: number, profit: number }>(
-        arr.map(r => [r.date, { inv: r.investment ?? (r.totalValue - r.profit), profit: r.profit }])
-    );
+    const getMonthFirstDay = (dateStr: string) => {
+        if (!dateStr || dateStr.length < 7) return dateStr;
+        return `${dateStr.substring(0, 7)}-01`;
+    };
+
+    // Map Lookups for faster access by Date (standardized to YYYY-MM-01)
+    const createMap = (arr: any[]) => {
+        const map = new Map<string, { inv: number, profit: number }>();
+        arr.forEach(r => {
+            if (r && r.date) {
+                const normDate = getMonthFirstDay(r.date);
+                map.set(normDate, { 
+                    inv: r.investment ?? (r.totalValue - r.profit), 
+                    profit: r.profit 
+                });
+            }
+        });
+        return map;
+    };
+
     const ppkMap = createMap(ppkData);
     const cryptoMap = createMap(cryptoData);
     const ikeMap = createMap(ikeData);
     const turtleHistoryMap = createMap(turtlesHistory);
-    const cashMap = new Map(cashData.map(r => [r.date, r.value]));
 
-    // Aggregate Turtle Transactions and merge with monthly snapshot
-    const turtleHistMapCombined = new Map<string, { inv: number, profit: number }>(turtleHistoryMap);
-    turtleTransactions.forEach(t => {
-        const dateKey = t.date; 
-        // If we already have this specific date in history, we don't double add transactions
-        // (Assuming history points already include current transactions up to that date)
-        if (!turtleHistMapCombined.has(dateKey)) {
-            const current = turtleHistMapCombined.get(dateKey) || { inv: 0, profit: 0 };
-            turtleHistMapCombined.set(dateKey, { inv: current.inv + t.cost, profit: 0 });
+    const cashMap = new Map<string, number>();
+    cashData.forEach(r => {
+        if (r && r.date) {
+            cashMap.set(getMonthFirstDay(r.date), r.value);
         }
     });
 
-    // --- LIVE TOTALS & SNOWBALL LOGIC ---
-    // Calculate the current state from OMF snapshots.
-    const closedProfits = { IKE: 0, CRYPTO: 0, TURTLE: 0 };
-    omfClosedAssets.forEach(a => {
-        const p = a.portfolio.toUpperCase();
-        if (p.includes('IKE')) closedProfits.IKE += a.profit;
-        if (p.includes('KRYPTO')) closedProfits.CRYPTO += a.profit;
-        if (p.includes('ŻÓŁWIE')) closedProfits.TURTLE += a.profit;
-    });
+    // Dates Union & Sorting - Exclusively from the 5 main files' standardized first-of-month dates
+    const uniqueDates = Array.from(new Set([
+        ...ppkMap.keys(),
+        ...cryptoMap.keys(),
+        ...ikeMap.keys(),
+        ...cashMap.keys(),
+        ...turtleHistoryMap.keys()
+    ])).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
 
-    const liveTotals = { PPK: {inv:0, val:0}, CRYPTO: {inv:0, val:0}, IKE: {inv:0, val:0}, TURTLE: {inv:0, val:0}, CASH: {inv:0, val:0} };
-    omfActiveAssets.forEach(a => {
-        const p = a.portfolio.toUpperCase();
-        let target = liveTotals.CASH;
-        if (p === 'PPK') target = liveTotals.PPK;
-        else if (p.includes('KRYPTO')) target = liveTotals.CRYPTO;
-        else if (p.includes('IKE')) target = liveTotals.IKE;
-        else if (p.includes('ŻÓŁWIE')) target = liveTotals.TURTLE;
-        
-        target.inv += a.purchaseValue;
-        target.val += a.currentValue;
-    });
+    // Check if we have loaded actual online live prices
+    const hasLivePrices = omfActiveAssets.some(a => a.isLivePrice);
+    if (hasLivePrices && uniqueDates.length > 0) {
+        const closedProfits = { IKE: 0, CRYPTO: 0, TURTLE: 0 };
+        omfClosedAssets.forEach(a => {
+            const p = a.portfolio.toUpperCase();
+            if (p.includes('IKE')) closedProfits.IKE += a.profit;
+            if (p.includes('KRYPTO')) closedProfits.CRYPTO += a.profit;
+            if (p.includes('ŻÓŁWIE')) closedProfits.TURTLE += a.profit;
+        });
 
-    // Snowball Adjustments:
-    // Net Invested = Gross Purchase Value (Current Open) - Realized Profits (Closed) - Reinvested Dividends.
-    // This ensures that reinvesting profits isn't counted as "new money" from the user's pocket.
-    const totalActiveDividendsIKE = dividends
-        .filter(d => d.portfolio === 'IKE' && d.isCounted)
-        .reduce((acc, row) => acc + row.value, 0);
+        const liveTotals = { PPK: {inv:0, val:0}, CRYPTO: {inv:0, val:0}, IKE: {inv:0, val:0}, TURTLE: {inv:0, val:0}, CASH: {inv:0, val:0} };
+        omfActiveAssets.forEach(a => {
+            const p = a.portfolio.toUpperCase();
+            let target = liveTotals.CASH;
+            if (p === 'PPK') target = liveTotals.PPK;
+            else if (p.includes('KRYPTO')) target = liveTotals.CRYPTO;
+            else if (p.includes('IKE')) target = liveTotals.IKE;
+            else if (p.includes('ŻÓŁWIE')) target = liveTotals.TURTLE;
+            
+            target.inv += a.purchaseValue;
+            target.val += a.currentValue;
+        });
 
-    const liveNetInvIKE = liveTotals.IKE.inv - closedProfits.IKE - totalActiveDividendsIKE;
-    const liveNetInvCrypto = liveTotals.CRYPTO.inv - closedProfits.CRYPTO;
-    const liveNetInvTurtle = liveTotals.TURTLE.inv - closedProfits.TURTLE;
+        const totalActiveDividendsIKE = dividends
+            .filter(d => d.portfolio === 'IKE' && d.isCounted)
+            .reduce((acc, row) => acc + row.value, 0);
 
-    // Dates Union & Sorting - Force Monthly Bucketing
-    const monthsMap = new Map<string, string>(); // YYYY-MM -> Latest YYYY-MM-DD
-    [...ppkMap.keys(), ...cryptoMap.keys(), ...ikeMap.keys(), ...cashMap.keys(), ...turtleHistMapCombined.keys()].forEach(date => {
-        const monthKey = date.substring(0, 7); // "YYYY-MM"
-        const existing = monthsMap.get(monthKey);
-        if (!existing || date > existing) {
-            monthsMap.set(monthKey, date);
-        }
-    });
-    
-    const sortedDates = Array.from(monthsMap.values()).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+        const liveNetInvIKE = liveTotals.IKE.inv - closedProfits.IKE - totalActiveDividendsIKE;
+        const liveNetInvCrypto = liveTotals.CRYPTO.inv - closedProfits.CRYPTO;
+        const liveNetInvTurtle = liveTotals.TURTLE.inv - closedProfits.TURTLE;
 
-    // Update Last Point with Live Data (Live prices usually newer than CSV history)
-    if (sortedDates.length > 0) {
-        const lastDate = sortedDates[sortedDates.length - 1];
+        const lastDate = uniqueDates[uniqueDates.length - 1];
         
         if (liveTotals.PPK.val > 0) {
             ppkMap.set(lastDate, { 
@@ -140,14 +142,22 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
         }
         if (liveTotals.TURTLE.val > 0) {
             const liveProfitTurtle = liveTotals.TURTLE.val - liveNetInvTurtle;
-            turtleHistMapCombined.set(lastDate, { 
+            turtleHistoryMap.set(lastDate, { 
                 inv: liveNetInvTurtle, 
                 profit: liveProfitTurtle 
             });
         }
+        if (liveTotals.CASH.val > 0) {
+            cashMap.set(lastDate, liveTotals.CASH.val);
+        }
     }
 
-    let lastPPK = { inv: 0, profit: 0 }, lastCrypto = { inv: 0, profit: 0 }, lastIKE = { inv: 0, profit: 0 }, lastTurtle = { inv: 0, profit: 0 };
+    let lastPPK = { inv: 0, profit: 0 };
+    let lastCrypto = { inv: 0, profit: 0 };
+    let lastIKE = { inv: 0, profit: 0 };
+    let lastTurtle = { inv: 0, profit: 0 };
+    let lastCash = 0;
+
     let twrProduct = 1, prevTwrVal = 0, prevTwrInv = 0;
     
     // --- REAL VALUE CALCULATION (CPI - Chain Linked) ---
@@ -172,7 +182,7 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
            if (map[k]) return map[k];
        }
        return undefined;
-    };
+     };
 
     // Helper: Find the LATEST available price in a given month.
     // This is used for the current incomplete month where End-of-Month data doesn't exist yet.
@@ -191,35 +201,22 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
     const sp500Base = benchmarks?.sp500 ? findPrice(benchmarks.sp500, '2023-03-31') : undefined;
     const wig20Base = benchmarks?.wig20 ? findPrice(benchmarks.wig20, '2023-03-31') : undefined;
 
-    return sortedDates.map((date, index) => {
+    return uniqueDates.map((date, index) => {
         // Carry forward last known values if data missing for a month
         if (ppkMap.has(date)) lastPPK = ppkMap.get(date)!;
         if (cryptoMap.has(date)) lastCrypto = cryptoMap.get(date)!;
         if (ikeMap.has(date)) lastIKE = ikeMap.get(date)!;
-        if (turtleHistMapCombined.has(date)) lastTurtle = turtleHistMapCombined.get(date)!;
+        if (turtleHistoryMap.has(date)) lastTurtle = turtleHistoryMap.get(date)!;
+        if (cashMap.has(date)) lastCash = cashMap.get(date)!;
 
         const currentPPKInv = excludePPK ? 0 : lastPPK.inv;
         const currentPPKProfit = excludePPK ? 0 : lastPPK.profit;
         
-        // Cash Handling
-        const isCurrentMonth = index === sortedDates.length - 1;
-        let cashVal = 0;
-        if (isCurrentMonth && liveTotals.CASH.val > 0) {
-             cashVal = liveTotals.CASH.val;
-        } else {
-             cashVal = cashMap.get(date) || 0;
-        }
-        const cashInv = cashVal;
+        const cashInv = lastCash;
         const cashProfit = 0; // Cash generates no profit in this model
 
-        // Fix: Use liveTotals.TURTLE only for the last point, otherwise use history or 0.
-        let turtleInv = lastTurtle.inv;
-        let turtleProfit = lastTurtle.profit;
-        
-        if (isCurrentMonth && liveTotals.TURTLE.val > 0) {
-            turtleInv = liveTotals.TURTLE.inv;
-            turtleProfit = liveTotals.TURTLE.val - liveTotals.TURTLE.inv;
-        }
+        const turtleInv = lastTurtle.inv;
+        const turtleProfit = lastTurtle.profit;
 
         const totalInvestment = currentPPKInv + lastCrypto.inv + lastIKE.inv + cashInv + turtleInv;
         const totalProfit = currentPPKProfit + lastCrypto.profit + lastIKE.profit + cashProfit + turtleProfit;
@@ -308,7 +305,7 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
         const cryptoVal = lastCrypto.inv + lastCrypto.profit;
         const ikeVal = lastIKE.inv + lastIKE.profit;
         const turtleVal = turtleInv + turtleProfit;
-        const sumVal = ppkVal + cryptoVal + ikeVal + cashVal + turtleVal; 
+        const sumVal = ppkVal + cryptoVal + ikeVal + lastCash + turtleVal; 
 
         return {
             date,
@@ -330,5 +327,5 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
             totalValueNoPPK: valNoPPK
         };
     });
-  }, [portfolioType, omfActiveAssets, omfClosedAssets, excludePPK, dividends, benchmarks]);
+  }, [portfolioType, omfActiveAssets, omfClosedAssets, dividends, excludePPK, benchmarks]);
 };

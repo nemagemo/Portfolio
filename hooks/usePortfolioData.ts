@@ -6,6 +6,8 @@ import { useAssetPricing } from './useAssetPricing';
 import { useGlobalHistory } from './useGlobalHistory';
 import { usePortfolioStats } from './usePortfolioStats';
 import { OMF_LAST_UPDATED } from '../CSV/OMFopen';
+import { parseCSV } from '../utils/parser';
+import { TURTLES_HISTORY_DATA } from '../CSV/TurtlesHistory';
 
 interface UsePortfolioDataProps {
   portfolioType: PortfolioType;
@@ -56,13 +58,56 @@ export const usePortfolioData = ({
   // Transforms the static CSV data by injecting the current "Live" valuation from OMF Assets.
   // This ensures specific portfolio charts (PPK, IKE, Crypto) show today's value on the timeline.
   const data = useMemo(() => {
+    let baseRows = [...rawData];
+
+    // Merge IKE with TurtlesHistory for accurate charts representation
+    if (portfolioType === 'IKE') {
+        const turtlesHistoryRes = parseCSV(TURTLES_HISTORY_DATA, 'TURTLES_HISTORY', 'Offline');
+        const turtlesHistoryRows = turtlesHistoryRes.data as CryptoDataRow[];
+        
+        const getMonthFirstDay = (dateStr: string) => {
+            if (!dateStr || dateStr.length < 7) return dateStr;
+            return `${dateStr.substring(0, 7)}-01`;
+        };
+
+        const turtleHistoryMap = new Map<string, CryptoDataRow>();
+        turtlesHistoryRows.forEach(row => {
+            if (row && row.date) {
+                turtleHistoryMap.set(getMonthFirstDay(row.date), row);
+            }
+        });
+
+        baseRows = baseRows.map(r => {
+            const normDate = getMonthFirstDay((r as any).date);
+            const matchedTurtle = turtleHistoryMap.get(normDate);
+            if (matchedTurtle) {
+                const matchedTurtleInv = matchedTurtle.investment ?? (matchedTurtle.totalValue - matchedTurtle.profit);
+                const matchedTurtleProfit = matchedTurtle.profit;
+
+                const combinedInv = (r as IKEDataRow).investment + matchedTurtleInv;
+                const combinedProfit = (r as IKEDataRow).profit + matchedTurtleProfit;
+                const combinedTotal = combinedInv + combinedProfit;
+                const combinedRoi = combinedInv > 0 ? (combinedProfit / combinedInv) * 100 : 0;
+
+                return {
+                    ...r,
+                    investment: combinedInv,
+                    profit: combinedProfit,
+                    totalValue: combinedTotal,
+                    roi: combinedRoi
+                } as IKEDataRow;
+            }
+            return r;
+        });
+    }
+
     // Skip patching for OMF (handled by useGlobalHistory) or non-asset types
     if (portfolioType === 'OMF' || portfolioType === 'CASH' || portfolioType === 'DIVIDENDS') {
-        return rawData;
+        return baseRows;
     }
 
     if (!omfActiveAssets.length || !rawData.length) {
-        return rawData;
+        return baseRows;
     }
 
     // Filter assets belonging to the current portfolio view
@@ -73,48 +118,50 @@ export const usePortfolioData = ({
         return a.portfolio === portfolioType;
     });
 
-    if (currentAssets.length === 0 && portfolioType !== 'TURTLES_HISTORY') return rawData;
+    if (currentAssets.length === 0 && portfolioType !== 'TURTLES_HISTORY') return baseRows;
 
     // Calculate Live Totals
     const liveTotalValue = currentAssets.reduce((sum, a) => sum + a.currentValue, 0);
     
-    // Create a copy of data to modify
-    const enhancedData = [...rawData];
-    const lastRow = enhancedData[enhancedData.length - 1];
+    // Create a copy of baseRows (which are already merged if IKE)
+    const enhancedData = [...baseRows];
     
-    if (!lastRow || !('date' in lastRow)) return rawData;
+    // To calculate the live row accurately without double-counting, we grab the clean raw row:
+    const rawLastRow = rawData[rawData.length - 1];
+    if (!rawLastRow || !('date' in rawLastRow)) return baseRows;
 
-    const lastDate = new Date(lastRow.date);
-    
-    // Determine "Today" for the chart.
-    // If OMF_LAST_UPDATED is in the future (Time Travel scenario), use that.
-    // Otherwise use System Date.
-    let today = new Date();
-    if (OMF_LAST_UPDATED) {
-        const omfDate = new Date(OMF_LAST_UPDATED);
-        if (!isNaN(omfDate.getTime()) && omfDate > today) {
-            today = omfDate;
-        }
-    }
-    
-    // Check if last row is from the same month as our target "today"
-    const isSameMonth = lastDate.getMonth() === today.getMonth() && lastDate.getFullYear() === today.getFullYear();
-    const dateStr = today.toISOString().split('T')[0];
-
-    if (portfolioType === 'PPK') {
-        const r = lastRow as PPKDataRow;
-        // For PPK, purchaseValue in OMF matches employee contribution (based on OMF Logic)
+    let liveInvestment = (rawLastRow as any).investment;
+    if (portfolioType === 'TURTLES_HISTORY') {
+        const turtleClosed = omfClosedAssets.filter(a => a.portfolio === 'Żółwie');
+        const turtleClosedProfit = turtleClosed.reduce((sum, a) => sum + a.profit, 0);
+        liveInvestment = currentAssets.reduce((sum, a) => sum + a.purchaseValue, 0) - turtleClosedProfit;
+    } else if (portfolioType === 'IKE') {
+        const turtleActive = omfActiveAssets.filter(a => a.portfolio === 'Żółwie');
+        const turtleClosed = omfClosedAssets.filter(a => a.portfolio === 'Żółwie');
+        const turtleClosedProfit = turtleClosed.reduce((sum, a) => sum + a.profit, 0);
+        const turtleInvestment = turtleActive.reduce((sum, a) => sum + a.purchaseValue, 0) - turtleClosedProfit;
+        liveInvestment += turtleInvestment;
+    } else if (portfolioType === 'PPK') {
+        const r = rawLastRow as PPKDataRow;
         const liveEmployeeContrib = currentAssets.reduce((sum, a) => sum + a.purchaseValue, 0);
         
-        // Recalculate derived stats based on Live Value
-        // Note: We use the last known employer/state contributions from CSV as they update monthly (or less often)
         const newFundProfit = liveTotalValue - (liveEmployeeContrib + r.employerContribution + r.stateContribution);
         const newProfit = liveTotalValue - liveEmployeeContrib;
         const newRoi = liveEmployeeContrib > 0 ? (newProfit / liveEmployeeContrib) * 100 : 0;
         
-        // Exit ROI calculation (Standard formula)
         const exitGain = (newFundProfit * 0.81) + (r.employerContribution * 0.70);
         const newExitRoi = liveEmployeeContrib > 0 ? (exitGain / liveEmployeeContrib) * 100 : 0;
+
+        let today = new Date();
+        if (OMF_LAST_UPDATED) {
+            const omfDate = new Date(OMF_LAST_UPDATED);
+            if (!isNaN(omfDate.getTime()) && omfDate > today) {
+                today = omfDate;
+            }
+        }
+        const lastDate = new Date(r.date);
+        const isSameMonth = lastDate.getMonth() === today.getMonth() && lastDate.getFullYear() === today.getFullYear();
+        const dateStr = today.toISOString().split('T')[0];
 
         const liveRow: PPKDataRow = {
             ...r,
@@ -126,7 +173,6 @@ export const usePortfolioData = ({
             profit: newProfit,
             roi: newRoi,
             exitRoi: newExitRoi,
-            // Keep others static
             employerContribution: r.employerContribution,
             stateContribution: r.stateContribution,
             tax: r.tax 
@@ -137,56 +183,47 @@ export const usePortfolioData = ({
         } else {
             enhancedData.push(liveRow);
         }
+        return enhancedData;
+    }
 
+    const rMerged = enhancedData[enhancedData.length - 1] as CryptoDataRow | IKEDataRow;
+    
+    const newProfit = liveTotalValue - liveInvestment;
+    const newRoi = liveInvestment > 0 ? (newProfit / liveInvestment) * 100 : 0;
+
+    let today = new Date();
+    if (OMF_LAST_UPDATED) {
+        const omfDate = new Date(OMF_LAST_UPDATED);
+        if (!isNaN(omfDate.getTime()) && omfDate > today) {
+            today = omfDate;
+        }
+    }
+    const lastDate = new Date(rMerged.date);
+    const isSameMonth = lastDate.getMonth() === today.getMonth() && lastDate.getFullYear() === today.getFullYear();
+    const dateStr = today.toISOString().split('T')[0];
+
+    const liveRow: any = {
+        ...rMerged,
+        date: dateStr,
+        dateObj: today,
+        totalValue: liveTotalValue,
+        investment: liveInvestment,
+        profit: newProfit,
+        roi: newRoi
+    };
+
+    if (portfolioType === 'IKE') {
+         const tax = newProfit > 0 ? newProfit * 0.19 : 0;
+         liveRow.taxedTotalValue = liveTotalValue - tax;
+    }
+
+    if (isSameMonth) {
+        enhancedData[enhancedData.length - 1] = liveRow;
     } else {
-        // IKE, CRYPTO & TURTLES_HISTORY
-        const r = lastRow as CryptoDataRow | IKEDataRow;
-        
-        // For Investment (Cost Basis), we generally stick to the CSV history for stability
-        // unless we have a reliable way to calculate it from Open+Closed assets on the fly.
-        // Using the last CSV row's investment is the safest bet for "Live View" without full re-calc.
-        
-        // Special case for Turtles: calculate investment dynamically
-        let liveInvestment = r.investment;
-        if (portfolioType === 'TURTLES_HISTORY') {
-            const turtleClosed = omfClosedAssets.filter(a => a.portfolio === 'Żółwie');
-            const turtleClosedProfit = turtleClosed.reduce((sum, a) => sum + a.profit, 0);
-            liveInvestment = currentAssets.reduce((sum, a) => sum + a.purchaseValue, 0) - turtleClosedProfit;
-        } else if (portfolioType === 'IKE') {
-            const turtleActive = omfActiveAssets.filter(a => a.portfolio === 'Żółwie');
-            const turtleClosed = omfClosedAssets.filter(a => a.portfolio === 'Żółwie');
-            const turtleClosedProfit = turtleClosed.reduce((sum, a) => sum + a.profit, 0);
-            const turtleInvestment = turtleActive.reduce((sum, a) => sum + a.purchaseValue, 0) - turtleClosedProfit;
-            liveInvestment += turtleInvestment;
-        }
-        
-        const newProfit = liveTotalValue - liveInvestment;
-        const newRoi = liveInvestment > 0 ? (newProfit / liveInvestment) * 100 : 0;
-
-        const liveRow: any = {
-            ...r,
-            date: dateStr,
-            dateObj: today,
-            totalValue: liveTotalValue,
-            investment: liveInvestment,
-            profit: newProfit,
-            roi: newRoi
-        };
-
-        if (portfolioType === 'IKE') {
-             const tax = newProfit > 0 ? newProfit * 0.19 : 0;
-             liveRow.taxedTotalValue = liveTotalValue - tax;
-        }
-
-        if (isSameMonth) {
-            enhancedData[enhancedData.length - 1] = liveRow;
-        } else {
-            enhancedData.push(liveRow);
-        }
+        enhancedData.push(liveRow);
     }
 
     return enhancedData;
-
   }, [portfolioType, rawData, omfActiveAssets, omfClosedAssets]);
 
   // 3. Build Global History (Timeline)
