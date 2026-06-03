@@ -56,7 +56,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
     if (t.endsWith('.L')) return 'https://flagcdn.com/w40/gb.png';
     if (t.endsWith('.DE')) return 'https://flagcdn.com/w40/de.png';
     // Check common polish symbols
-    const polishSymbols = ['ARH', 'LPP', 'CMP', 'PKO', 'ALE', 'VRG', 'DNP', 'ORL', 'SEK', 'PEO', 'PZU', 'KGH', 'PKN'];
+    const polishSymbols = ['ARH', 'ODL', 'CMP', 'LBW', 'ALE', 'VRG', 'DNP', 'ORL', 'SEK', 'PEO', 'PZU', 'KGH', 'PKN'];
     if (polishSymbols.includes(t)) return 'https://flagcdn.com/w40/pl.png';
     const ukSymbols = ['RPI'];
     if (ukSymbols.includes(t)) return 'https://flagcdn.com/w40/gb.png';
@@ -73,9 +73,28 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
     const turtleActive = activeAssets.filter(a => a.portfolio === 'Żółwie');
     const turtleClosed = closedAssets.filter(a => a.portfolio === 'Żółwie');
     
-    // 2. Fixed list of 10 turtles
-    const turtleNames = ['Oktawian', 'Tyberiusz', 'Kaligula', 'Klaudiusz', 'Neron', 'Galba', 'Oton', 'Witeliusz', 'Wespazjan', 'Tytus'];
+    // 2. Setup predefined ones and dynamically discover new ones from active/closed assets
+    const predefinedNames = ['Oktawian', 'Tyberiusz', 'Kaligula', 'Klaudiusz', 'Neron', 'Galba', 'Oton', 'Witeliusz', 'Wespazjan', 'Tytus'];
     const turtleColors = ['#22c55e', '#3b82f6', '#ef4444', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b', '#06b6d4', '#10b981', '#f97316'];
+    
+    const parsedNamesSet = new Set<string>();
+    [...turtleActive, ...turtleClosed].forEach(a => {
+      if (a.sector && a.sector.trim()) {
+        const name = a.sector.trim();
+        // Capitalize first letter neatly
+        const formattedName = name.charAt(0).toUpperCase() + name.slice(1);
+        parsedNamesSet.add(formattedName);
+      }
+    });
+
+    const turtleNamesMap = new Set<string>(predefinedNames);
+    parsedNamesSet.forEach(name => {
+      const hasItem = Array.from(turtleNamesMap).some(existing => existing.toLowerCase() === name.toLowerCase());
+      if (!hasItem) {
+        turtleNamesMap.add(name);
+      }
+    });
+    const turtleNames = Array.from(turtleNamesMap);
     
     // 2.5 Calculate the total value of "Żółwie" portfolio to check 1.5% threshold
     let totalTurtlesValue = 0;
