@@ -315,7 +315,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
       {/* Bubble Risk Map (Intraday) - Full Width - MOVED UP */}
       <div className={`${styles.cardContainer} p-6 hidden md:block`}>
         <div className="flex items-center justify-between mb-0">
-          <div><h3 className={`text-lg font-bold ${styles.text}`}>Intraday</h3><p className={`text-[10px] sm:text-xs mt-1 text-slate-400`}>Gdy zmiana wynosi 0 lub jest bardzo duża, może to wskazywać na błąd synchronizacji danych.</p></div>
+          <div><h3 className={`text-lg font-bold ${styles.text}`}>Intraday</h3></div>
           <div className="flex space-x-2 items-center">
             <div className="flex items-center space-x-1 p-1 border bg-slate-50 border-slate-100 rounded-lg">
                 <button onClick={() => setBubbleChartFilter('ALL')} className={`px-3 py-1 text-xs font-bold transition-all ${bubbleChartFilter === 'ALL' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:bg-slate-100'} rounded-md`}>Wszystkie</button>
