@@ -361,7 +361,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
               {/* Header with Title and Rules toggle in the upper area */}
               <div className="flex items-center justify-between">
                 <span className="px-2.5 py-1 bg-emerald-500 text-white text-[10px] font-black rounded-md tracking-wider uppercase">
-                  Etap: Wyścig #1
+                  Wyścig #1
                 </span>
                 <button
                   onClick={() => setIsGPInfoExpanded(!isGPInfoExpanded)}
