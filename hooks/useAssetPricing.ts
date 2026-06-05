@@ -76,9 +76,7 @@ export const useAssetPricing = ({ portfolioType, onlinePrices, historyPrices, di
 
           let symbolKey = row.symbol.toUpperCase();
           // Normalize symbols to bridge differences between local DB codes and Google Sheets
-          if (symbolKey === 'LBW') {
-              symbolKey = 'LUB'; // Lubawa is represented as LUB in the Google Sheet data
-          } else if (symbolKey === 'PLN-IKE' || symbolKey === 'PLN-ŻÓŁWIE') {
+          if (symbolKey === 'PLN-IKE' || symbolKey === 'PLN-ŻÓŁWIE') {
               symbolKey = 'PLN'; // Map cash positions to the core PLN rate
           }
           
