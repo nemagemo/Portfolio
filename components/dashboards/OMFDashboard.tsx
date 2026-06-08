@@ -41,7 +41,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
   const styles = themeStyles[theme];
   const [isActivePositionsExpanded, setIsActivePositionsExpanded] = useState(false);
   const [isClosedHistoryExpanded, setIsClosedHistoryExpanded] = useState(false);
-  const [bubbleChartFilter, setBubbleChartFilter] = useState<'ALL' | 'KRYPTO' | 'IKE'>('ALL');
+  const [bubbleChartFilter, setBubbleChartFilter] = useState<'ALL' | 'KRYPTO' | 'IKE' | 'ZOLWIE'>('ALL');
   
   // Aggregate Turtle Cash
   const processedActiveAssets = useMemo(() => {
@@ -97,16 +97,69 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
 
   const filteredBubbleData = useMemo(() => {
     let baseData = processedActiveAssets.filter(a => a.symbol !== 'PLN-Żółwie');
-    if (bubbleChartFilter !== 'ALL') {
-        baseData = baseData.filter(a => a.portfolio.toUpperCase().includes(bubbleChartFilter));
+    
+    if (bubbleChartFilter === 'KRYPTO') {
+        return baseData.filter(a => a.portfolio === 'Krypto');
     }
-    if (bubbleChartFilter === 'KRYPTO') return baseData;
+    if (bubbleChartFilter === 'IKE') {
+        return baseData.filter(a => a.portfolio === 'IKE');
+    }
+    if (bubbleChartFilter === 'ZOLWIE') {
+        return baseData.filter(a => a.portfolio === 'Żółwie');
+    }
 
+    // bubbleChartFilter === 'ALL'
+    // First, group all 'Żółwie' positions into a single position named 'Żółwie'
+    const turtleAssets = baseData.filter(a => a.portfolio === 'Żółwie');
+    const nonTurtleAssets = baseData.filter(a => a.portfolio !== 'Żółwie');
+
+    let allViewAssets = [...nonTurtleAssets];
+
+    if (turtleAssets.length > 0) {
+        let turtleCurrent = 0;
+        let turtlePurchase = 0;
+        let turtlePrev24h = 0;
+        let hasLivePrice = false;
+
+        turtleAssets.forEach(a => {
+            turtleCurrent += a.currentValue;
+            turtlePurchase += a.purchaseValue;
+            if (a.isLivePrice) hasLivePrice = true;
+            const change = a.change24h || 0;
+            const divisor = 1 + (change / 100);
+            const prev = divisor !== 0 ? a.currentValue / divisor : 0;
+            turtlePrev24h += prev;
+        });
+
+        const aggProfit = turtleCurrent - turtlePurchase;
+        const aggRoi = turtlePurchase > 0 ? (aggProfit / turtlePurchase) * 100 : 0;
+        const aggChange24h = turtlePrev24h > 0 ? ((turtleCurrent - turtlePrev24h) / turtlePrev24h) * 100 : 0;
+
+        const syntheticTurtleNode: OMFDataRow = {
+            symbol: 'Żółwie',
+            portfolio: 'Żółwie',
+            status: 'Otwarta',
+            type: 'Agregat',
+            sector: '',
+            quantity: 0,
+            lastPurchaseDate: '',
+            investmentPeriod: '',
+            currentValue: turtleCurrent,
+            purchaseValue: turtlePurchase,
+            profit: aggProfit,
+            roi: aggRoi,
+            change24h: aggChange24h,
+            isLivePrice: hasLivePrice
+        };
+        allViewAssets.push(syntheticTurtleNode);
+    }
+
+    // Now process small crypto for is-Krypto assets in the 'ALL' view
     const smallCrypto: OMFDataRow[] = [];
     const others: OMFDataRow[] = [];
 
-    baseData.forEach(asset => {
-        if (asset.portfolio.toUpperCase().includes('KRYPTO') && asset.currentValue < 1000) {
+    allViewAssets.forEach(asset => {
+        if (asset.portfolio === 'Krypto' && asset.currentValue < 1000) {
             smallCrypto.push(asset);
         } else {
             others.push(asset);
@@ -321,6 +374,7 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
                 <button onClick={() => setBubbleChartFilter('ALL')} className={`px-3 py-1 text-xs font-bold transition-all ${bubbleChartFilter === 'ALL' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:bg-slate-100'} rounded-md`}>Wszystkie</button>
                 <button onClick={() => setBubbleChartFilter('KRYPTO')} className={`px-3 py-1 text-xs font-bold transition-all ${bubbleChartFilter === 'KRYPTO' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:bg-slate-100'} rounded-md`}>Krypto</button>
                 <button onClick={() => setBubbleChartFilter('IKE')} className={`px-3 py-1 text-xs font-bold transition-all ${bubbleChartFilter === 'IKE' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:bg-slate-100'} rounded-md`}>IKE</button>
+                <button onClick={() => setBubbleChartFilter('ZOLWIE')} className={`px-3 py-1 text-xs font-bold transition-all ${bubbleChartFilter === 'ZOLWIE' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:bg-slate-100'} rounded-md`}>Żółwie</button>
             </div>
             <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><ScatterChart className="text-amber-600" size={20} /></div>
           </div>
