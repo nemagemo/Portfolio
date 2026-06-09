@@ -74,9 +74,11 @@ Otwarta,Żółwie,Akcje,ODL,,Domicjan,0,2026-06-03,"4,000000","94,00 zł","94,00
 Otwarta,Żółwie,Gotówka,PLN,,Domicjan,0,2026-06-03,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Akcje,LBW,,Nerwa,0,2026-06-03,"7,000000","94,50 zł","94,50 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Gotówka,PLN,,Nerwa,0,2026-06-03,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Akcje,UNT,,Trajan,0,2026-06-09,"0,615700","99,37 zł","99,37 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Gotówka,PLN,,Trajan,0,2026-06-09,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Gotówka,Gotówka,PLN,,,382,2026-06-03,"0,000000","0,00 zł","0,00 zł","0,00 zł","0,00%"`;
 
 
 
 
-export const OMF_LAST_UPDATED = '2026-06-06';
+export const OMF_LAST_UPDATED = '2026-06-09';
