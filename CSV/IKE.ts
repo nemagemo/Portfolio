@@ -32,4 +32,4 @@ export const IKE_DATA = `Data,Wkład,Zysk,ROI
 2026-05-01,"19 148,68 zł","4 079,17 zł","21,30%"
 2026-06-01,"19 102,10 zł","4 079,17 zł","21,35%"`;
 
-export const IKE_LAST_UPDATED = '2026-06-03';
+export const IKE_LAST_UPDATED = '2026-06-20';
