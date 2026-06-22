@@ -72,6 +72,41 @@ export const useAssetPricing = ({ portfolioType, onlinePrices, historyPrices, di
               processedSymbol = 'PLN-Żółwie';
           }
 
+          if (row.portfolio === 'Żółwie' && row.symbol === 'PLN') {
+              const currentTurtleName = row.sector?.trim().toLowerCase();
+              let turtleDividendsSum = 0;
+              if (currentTurtleName) {
+                  const turtleSymbols = new Set<string>();
+                  const rawOpen = openRes.data as OMFDataRow[];
+                  const rawClosed = closedRes.data as OMFDataRow[];
+                  rawOpen.forEach(r => {
+                      if (r.portfolio === 'Żółwie' && r.sector?.trim().toLowerCase() === currentTurtleName && r.type !== 'Gotówka') {
+                          turtleSymbols.add(r.symbol.toUpperCase());
+                      }
+                  });
+                  rawClosed.forEach(r => {
+                      if (r.portfolio === 'Żółwie' && r.sector?.trim().toLowerCase() === currentTurtleName && r.type !== 'Gotówka') {
+                          turtleSymbols.add(r.symbol.toUpperCase());
+                      }
+                  });
+
+                  turtleDividendsSum = dividends
+                      .filter(d => (d.portfolio === 'Żółwie' || d.portfolio === 'IKE') && d.symbol && turtleSymbols.has(d.symbol.toUpperCase()))
+                      .reduce((sum, d) => sum + d.value, 0);
+              }
+
+              return {
+                  ...row,
+                  symbol: processedSymbol,
+                  purchaseValue: turtleDividendsSum,
+                  currentValue: turtleDividendsSum,
+                  profit: 0,
+                  roi: 0,
+                  isLivePrice: false,
+                  change24h: undefined
+              } as OMFDataRow;
+          }
+
           if (row.status !== 'Otwarta' && row.status !== 'Gotówka') return { ...row, symbol: processedSymbol };
 
           let symbolKey = row.symbol.toUpperCase();
@@ -131,7 +166,7 @@ export const useAssetPricing = ({ portfolioType, onlinePrices, historyPrices, di
       
       const openIKE = omfOpenRows.filter(r => r.portfolio === 'IKE').reduce((sum, r) => sum + r.purchaseValue, 0);
       const closedIKE = omfClosedRows.filter(r => r.portfolio === 'IKE').reduce((sum, r) => sum + r.profit, 0);
-      const divsIKE = dividends.filter(d => d.portfolio === 'IKE' && d.isCounted).reduce((sum, r) => sum + r.value, 0);
+      const divsIKE = dividends.filter(d => (d.portfolio === 'IKE' || d.portfolio === 'Żółwie') && d.isCounted).reduce((sum, r) => sum + r.value, 0);
       
       const calcIKE = openIKE - closedIKE - divsIKE;
 

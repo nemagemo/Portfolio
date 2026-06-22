@@ -231,7 +231,7 @@ export const useChartTransformations = ({
 // --- Separate Hook for Dividends Grouping ---
 export const useDividendGrouping = (dividends: DividendDataRow[], viewMode: 'Yearly' | 'Quarterly') => {
     return useMemo(() => {
-        const ikeDividends = dividends.filter(d => d.portfolio === 'IKE');
+        const ikeDividends = dividends.filter(d => d.portfolio === 'IKE' || d.portfolio === 'Żółwie');
         const grouped: Record<string, number> = {};
     
         ikeDividends.forEach(d => {

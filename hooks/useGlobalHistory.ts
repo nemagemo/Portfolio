@@ -111,7 +111,7 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
         });
 
         const totalActiveDividendsIKE = dividends
-            .filter(d => d.portfolio === 'IKE' && d.isCounted)
+            .filter(d => (d.portfolio === 'IKE' || d.portfolio === 'Żółwie') && d.isCounted)
             .reduce((acc, row) => acc + row.value, 0);
 
         const liveNetInvIKE = liveTotals.IKE.inv - closedProfits.IKE - totalActiveDividendsIKE;

@@ -43,4 +43,4 @@ export const KRYPTO_DATA = `Data,Wkład,Zysk,ROI
 
 
 
-export const KRYPTO_LAST_UPDATED = '2026-06-06';
+export const KRYPTO_LAST_UPDATED = '2026-06-22';

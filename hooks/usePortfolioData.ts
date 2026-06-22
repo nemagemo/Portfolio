@@ -114,7 +114,10 @@ export const usePortfolioData = ({
     const currentAssets = omfActiveAssets.filter(a => {
         if (portfolioType === 'CRYPTO') return a.portfolio.toUpperCase().includes('KRYPTO');
         if (portfolioType === 'TURTLES_HISTORY') return a.portfolio === 'Żółwie';
-        if (portfolioType === 'IKE') return a.portfolio === 'IKE' || a.portfolio === 'Żółwie';
+        if (portfolioType === 'IKE') {
+            // Exclude virtual cash of turtles from IKE currentAssets list to avoid double counting with PLN-IKE
+            return a.portfolio === 'IKE' || (a.portfolio === 'Żółwie' && a.symbol !== 'PLN-Żółwie');
+        }
         return a.portfolio === portfolioType;
     });
 
@@ -134,12 +137,18 @@ export const usePortfolioData = ({
     if (portfolioType === 'TURTLES_HISTORY') {
         const turtleClosed = omfClosedAssets.filter(a => a.portfolio === 'Żółwie');
         const turtleClosedProfit = turtleClosed.reduce((sum, a) => sum + a.profit, 0);
-        liveInvestment = currentAssets.reduce((sum, a) => sum + a.purchaseValue, 0) - turtleClosedProfit;
+        const turtleDividends = dividends
+            .filter(d => d.portfolio === 'Żółwie' && d.isCounted)
+            .reduce((sum, d) => sum + d.value, 0);
+        liveInvestment = currentAssets.reduce((sum, a) => sum + a.purchaseValue, 0) - turtleClosedProfit - turtleDividends;
     } else if (portfolioType === 'IKE') {
-        const turtleActive = omfActiveAssets.filter(a => a.portfolio === 'Żółwie');
+        const turtleActive = omfActiveAssets.filter(a => a.portfolio === 'Żółwie' && a.symbol !== 'PLN-Żółwie');
         const turtleClosed = omfClosedAssets.filter(a => a.portfolio === 'Żółwie');
         const turtleClosedProfit = turtleClosed.reduce((sum, a) => sum + a.profit, 0);
-        const turtleInvestment = turtleActive.reduce((sum, a) => sum + a.purchaseValue, 0) - turtleClosedProfit;
+        const turtleDividends = dividends
+             .filter(d => d.portfolio === 'Żółwie' && d.isCounted)
+             .reduce((sum, d) => sum + d.value, 0);
+        const turtleInvestment = turtleActive.reduce((sum, a) => sum + a.purchaseValue, 0) - turtleClosedProfit - turtleDividends;
         liveInvestment += turtleInvestment;
     } else if (portfolioType === 'PPK') {
         const r = rawLastRow as PPKDataRow;
@@ -224,7 +233,7 @@ export const usePortfolioData = ({
     }
 
     return enhancedData;
-  }, [portfolioType, rawData, omfActiveAssets, omfClosedAssets]);
+  }, [portfolioType, rawData, omfActiveAssets, omfClosedAssets, dividends]);
 
   // 3. Build Global History (Timeline)
   const globalHistoryData = useGlobalHistory({

@@ -3,7 +3,7 @@ import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Turtle, TrendingUp, Trophy, Info, Target, Wallet, Moon, Activity, Flag, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { Theme, themeStyles } from '../../theme/styles';
-import { OMFDataRow } from '../../types';
+import { OMFDataRow, DividendDataRow } from '../../types';
 import { usePortfolioData } from '../../hooks/usePortfolioData';
 import { CryptoValueChart, ROIChart } from '../Charts';
 
@@ -13,6 +13,7 @@ interface TurtleDashboardProps {
   closedAssets: OMFDataRow[];
   onlinePrices: Record<string, number> | null;
   historyPrices: Record<string, number> | null;
+  dividends?: DividendDataRow[];
 }
 
 interface TurtleState {
@@ -35,10 +36,12 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
   activeAssets, 
   closedAssets,
   onlinePrices,
-  historyPrices
+  historyPrices,
+  dividends = []
 }) => {
   const styles = themeStyles[theme];
   const [isGPInfoExpanded, setIsGPInfoExpanded] = useState(false);
+  const [expandedTurtleName, setExpandedTurtleName] = useState<string | null>(null);
 
   // Fetch history data for Turtle portfolio
   const { data: historyData } = usePortfolioData({
@@ -102,11 +105,16 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
       const myActive = turtleActive.filter(a => a.sector?.trim().toLowerCase() === name.toLowerCase());
       const myClosed = turtleClosed.filter(a => a.sector?.trim().toLowerCase() === name.toLowerCase());
       
+      const mySymbols = [...myActive, ...myClosed].map(a => a.symbol.toLowerCase());
+      const turtleDividends = dividends
+        .filter(d => (d.portfolio === 'Żółwie' || d.portfolio === 'IKE') && mySymbols.includes(d.symbol.toLowerCase()))
+        .reduce((sum, d) => sum + d.value, 0);
+
       const activeProfit = myActive.reduce((sum, a) => sum + a.profit, 0);
       const closedProfit = myClosed.reduce((sum, a) => sum + a.profit, 0);
-      const totalProfit = activeProfit + closedProfit;
+      const totalProfit = activeProfit + closedProfit + turtleDividends;
       
-      const initialCapital = myActive.reduce((sum, a) => sum + a.purchaseValue, 0) + myClosed.reduce((sum, a) => sum + a.purchaseValue, 0);
+      const initialCapital = myActive.filter(a => a.type !== 'Gotówka' && a.symbol !== 'PLN-Żółwie').reduce((sum, a) => sum + a.purchaseValue, 0) + myClosed.reduce((sum, a) => sum + a.purchaseValue, 0);
       totalTurtlesValue += (initialCapital + totalProfit);
     });
 
@@ -157,14 +165,19 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
         }
       });
 
+      const mySymbols = [...myActive, ...myClosed].map(a => a.symbol.toLowerCase());
+      const turtleDividends = dividends
+        .filter(d => (d.portfolio === 'Żółwie' || d.portfolio === 'IKE') && mySymbols.includes(d.symbol.toLowerCase()))
+        .reduce((sum, d) => sum + d.value, 0);
+
       const activeProfit = myActive.reduce((sum, a) => sum + a.profit, 0);
       const closedProfit = myClosed.reduce((sum, a) => sum + a.profit, 0);
-      const totalProfit = activeProfit + closedProfit;
+      const totalProfit = activeProfit + closedProfit + turtleDividends;
       
       const hasActivity = myActive.some(a => a.currentValue > 0 || a.purchaseValue > 0) || myClosed.length > 0;
       
-      // Calculate real capital based on purchase values
-      const initialCapital = myActive.reduce((sum, a) => sum + a.purchaseValue, 0) + myClosed.reduce((sum, a) => sum + a.purchaseValue, 0);
+      // Calculate real capital based on purchase values (excluding virtual cash PLN-Żółwie rows to prevent double-counting of dividends)
+      const initialCapital = myActive.filter(a => a.type !== 'Gotówka' && a.symbol !== 'PLN-Żółwie').reduce((sum, a) => sum + a.purchaseValue, 0) + myClosed.reduce((sum, a) => sum + a.purchaseValue, 0);
       const totalEquity = initialCapital + totalProfit;
       const roi = initialCapital > 0 ? (totalProfit / initialCapital) * 100 : 0;
 
@@ -576,55 +589,280 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
             <tbody className="divide-y divide-slate-100">
               {turtles.map((turtle, index) => {
                 const isActive = turtle.isActive;
+                const name = turtle.name;
+                const myActive = activeAssets.filter(a => a.portfolio === 'Żółwie' && a.sector?.trim().toLowerCase() === name.toLowerCase());
+                const myClosed = closedAssets.filter(a => a.portfolio === 'Żółwie' && a.sector?.trim().toLowerCase() === name.toLowerCase());
+                const mySymbols = [...myActive, ...myClosed].map(a => a.symbol.toLowerCase());
+                const myDividends = dividends.filter(d => 
+                  (d.portfolio === 'Żółwie' || d.portfolio === 'IKE') && 
+                  mySymbols.includes(d.symbol.toLowerCase())
+                );
+
+                const activeProfitSum = myActive.reduce((sum, a) => sum + a.profit, 0);
+                const closedProfitSum = myClosed.reduce((sum, a) => sum + a.profit, 0);
+                const totalDividendsSum = myDividends.reduce((sum, d) => sum + d.value, 0);
+                const calculatedTotalProfit = activeProfitSum + closedProfitSum + totalDividendsSum;
+                const isExpanded = expandedTurtleName === turtle.name;
+
                 return (
-                  <tr key={turtle.id} className={`transition-all duration-300 ${turtle.isDanger ? 'bg-red-50/50 hover:bg-red-100/40 text-red-900 border-l-4 border-l-red-500' : 'hover:bg-slate-50'} ${!isActive ? 'opacity-60' : ''}`}>
-                    <td className="px-6 py-4">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${isActive && index < 3 && !turtle.isDanger ? 'bg-amber-100 text-amber-700' : turtle.isDanger ? 'bg-red-100 text-red-700' : 'text-slate-400'}`}>
-                        {index + 1}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <Turtle size={18} style={{ color: turtle.isDanger ? '#ef4444' : turtle.color }} className={`${!isActive ? 'grayscale opacity-70' : ''} ${turtle.isDanger ? 'animate-pulse' : ''}`} />
-                        <span className={`font-semibold ${turtle.isDanger ? 'text-red-700 font-black' : 'text-slate-700'}`}>{turtle.name}</span>
-                        {turtle.isDanger && (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-red-100 text-red-700 text-[8px] font-black rounded-full uppercase tracking-wider animate-pulse border border-red-200">
-                            WYSOKIE RYZYKO
+                  <React.Fragment key={turtle.id}>
+                    <tr className={`transition-all duration-300 ${turtle.isDanger ? 'bg-red-50/50 hover:bg-red-100/40 text-red-900 border-l-4 border-l-red-500' : 'hover:bg-slate-50'} ${!isActive ? 'opacity-60' : ''} ${isExpanded ? 'bg-slate-50/55' : ''}`}>
+                      <td className="px-6 py-4">
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${isActive && index < 3 && !turtle.isDanger ? 'bg-amber-100 text-amber-700' : turtle.isDanger ? 'bg-red-100 text-red-700' : 'text-slate-400'}`}>
+                          {index + 1}
+                        </div>
+                      </td>
+                      <td 
+                        className="px-6 py-4 cursor-pointer select-none group/turtle-name"
+                        onClick={() => setExpandedTurtleName(isExpanded ? null : turtle.name)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Turtle 
+                            size={18} 
+                            style={{ color: turtle.isDanger ? '#ef4444' : turtle.color }} 
+                            className={`transition-all duration-300 ${!isActive ? 'grayscale opacity-70' : ''} ${turtle.isDanger ? 'animate-pulse' : ''} group-hover/turtle-name:scale-110`} 
+                          />
+                          <span className={`font-semibold transition-colors duration-200 group-hover/turtle-name:text-blue-600 ${turtle.isDanger ? 'text-red-700 font-black' : 'text-slate-700'}`}>
+                            {turtle.name}
                           </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        {isActive ? (
-                          <>
-                            <div className="w-8 h-6 rounded bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200">
-                              <img src={getFlagUrl(turtle.currentStock)} alt="flag" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                          <ChevronDown 
+                            size={14} 
+                            className={`text-slate-400 transition-transform duration-300 ${isExpanded ? 'rotate-180 text-blue-500' : ''}`} 
+                          />
+                          {turtle.isDanger && (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-red-100 text-red-700 text-[8px] font-black rounded-full uppercase tracking-wider animate-pulse border border-red-200">
+                              WYSOKIE RYZYKO
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          {isActive ? (
+                            <>
+                              <div className="w-8 h-6 rounded bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200">
+                                <img src={getFlagUrl(turtle.currentStock)} alt="flag" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                              </div>
+                              <span className="text-xs font-bold text-slate-900 tracking-tight">{cleanSymbol(turtle.currentStock)}</span>
+                            </>
+                          ) : (
+                            <div className="flex items-center gap-1.5 px-1.5 py-0.5 bg-indigo-50 border border-indigo-100 rounded-full shadow-inner ring-4 ring-indigo-50/10">
+                              <div className="relative">
+                                <Moon size={9} className="text-indigo-500 fill-indigo-200 animate-pulse" />
+                                <div className="absolute inset-0 bg-indigo-400 blur-sm opacity-20" />
+                              </div>
+                              <span className="text-[7px] font-black text-indigo-400 tracking-widest leading-none">ZZZ</span>
                             </div>
-                            <span className="text-xs font-bold text-slate-900 tracking-tight">{cleanSymbol(turtle.currentStock)}</span>
-                          </>
-                        ) : (
-                          <div className="flex items-center gap-1.5 px-1.5 py-0.5 bg-indigo-50 border border-indigo-100 rounded-full shadow-inner ring-4 ring-indigo-50/10">
-                            <div className="relative">
-                              <Moon size={9} className="text-indigo-500 fill-indigo-200 animate-pulse" />
-                              <div className="absolute inset-0 bg-indigo-400 blur-sm opacity-20" />
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-right font-mono text-xs text-slate-500">{turtle.initialCapital.toFixed(2)} zł</td>
+                      <td className="px-6 py-4 text-right font-bold text-slate-700">{turtle.currentValue.toFixed(2)} zł</td>
+                      <td className={`px-6 py-4 text-right font-bold ${turtle.profit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                        {turtle.profit.toFixed(2)} zł
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <span className={`px-2 py-1 rounded text-[10px] font-bold ${turtle.roi >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
+                          {turtle.roi.toFixed(1)}%
+                        </span>
+                      </td>
+                    </tr>
+                    {isExpanded && (
+                      <tr className="bg-slate-50/50">
+                        <td colSpan={7} className="p-0 border-t border-b border-dashed border-slate-200">
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            transition={{ duration: 0.2 }}
+                            className="px-6 py-6 overflow-hidden"
+                          >
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                              {/* Left Panel: ROI Calculation Details (col-span-12 lg:col-span-4) */}
+                              <div className="lg:col-span-4 space-y-4">
+                                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+                                  <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                    <Target size={14} className="text-blue-500" /> Obliczenia ROI: {turtle.name}
+                                  </h4>
+                                  
+                                  <div className="space-y-3">
+                                    <div className="flex justify-between items-center text-xs">
+                                      <span className="text-slate-500 font-medium">Wkład początkowy (Wpłaty):</span>
+                                      <span className="font-mono font-bold text-slate-800">
+                                        {turtle.initialCapital.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł
+                                      </span>
+                                    </div>
+                                    
+                                    <div className="flex justify-between items-center text-xs">
+                                      <span className="text-slate-500 font-medium">Wynik otwartych pozycji:</span>
+                                      <span className={`font-mono font-bold ${activeProfitSum >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                        {activeProfitSum >= 0 ? '+' : ''}{activeProfitSum.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł
+                                      </span>
+                                    </div>
+
+                                    <div className="flex justify-between items-center text-xs">
+                                      <span className="text-slate-500 font-medium">Wynik zamkniętych pozycji:</span>
+                                      <span className={`font-mono font-bold ${closedProfitSum >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                        {closedProfitSum >= 0 ? '+' : ''}{closedProfitSum.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł
+                                      </span>
+                                    </div>
+
+                                    <div className="flex justify-between items-center text-xs">
+                                      <span className="text-slate-500 font-medium">Otrzymane dywidendy:</span>
+                                      <span className="font-mono font-bold text-emerald-600">
+                                        +{totalDividendsSum.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł
+                                      </span>
+                                    </div>
+
+                                    <div className="border-t border-slate-100 my-2 pt-3 flex justify-between items-center">
+                                      <span className="text-xs font-bold text-slate-700">Całkowity zysk (Suma):</span>
+                                      <span className={`font-mono font-black text-sm ${calculatedTotalProfit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                        {calculatedTotalProfit >= 0 ? '+' : ''}{calculatedTotalProfit.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł
+                                      </span>
+                                    </div>
+
+                                    <div className="bg-slate-50 rounded-lg p-3 flex justify-between items-center mt-3 border border-slate-100">
+                                      <span className="text-xs font-bold text-slate-600">ROI Żółwia:</span>
+                                      <span className={`px-2 py-0.5 rounded text-xs font-black ${turtle.roi >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                                        {turtle.roi.toFixed(1)}%
+                                      </span>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="mt-4 pt-4 border-t border-slate-100 text-[10px] text-slate-400 font-medium leading-relaxed">
+                                    Wzór: <code>(Wynik Otwartych + Wynik Zamkniętych + Dywidendy) / Wpłaty</code>. Wszystkie dywidendy ze spółek posiadanych przez danego Żółwia powiększają jego zysk i ROI.
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Right Panel: Operations & Dividends (col-span-12 lg:col-span-8) */}
+                              <div className="lg:col-span-8 space-y-6">
+                                {/* Positions section */}
+                                <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+                                  <div className="px-4 py-3 bg-slate-50/50 border-b border-slate-100 flex items-center gap-2">
+                                    <Activity size={14} className="text-purple-500" />
+                                    <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider">Historia Pozycji ({[...myActive, ...myClosed].length})</h4>
+                                  </div>
+                                  
+                                  {[...myActive, ...myClosed].length === 0 ? (
+                                    <p className="p-4 text-xs text-slate-400 italic">Brak aktywnych lub zamkniętych pozycji dla tego Żółwia.</p>
+                                  ) : (
+                                    <div className="overflow-x-auto">
+                                      <table className="w-full text-left text-xs">
+                                        <thead>
+                                          <tr className="bg-slate-50/10 text-[10px] text-slate-400 font-bold uppercase tracking-wider border-b border-slate-100">
+                                            <th className="px-4 py-2">Symbol</th>
+                                            <th className="px-4 py-2">Ilość</th>
+                                            <th className="px-4 py-2 text-right">Koszt zakupu</th>
+                                            <th className="px-4 py-2 text-right">Bieżąca wycena</th>
+                                            <th className="px-4 py-2 text-right">Zysk / Strata</th>
+                                            <th className="px-4 py-2 text-right">ROI</th>
+                                            <th className="px-4 py-2 text-center">Status</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100 font-mono">
+                                          {[...myActive, ...myClosed].map((item, idx) => {
+                                            const itemRoi = item.purchaseValue > 0 ? (item.profit / item.purchaseValue) * 100 : 0;
+                                            const isPlnCash = item.symbol === 'PLN-Żółwie' || item.symbol === 'PLN';
+                                            return (
+                                              <tr key={idx} className="hover:bg-slate-50/30">
+                                                <td className="px-4 py-2.5 font-bold text-slate-800 flex items-center gap-2 font-sans text-left">
+                                                  <div className="w-5 h-4 rounded bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200">
+                                                    <img src={isPlnCash ? 'https://flagcdn.com/w40/pl.png' : getFlagUrl(item.symbol)} alt="flag" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                                  </div>
+                                                  <span>{isPlnCash ? 'PLN' : cleanSymbol(item.symbol)}</span>
+                                                </td>
+                                                <td className="px-4 py-2.5 text-slate-600">
+                                                  {isPlnCash ? '-' : item.quantity.toFixed(4)}
+                                                </td>
+                                                <td className="px-4 py-2.5 text-right text-slate-600">
+                                                  {item.purchaseValue.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł
+                                                </td>
+                                                <td className="px-4 py-2.5 text-right text-slate-800">
+                                                  {isPlnCash 
+                                                    ? '-' 
+                                                    : item.status === 'Otwarta' 
+                                                      ? item.currentValue.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' zł'
+                                                      : '-'
+                                                  }
+                                                </td>
+                                                <td className={isPlnCash ? 'px-4 py-2.5 text-right text-slate-400' : `px-4 py-2.5 text-right font-bold ${item.profit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                                  {isPlnCash 
+                                                    ? '-' 
+                                                    : (item.profit >= 0 ? '+' : '') + item.profit.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' zł'
+                                                  }
+                                                </td>
+                                                <td className="px-4 py-2.5 text-right">
+                                                  {isPlnCash ? (
+                                                    <span className="text-slate-400">-</span>
+                                                  ) : (
+                                                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${itemRoi >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
+                                                      {itemRoi.toFixed(1)}%
+                                                    </span>
+                                                  )}
+                                                </td>
+                                                <td className="px-4 py-2.5 text-center font-sans text-slate-400">
+                                                  {isPlnCash ? '-' : (
+                                                    <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-black uppercase ${item.status === 'Otwarta' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-slate-100 text-slate-500'}`}>
+                                                      {item.status}
+                                                    </span>
+                                                  )}
+                                                </td>
+                                              </tr>
+                                            );
+                                          })}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Dividends section */}
+                                <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+                                  <div className="px-4 py-3 bg-slate-50/50 border-b border-slate-100 flex items-center gap-2">
+                                    <TrendingUp size={14} className="text-emerald-500" />
+                                    <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider">Otrzymane Dywidendy ({myDividends.length})</h4>
+                                  </div>
+                                  
+                                  {myDividends.length === 0 ? (
+                                    <p className="p-4 text-xs text-slate-400 italic font-sans text-left">Brak otrzymanych dywidend dla spółek tego Żółwia.</p>
+                                  ) : (
+                                    <div className="overflow-x-auto">
+                                      <table className="w-full text-left text-xs">
+                                        <thead>
+                                          <tr className="bg-slate-50/10 text-[10px] text-slate-400 font-bold uppercase tracking-wider border-b border-slate-100">
+                                            <th className="px-4 py-2">Data</th>
+                                            <th className="px-4 py-2 flex items-center gap-1.5">Spółka</th>
+                                            <th className="px-4 py-2 text-right">Kwota Netto</th>
+                                            <th className="px-4 py-2 text-center">Status</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100 font-mono">
+                                          {myDividends.map((div, idx) => (
+                                            <tr key={idx} className="hover:bg-slate-50/30">
+                                              <td className="px-4 py-2.5 text-slate-500">{div.date}</td>
+                                              <td className="px-4 py-2.5 font-bold text-slate-800 font-sans text-left">{cleanSymbol(div.symbol)}</td>
+                                              <td className="px-4 py-2.5 text-right font-black text-emerald-600 font-mono">
+                                                +{div.value.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł
+                                              </td>
+                                              <td className="px-4 py-2.5 text-center font-sans">
+                                                <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-black ${div.isCounted ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-amber-50 text-amber-600 border border-amber-100'}`}>
+                                                  {div.isCounted ? 'UWZGLĘDNIONA' : 'Tylko wizualna'}
+                                                </span>
+                                              </td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
                             </div>
-                            <span className="text-[7px] font-black text-indigo-400 tracking-widest leading-none">ZZZ</span>
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-right font-mono text-xs text-slate-500">{turtle.initialCapital.toFixed(2)} zł</td>
-                    <td className="px-6 py-4 text-right font-bold text-slate-700">{turtle.currentValue.toFixed(2)} zł</td>
-                    <td className={`px-6 py-4 text-right font-bold ${turtle.profit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                      {turtle.profit.toFixed(2)} zł
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <span className={`px-2 py-1 rounded text-[10px] font-bold ${turtle.roi >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
-                        {turtle.roi.toFixed(1)}%
-                      </span>
-                    </td>
-                  </tr>
+                          </motion.div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 );
               })}
             </tbody>
@@ -640,17 +878,53 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
         </div>
         <div className="overflow-x-auto">
           {useMemo(() => {
-            const allTurtAssets = [...activeAssets, ...closedAssets]
+            const turtleAssetsSymbols = [...activeAssets, ...closedAssets]
               .filter(a => a.portfolio === 'Żółwie' && a.type !== 'Gotówka')
-              .sort((a, b) => new Date(b.lastPurchaseDate).getTime() - new Date(a.lastPurchaseDate).getTime());
+              .reduce((acc, a) => {
+                if (a.sector) {
+                  acc[a.symbol.toLowerCase()] = a.sector;
+                }
+                return acc;
+              }, {} as Record<string, string>);
+
+            const turtleTransactions = [...activeAssets, ...closedAssets]
+              .filter(a => a.portfolio === 'Żółwie' && a.type !== 'Gotówka')
+              .map(a => ({
+                date: a.lastPurchaseDate,
+                dateObj: new Date(a.lastPurchaseDate),
+                turtle: a.sector || 'Nieznany Żółw',
+                type: a.status === 'Otwarta' ? 'Kupno' : 'Sprzedaż',
+                symbol: a.symbol,
+                quantity: a.quantity,
+                value: a.purchaseValue,
+                status: a.status,
+                isDividend: false
+              }));
+
+            const turtleDividends = dividends
+              .filter(d => (d.portfolio === 'Żółwie' || d.portfolio === 'IKE') && d.symbol && turtleAssetsSymbols[d.symbol.toLowerCase()])
+              .map(d => ({
+                date: d.date,
+                dateObj: d.dateObj || new Date(d.date),
+                turtle: turtleAssetsSymbols[d.symbol.toLowerCase()],
+                type: 'Dywidenda',
+                symbol: d.symbol,
+                quantity: null as number | null,
+                value: d.value,
+                status: 'Otrzymana',
+                isDividend: true
+              }));
+
+            const combinedHistory = [...turtleTransactions, ...turtleDividends]
+              .sort((a, b) => b.dateObj.getTime() - a.dateObj.getTime());
             
-            if (allTurtAssets.length === 0) return (
+            if (combinedHistory.length === 0) return (
               <div className="p-12 text-center">
                 <div className="inline-flex p-4 bg-slate-50 rounded-full text-slate-300 mb-4">
                   <Info size={32} />
                 </div>
                 <p className="text-slate-500 font-medium">Brak historii operacji w tym portfelu.</p>
-                <p className="text-xs text-slate-400 mt-1">Operacje pojawią się automatycznie po dodaniu ich do OMFopen.ts lub OMFclosed.ts</p>
+                <p className="text-xs text-slate-400 mt-1">Operacje i dywidendy pojawią się automatycznie.</p>
               </div>
             );
 
@@ -668,31 +942,47 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {allTurtAssets.map((t, idx) => (
+                  {combinedHistory.map((t, idx) => (
                     <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-6 py-4 text-xs font-mono text-slate-500">{t.lastPurchaseDate}</td>
-                      <td className="px-6 py-4 text-sm font-bold text-slate-900">{t.sector}</td>
+                      <td className="px-6 py-4 text-xs font-mono text-slate-500">{t.date}</td>
+                      <td className="px-6 py-4 text-sm font-bold text-slate-900">{t.turtle}</td>
                       <td className="px-6 py-4">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${t.status === 'Otwarta' ? 'bg-blue-50 text-blue-700' : 'bg-orange-50 text-orange-700'}`}>
-                          {t.status === 'Otwarta' ? 'Kupno' : 'Sprzedaż'}
-                        </span>
+                        {t.isDividend ? (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700">
+                            Dywidenda
+                          </span>
+                        ) : (
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${t.status === 'Otwarta' ? 'bg-blue-50 text-blue-700' : 'bg-orange-50 text-orange-700'}`}>
+                            {t.type}
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-sm font-bold text-blue-600 text-left">{cleanSymbol(t.symbol)}</td>
-                      <td className="px-6 py-4 text-sm font-mono text-slate-600">{(t.quantity || 0).toFixed(4)}</td>
-                      <td className="px-6 py-4 text-right">
-                        <span className="text-sm font-black text-slate-900">{t.purchaseValue.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł</span>
+                      <td className="px-6 py-4 text-sm font-mono text-slate-600">
+                        {t.isDividend || t.quantity === null ? '-' : t.quantity.toFixed(4)}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <span className={`px-2 py-1 rounded text-[10px] font-bold ${t.status === 'Otwarta' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
-                          {t.status}
+                        <span className="text-sm font-black text-slate-900">
+                          {t.value.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł
                         </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        {t.isDividend ? (
+                          <span className="px-2 py-1 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                            Otrzymana
+                          </span>
+                        ) : (
+                          <span className={`px-2 py-1 rounded text-[10px] font-bold ${t.status === 'Otwarta' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
+                            {t.status}
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             );
-          }, [activeAssets, closedAssets])}
+          }, [activeAssets, closedAssets, dividends])}
         </div>
       </div>
     </div>

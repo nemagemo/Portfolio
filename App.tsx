@@ -129,6 +129,7 @@ export const App: React.FC = () => {
               closedAssets={omfClosedAssets} 
               onlinePrices={onlinePrices}
               historyPrices={historyPrices}
+              dividends={dividends}
             />
         ) : (
           <StandardDashboard 
