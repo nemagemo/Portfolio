@@ -448,7 +448,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
 
           <div className="relative space-y-1">
             {/* The Track Base - Overlay layer for lines */}
-            <div className="absolute inset-y-0 left-16 right-0 z-40 pointer-events-none">
+            <div className="absolute inset-y-0 left-16 right-0 z-20 pointer-events-none">
               <div className="absolute inset-y-0 left-0 w-1 bg-slate-200/50 rounded-full" />
               
               {/* FINISH Line (The Meta) - Checkerboard lane on the right, across whole height */}
@@ -475,56 +475,62 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
               return (
                 <div key={`gp-${turtle.id}`} className={`relative h-14 group/gp-lane border-y ${turtle.isDanger ? 'border-red-200' : 'border-slate-100/50'}`}>
                   {/* Lane Label (Fixed on the left) */}
-                  <div className={`absolute inset-y-0 left-0 w-16 z-20 flex items-center justify-start pl-4 border-r ${turtle.isDanger ? 'border-red-200 bg-red-100/40 text-red-500 font-bold' : 'border-slate-200/50 bg-slate-50 text-slate-300'} text-[10px] font-black italic group-hover/gp-lane:text-indigo-400 group-hover/gp-lane:bg-indigo-50/30 transition-colors`}>
+                  <div className={`absolute inset-y-0 left-0 w-16 z-30 flex items-center justify-start pl-4 border-r ${turtle.isDanger ? 'border-red-200 bg-red-100/40 text-red-500 font-bold' : 'border-slate-200/50 bg-slate-50 text-slate-300'} text-[10px] font-black italic group-hover/gp-lane:text-indigo-400 group-hover/gp-lane:bg-indigo-50/30 transition-colors`}>
                     TOR {String(turtle.trackNumber).padStart(2, '0')}
                   </div>
 
-                  {/* Movable Area */}
-                  <div className="absolute inset-y-0 left-16 right-0 z-30">
+                  {/* Lane Background (placed under the lines layer z-20) */}
+                  <div className="absolute inset-0 left-16 right-0 z-10">
                     <div className={`absolute inset-0 ${turtle.isDanger ? 'bg-gradient-to-r from-red-50/30 to-rose-50/50 group-hover/gp-lane:bg-red-100/20' : 'bg-white group-hover/gp-lane:bg-slate-50/50'} transition-colors`} />
-                    
-                    {/* Turtle Movable Unit */}
-                    <motion.div
-                      animate={{ left: `${progress}%` }}
-                      transition={{ duration: 2.5, type: 'spring', stiffness: 35, damping: 15 }}
-                      className="absolute top-0 bottom-0 z-50 flex items-center"
-                    >
-                      <div className="relative flex items-center">
-                        {/* THE CENTERING WRAPPER: Centers the badge on the coordinate */}
-                        <div className="absolute left-0 -translate-x-1/2 flex items-center justify-center">
-                          {/* Shadow / Tail effect */}
-                          <div className={`absolute -left-20 right-0 h-0.5 opacity-20 bg-gradient-to-r from-transparent to-current transition-opacity group-hover/gp-lane:opacity-40`} style={{ color: turtle.color }} />
-                          
-                          {/* Turtle Badge */}
-                          <div 
-                            className={`relative p-2.5 rounded-2xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] border-2 transition-all duration-500 group-hover/gp-lane:rotate-6 ${!isActive ? 'grayscale opacity-40' : ''}`}
-                            style={{ borderColor: turtle.color }}
-                          >
-                            {!isActive && (
-                              <div className="absolute -right-3 -top-3 bg-indigo-100 text-indigo-600 rounded-full p-1 border-2 border-white shadow-sm">
-                                <Moon size={10} className="fill-indigo-300" />
-                              </div>
-                            )}
-                            <Turtle size={24} style={{ color: turtle.color }} className={isActive ? 'animate-bounce' : ''} />
-                          </div>
-                        </div>
+                  </div>
 
-                        {/* Data Bubble (Offset to clear the badge) */}
-                        <div className="ml-8 pointer-events-none transition-all duration-500 translate-y-0 group-hover/gp-lane:-translate-y-1">
-                          <div className="flex flex-col">
-                            <span className="text-xs font-black text-slate-900 tracking-tight flex items-center gap-2">
-                              {turtle.name}
-                              {isActive && (
-                                <img src={getFlagUrl(turtle.currentStock)} alt="" className="w-3 h-2.5 object-cover rounded shadow-sm" />
+                  {/* Movable Area Content (placed above the lines layer z-20) */}
+                  <div className="absolute inset-y-0 left-16 right-0 z-30">
+                    {/* Track Safe Zone: Prevents any turtle elements from overlapping labels or the checkerboard finish region */}
+                    <div className="absolute inset-y-0 left-7 right-10">
+                      {/* Turtle Movable Unit */}
+                      <motion.div
+                        animate={{ left: `${progress}%` }}
+                        transition={{ duration: 2.5, type: 'spring', stiffness: 35, damping: 15 }}
+                        className="absolute top-0 bottom-0 z-50 flex items-center"
+                      >
+                        <div className="relative flex items-center">
+                          {/* THE CENTERING WRAPPER: Centers the badge on the coordinate */}
+                          <div className="absolute left-0 -translate-x-1/2 flex items-center justify-center">
+                            {/* Shadow / Tail effect */}
+                            <div className={`absolute -left-20 right-0 h-0.5 opacity-20 bg-gradient-to-r from-transparent to-current transition-opacity group-hover/gp-lane:opacity-40`} style={{ color: turtle.color }} />
+                            
+                            {/* Turtle Badge */}
+                            <div 
+                              className={`relative p-2.5 rounded-2xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] border-2 transition-all duration-500 group-hover/gp-lane:rotate-6 ${!isActive ? 'grayscale opacity-40' : ''}`}
+                              style={{ borderColor: turtle.color }}
+                            >
+                              {!isActive && (
+                                <div className="absolute -right-3 -top-3 bg-indigo-100 text-indigo-600 rounded-full p-1 border-2 border-white shadow-sm">
+                                  <Moon size={10} className="fill-indigo-300" />
+                                </div>
                               )}
-                            </span>
-                            <span className={`text-[10px] font-bold ${isPositive ? 'text-emerald-500' : 'text-rose-500'} flex items-center gap-1`}>
-                              {isPositive ? '▲' : '▼'} {Math.abs(turtle.roi).toFixed(2)}%
-                            </span>
+                              <Turtle size={24} style={{ color: turtle.color }} className={isActive ? 'animate-bounce' : ''} />
+                            </div>
+                          </div>
+
+                          {/* Data Bubble (Offset to clear the badge) */}
+                          <div className="ml-8 pointer-events-none transition-all duration-500 translate-y-0 group-hover/gp-lane:-translate-y-1">
+                            <div className="flex flex-col">
+                              <span className="text-xs font-black text-slate-900 tracking-tight flex items-center gap-2">
+                                {turtle.name}
+                                {isActive && (
+                                  <img src={getFlagUrl(turtle.currentStock)} alt="" className="w-3 h-2.5 object-cover rounded shadow-sm" />
+                                )}
+                              </span>
+                              <span className={`text-[10px] font-bold ${isPositive ? 'text-emerald-500' : 'text-rose-500'} flex items-center gap-1`}>
+                                {isPositive ? '▲' : '▼'} {Math.abs(turtle.roi).toFixed(2)}%
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </motion.div>
+                      </motion.div>
+                    </div>
                   </div>
                 </div>
               );
