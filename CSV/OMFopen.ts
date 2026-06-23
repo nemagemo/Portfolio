@@ -78,9 +78,11 @@ Otwarta,Żółwie,Akcje,UNT,,Trajan,0,2026-06-09,"0,615700","99,37 zł","99,37 z
 Otwarta,Żółwie,Gotówka,PLN,,Trajan,0,2026-06-09,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Akcje,APE,,Hadrian,0,2026-06-16,"18,000000","99,72 zł","99,72 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Gotówka,PLN,,Hadrian,0,2026-06-16,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Akcje,TOR,,Kommodus,0,2026-06-23,"1,481400","99,99 zł","99,99 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Gotówka,PLN,,Kommodus,0,2026-06-23,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Gotówka,Gotówka,PLN,,,382,2026-06-03,"0,000000","0,00 zł","0,00 zł","0,00 zł","0,00%"`;
 
 
 
 
-export const OMF_LAST_UPDATED = '2026-06-22';
+export const OMF_LAST_UPDATED = '2026-06-23';

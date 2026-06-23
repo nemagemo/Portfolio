@@ -1,5 +1,5 @@
 
-import { PPKDataRow, CryptoDataRow, IKEDataRow, OMFDataRow, AnyDataRow, ValidationReport, PortfolioType, OMFValidationReport, CashDataRow, DividendDataRow } from '../types';
+import { PPKDataRow, CryptoDataRow, IKEDataRow, OMFDataRow, AnyDataRow, ValidationReport, PortfolioType, OMFValidationReport, CashDataRow, DividendDataRow, TurtleTransactionRow } from '../types';
 
 /**
  * ARCHITECTURAL NOTE:

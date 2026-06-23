@@ -2,29 +2,43 @@
 <html lang="pl">
   <head>
     <script>
-      // Suppress "Cannot set property ethereum of #<Window>" error
-      // This often happens when a browser extension (like MetaMask) injects a read-only ethereum object
-      // and another script tries to overwrite it.
+      // Suppress "Cannot set property ethereum of #<Window>" and generic "Script error."
+      // These are often caused by browser extensions or third-party crossorigin scripts.
       window.addEventListener('error', function(e) {
-        if (e.message && e.message.includes('Cannot set property ethereum')) {
+        if (e.message && (e.message.includes('Cannot set property ethereum') || e.message.includes('Script error'))) {
           e.stopImmediatePropagation();
           e.preventDefault();
-          console.warn('Suppressed "Cannot set property ethereum" error from external source.');
+          console.warn('Suppressed external error:', e.message);
         }
       });
       window.addEventListener('unhandledrejection', function(e) {
-        if (e.reason && e.reason.message && e.reason.message.includes('Cannot set property ethereum')) {
+        const errorMsg = e.reason && e.reason.message;
+        if (errorMsg && (errorMsg.includes('Cannot set property ethereum') || errorMsg.includes('Script error'))) {
           e.stopImmediatePropagation();
           e.preventDefault();
-          console.warn('Suppressed "Cannot set property ethereum" unhandled rejection from external source.');
+          console.warn('Suppressed external unhandled rejection:', errorMsg);
         }
       });
+      // Global onerror hook to return true and prevent default error propagation for Script error
+      const originalOnError = window.onerror;
+      window.onerror = function(message, source, lineno, colno, error) {
+        const msgStr = String(message || '');
+        if (msgStr.includes('Cannot set property ethereum') || msgStr.includes('Script error')) {
+          console.warn('Suppressed global onerror:', msgStr);
+          return true; // prevent error firing in browser/parent frame
+        }
+        if (originalOnError) {
+          return originalOnError.apply(this, arguments);
+        }
+        return false;
+      };
+      
       const originalConsoleError = console.error;
       console.error = function(...args) {
         if (args.length > 0) {
           const arg = args[0];
-          if (typeof arg === 'string' && arg.includes('Cannot set property ethereum')) return;
-          if (arg && typeof arg === 'object' && arg.message && typeof arg.message === 'string' && arg.message.includes('Cannot set property ethereum')) return;
+          if (typeof arg === 'string' && (arg.includes('Cannot set property ethereum') || arg.includes('Script error'))) return;
+          if (arg && typeof arg === 'object' && arg.message && typeof arg.message === 'string' && (arg.message.includes('Cannot set property ethereum') || arg.message.includes('Script error'))) return;
         }
         originalConsoleError.apply(console, args);
       };
@@ -32,8 +46,8 @@
       console.warn = function(...args) {
         if (args.length > 0) {
           const arg = args[0];
-          if (typeof arg === 'string' && arg.includes('Cannot set property ethereum')) return;
-          if (arg && typeof arg === 'object' && arg.message && typeof arg.message === 'string' && arg.message.includes('Cannot set property ethereum')) return;
+          if (typeof arg === 'string' && (arg.includes('Cannot set property ethereum') || arg.includes('Script error'))) return;
+          if (arg && typeof arg === 'object' && arg.message && typeof arg.message === 'string' && (arg.message.includes('Cannot set property ethereum') || arg.message.includes('Script error'))) return;
         }
         originalConsoleWarn.apply(console, args);
       };

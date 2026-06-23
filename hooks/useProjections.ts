@@ -81,7 +81,7 @@ export const useProjections = ({
        projectionPoints.push({
          date: dateStr,
          investment: 0, profit: 0, totalValue: 0, projectedValue: currentValue,
-         roi: 0, cumulativeTwr: 0, ppkShare: 0, cryptoShare: 0, ikeShare: 0
+         roi: 0, cumulativeTwr: 0, ppkShare: 0, cryptoShare: 0, ikeShare: 0, turtleShare: 0
        });
     }
 

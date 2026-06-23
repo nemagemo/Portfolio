@@ -2,6 +2,7 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Turtle, TrendingUp, Trophy, Info, Target, Wallet, Moon, Activity, Flag, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { CesarzLogo } from '../../logos/CesarzLogo';
 import { Theme, themeStyles } from '../../theme/styles';
 import { OMFDataRow, DividendDataRow } from '../../types';
 import { usePortfolioData } from '../../hooks/usePortfolioData';
@@ -59,7 +60,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
     if (t.endsWith('.L')) return 'https://flagcdn.com/w40/gb.png';
     if (t.endsWith('.DE')) return 'https://flagcdn.com/w40/de.png';
     // Check common polish symbols
-    const polishSymbols = ['ARH', 'ODL', 'CMP', 'LBW', 'ALE', 'VRG', 'DNP', 'ORL', 'SEK', 'APE', 'PZU', 'KGH', 'PKN'];
+    const polishSymbols = ['ARH', 'ODL', 'CMP', 'LBW', 'ALE', 'VRG', 'DNP', 'ORL', 'SEK', 'APE', 'TOR', 'KGH', 'PKN'];
     if (polishSymbols.includes(t)) return 'https://flagcdn.com/w40/pl.png';
     const ukSymbols = ['RPI'];
     if (ukSymbols.includes(t)) return 'https://flagcdn.com/w40/gb.png';
@@ -107,7 +108,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
       
       const mySymbols = [...myActive, ...myClosed].map(a => a.symbol.toLowerCase());
       const turtleDividends = dividends
-        .filter(d => (d.portfolio === 'Żółwie' || d.portfolio === 'IKE') && mySymbols.includes(d.symbol.toLowerCase()))
+        .filter(d => (d.portfolio === 'Żółwie' || d.portfolio === 'IKE') && d.symbol && mySymbols.includes(d.symbol.toLowerCase()))
         .reduce((sum, d) => sum + d.value, 0);
 
       const activeProfit = myActive.reduce((sum, a) => sum + a.profit, 0);
@@ -167,7 +168,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
 
       const mySymbols = [...myActive, ...myClosed].map(a => a.symbol.toLowerCase());
       const turtleDividends = dividends
-        .filter(d => (d.portfolio === 'Żółwie' || d.portfolio === 'IKE') && mySymbols.includes(d.symbol.toLowerCase()))
+        .filter(d => (d.portfolio === 'Żółwie' || d.portfolio === 'IKE') && d.symbol && mySymbols.includes(d.symbol.toLowerCase()))
         .reduce((sum, d) => sum + d.value, 0);
 
       const activeProfit = myActive.reduce((sum, a) => sum + a.profit, 0);
@@ -212,7 +213,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
       if (b.initialCapital > 0) return 1;
       return 0;
     });
-  }, [activeAssets, closedAssets]);
+  }, [activeAssets, closedAssets, dividends]);
 
   const totalCapital = turtles.reduce((sum, t) => sum + t.initialCapital, 0);
   const totalValue = turtles.reduce((sum, t) => sum + t.currentValue, 0);
@@ -269,10 +270,14 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
             return (
               <div 
                 key={`bg-turtle-${t.id}`}
-                className="absolute"
+                className="absolute text-slate-200/40"
                 style={{ top: pos.top, left: pos.left, transform: `rotate(${pos.rotate})` }}
               >
-                <Turtle size={pos.size} />
+                {t.name === 'Oktawian' ? (
+                  <CesarzLogo style={{ width: pos.size, height: pos.size }} />
+                ) : (
+                  <Turtle size={pos.size} />
+                )}
               </div>
             );
           })}
@@ -501,17 +506,28 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
                             <div className={`absolute -left-20 right-0 h-0.5 opacity-20 bg-gradient-to-r from-transparent to-current transition-opacity group-hover/gp-lane:opacity-40`} style={{ color: turtle.color }} />
                             
                             {/* Turtle Badge */}
-                            <div 
-                              className={`relative p-2.5 rounded-2xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] border-2 transition-all duration-500 group-hover/gp-lane:rotate-6 ${!isActive ? 'grayscale opacity-40' : ''}`}
-                              style={{ borderColor: turtle.color }}
-                            >
-                              {!isActive && (
-                                <div className="absolute -right-3 -top-3 bg-indigo-100 text-indigo-600 rounded-full p-1 border-2 border-white shadow-sm">
-                                  <Moon size={10} className="fill-indigo-300" />
-                                </div>
-                              )}
-                              <Turtle size={24} style={{ color: turtle.color }} className={isActive ? 'animate-bounce' : ''} />
-                            </div>
+                            {turtle.name === 'Oktawian' ? (
+                              <div className={`relative transition-all duration-500 group-hover/gp-lane:rotate-6 ${!isActive ? 'grayscale opacity-40' : ''}`}>
+                                {!isActive && (
+                                  <div className="absolute -right-1 -top-1 bg-indigo-100 text-indigo-600 rounded-full p-1 border-2 border-white shadow-sm z-10">
+                                    <Moon size={10} className="fill-indigo-300" />
+                                  </div>
+                                )}
+                                <CesarzLogo style={{ color: turtle.color }} className={`w-9 h-9 ${isActive ? 'animate-bounce' : ''}`} />
+                              </div>
+                            ) : (
+                              <div 
+                                className={`relative p-2.5 rounded-2xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] border-2 transition-all duration-500 group-hover/gp-lane:rotate-6 ${!isActive ? 'grayscale opacity-40' : ''}`}
+                                style={{ borderColor: turtle.color }}
+                              >
+                                {!isActive && (
+                                  <div className="absolute -right-3 -top-3 bg-indigo-100 text-indigo-600 rounded-full p-1 border-2 border-white shadow-sm">
+                                    <Moon size={10} className="fill-indigo-300" />
+                                  </div>
+                                )}
+                                <Turtle size={24} style={{ color: turtle.color }} className={isActive ? 'animate-bounce' : ''} />
+                              </div>
+                            )}
                           </div>
 
                           {/* Data Bubble (Offset to clear the badge) */}
@@ -601,6 +617,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
                 const mySymbols = [...myActive, ...myClosed].map(a => a.symbol.toLowerCase());
                 const myDividends = dividends.filter(d => 
                   (d.portfolio === 'Żółwie' || d.portfolio === 'IKE') && 
+                  d.symbol &&
                   mySymbols.includes(d.symbol.toLowerCase())
                 );
 
@@ -623,11 +640,18 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
                         onClick={() => setExpandedTurtleName(isExpanded ? null : turtle.name)}
                       >
                         <div className="flex items-center gap-3">
-                          <Turtle 
-                            size={18} 
-                            style={{ color: turtle.isDanger ? '#ef4444' : turtle.color }} 
-                            className={`transition-all duration-300 ${!isActive ? 'grayscale opacity-70' : ''} ${turtle.isDanger ? 'animate-pulse' : ''} group-hover/turtle-name:scale-110`} 
-                          />
+                          {turtle.name === 'Oktawian' ? (
+                            <CesarzLogo 
+                              style={{ color: turtle.isDanger ? '#ef4444' : turtle.color }} 
+                              className={`w-[18px] h-[18px] transition-all duration-300 ${!isActive ? 'grayscale opacity-70' : ''} ${turtle.isDanger ? 'animate-pulse' : ''} group-hover/turtle-name:scale-110`} 
+                            />
+                          ) : (
+                            <Turtle 
+                              size={18} 
+                              style={{ color: turtle.isDanger ? '#ef4444' : turtle.color }} 
+                              className={`transition-all duration-300 ${!isActive ? 'grayscale opacity-70' : ''} ${turtle.isDanger ? 'animate-pulse' : ''} group-hover/turtle-name:scale-110`} 
+                            />
+                          )}
                           <span className={`font-semibold transition-colors duration-200 group-hover/turtle-name:text-blue-600 ${turtle.isDanger ? 'text-red-700 font-black' : 'text-slate-700'}`}>
                             {turtle.name}
                           </span>
