@@ -20,7 +20,7 @@ Otwarta,IKE,Akcje,FAST,US3119001044,Industrials,226,2025-05-06,"4,606400","738,8
 Otwarta,IKE,Akcje,GAW,GB0003718474,"Consumer Discretionary",412,2025-07-04,"1,447000","1 410,97 zł","965,50 zł","445,47 zł","46,14%"
 Otwarta,IKE,Akcje,ROL,US7757111049,Industrials,412,2026-02-13,"4,203200","726,05 zł","855,77 zł","-129,72 zł","-15,16%"
 Otwarta,IKE,Akcje,FRO,PLFERRO00016,Industrials,286,2025-06-05,"20,000000","640,00 zł","714,00 zł","-74,00 zł","-10,36%"
-Otwarta,IKE,Gotówka,PLN-IKE,,,0,2026-06-15,"0,530000","0,53 zł","0,53 zł","0,00 zł","0,00%"
+Otwarta,IKE,Gotówka,PLN-IKE,,,0,2026-06-25,"7,190000","7,19 zł","7,19 zł","0,00 zł","0,00%"
 Otwarta,Krypto,Krypto,POL,,,719,2024-10-04,"587,863288","193,77 zł","1 033,13 zł","-839,36 zł","-81,24%"
 Otwarta,Krypto,Krypto,ETH,,,997,2024-10-04,"0,098388","721,12 zł","956,50 zł","-235,38 zł","-24,61%"
 Otwarta,Krypto,Krypto,NEAR,,,934,2026-06-06,"59,619531","501,95 zł","652,06 zł","-150,11 zł","-23,02%"
@@ -55,7 +55,7 @@ Otwarta,Żółwie,Gotówka,PLN,,Oktawian,0,2026-05-06,0,"0,00 zł","0,00 zł","0
 Otwarta,Żółwie,Akcje,HWBK,,Tyberiusz,0,2026-05-12,"0,7543","100,43 zł","100,00 zł","0,43 zł","0,43%"
 Otwarta,Żółwie,Gotówka,PLN,,Tyberiusz,0,2026-05-12,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Akcje,SEK,,Kaligula,0,2026-05-15,"9,000000","103,95 zł","94,50 zł","9,45 zł","10,00%"
-Otwarta,Żółwie,Gotówka,PLN,,Kaligula,0,2026-05-15,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Gotówka,PLN,,Kaligula,0,2026-06-25,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Akcje,ARH,,Klaudiusz,0,2026-05-15,"1,9011","99,24 zł","100,00 zł","-0,76 zł","-0,76%"
 Otwarta,Żółwie,Gotówka,PLN,,Klaudiusz,0,2026-05-15,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Akcje,VRG,,Neron,0,2026-05-18,"18,000000","100,44 zł","97,92 zł","2,52 zł","2,57%"
@@ -85,4 +85,4 @@ Otwarta,Gotówka,Gotówka,PLN,,,382,2026-06-03,"0,000000","0,00 zł","0,00 zł",
 
 
 
-export const OMF_LAST_UPDATED = '2026-06-23';
+export const OMF_LAST_UPDATED = '2026-06-25';
