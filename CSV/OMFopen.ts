@@ -20,7 +20,7 @@ Otwarta,IKE,Akcje,FAST,US3119001044,Industrials,226,2025-05-06,"4,606400","738,8
 Otwarta,IKE,Akcje,GAW,GB0003718474,"Consumer Discretionary",412,2025-07-04,"1,447000","1 410,97 zł","965,50 zł","445,47 zł","46,14%"
 Otwarta,IKE,Akcje,ROL,US7757111049,Industrials,412,2026-02-13,"4,203200","726,05 zł","855,77 zł","-129,72 zł","-15,16%"
 Otwarta,IKE,Akcje,FRO,PLFERRO00016,Industrials,286,2025-06-05,"20,000000","640,00 zł","714,00 zł","-74,00 zł","-10,36%"
-Otwarta,IKE,Gotówka,PLN-IKE,,,0,2026-06-25,"7,190000","7,19 zł","7,19 zł","0,00 zł","0,00%"
+Otwarta,IKE,Gotówka,PLN-IKE,,,0,2026-06-30,"7,630000","7,63 zł","7,63 zł","0,00 zł","0,00%"
 Otwarta,Krypto,Krypto,POL,,,719,2024-10-04,"587,863288","193,77 zł","1 033,13 zł","-839,36 zł","-81,24%"
 Otwarta,Krypto,Krypto,ETH,,,997,2024-10-04,"0,098388","721,12 zł","956,50 zł","-235,38 zł","-24,61%"
 Otwarta,Krypto,Krypto,NEAR,,,934,2026-06-06,"59,619531","501,95 zł","652,06 zł","-150,11 zł","-23,02%"
@@ -69,7 +69,7 @@ Otwarta,Żółwie,Gotówka,PLN,,Witeliusz,0,2026-05-22,0,"0,00 zł","0,00 zł","
 Otwarta,Żółwie,Akcje,RPI,,Wespazjan,0,2026-05-27,"2,581200","104,11 zł","100,01 zł","4,10 zł","4,09%"
 Otwarta,Żółwie,Gotówka,PLN,,Wespazjan,0,2026-05-27,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Akcje,UNP,,Tytus,0,2026-05-28,"0,101300","96,55 zł","99,89 zł","-3,34 zł","-3,34%"
-Otwarta,Żółwie,Gotówka,PLN,,Tytus,0,2026-05-28,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Gotówka,PLN,,Tytus,0,2026-06-30,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Akcje,ODL,,Domicjan,0,2026-06-03,"4,000000","94,00 zł","94,00 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Gotówka,PLN,,Domicjan,0,2026-06-03,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Akcje,LBW,,Nerwa,0,2026-06-03,"7,000000","94,50 zł","94,50 zł","0,00 zł","0,00%"
@@ -85,4 +85,4 @@ Otwarta,Gotówka,Gotówka,PLN,,,382,2026-06-03,"0,000000","0,00 zł","0,00 zł",
 
 
 
-export const OMF_LAST_UPDATED = '2026-06-25';
+export const OMF_LAST_UPDATED = '2026-06-30';
