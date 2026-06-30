@@ -73,7 +73,7 @@ for (let i = 1; i < openLines.length; i++) {
 let finalOpenContent = openContent.replace(dataMatchOpen[1], openLines.join('\n'));
 let updatedOpenMatch = finalOpenContent.match(/export const OMF_LAST_UPDATED = '.*?';/);
 if (updatedOpenMatch) {
-  finalOpenContent = finalOpenContent.replace(updatedOpenMatch[0], `export const OMF_LAST_UPDATED = '2026-05-31';`);
+  finalOpenContent = finalOpenContent.replace(updatedOpenMatch[0], `export const OMF_LAST_UPDATED = '2026-06-30';`);
 }
 fs.writeFileSync('./CSV/OMFopen.ts', finalOpenContent, 'utf-8');
 console.log('Prices updated in OMFopen.ts');

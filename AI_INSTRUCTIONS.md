@@ -216,17 +216,18 @@ Zawsze sprawdzaj kolumnę "Sektor" (używaną jako pole dla imienia żółwia w 
     *   **Wylicz `Podatek` = `Pracodawca` * 0.12 (ujemna wartość). To jest zryczałtowany podatek dochodowy od wpłaty pracodawcy.**
     *   Wylicz `ROI` i `Exit ROI`.
     *   Sformatuj i dopisz nowy wiersz do `CSV/PPK.ts`.
-3.  **Snapshot IKE i Krypto:**
-    *   Pobierz sumę `Obecna wartość` wszystkich aktywów danego portfela z `OMFopen.ts`.
+3.  **Snapshot IKE, Krypto i Żółwie:**
+    *   Dla każdego z tych portfeli (IKE, Krypto, Żółwie) wykonaj następujące kroki:
+    *   Pobierz sumę `Obecna wartość` wszystkich aktywów danego portfela z `OMFopen.ts` (dla IKE uwzględniaj też Żółwie z wyjątkiem wirtualnej gotówki `PLN-Żółwie`, dla Żółwi filtruj po `portfolio === 'Żółwie'`).
     *   **ZASADA STABILNEGO WKŁADU (Kapitał Zewnętrzny):**
         *   `Gotówka` = Suma pozycji typu "Gotówka" w `OMFopen.ts` dla tego portfela.
-        *   `Wartość Zakupu Otwartych` = Suma kolumny "Wartość zakupu" dla pozycji "Otwarta" w `OMFopen.ts`.
+        *   `Wartość Zakupu Otwartych` = Suma kolumny "Wartość zakupu" dla pozycji "Otwarta" w `OMFopen.ts` dla tego portfela.
         *   `Zysk Zamknięty` = Suma kolumny "Zysk/Strata" w `OMFclosed.ts` dla tego portfela.
-        *   `Dywidendy` = Suma z `Dividends.ts` (dla IKE).
-        *   **FORMUŁA WYKŁADU:** `Wkład = (Wartość Zakupu Otwartych + Gotówka) - (Zysk Zamknięty + Dywidendy)`.
+        *   `Dywidendy` = Suma z `Dividends.ts` dla tego portfela (dla IKE i Żółwie).
+        *   **FORMUŁA WKŁADU:** `Wkład = (Wartość Zakupu Otwartych + Gotówka) - (Zysk Zamknięty + Dywidendy)`.
     *   Wylicz `Zysk` = `Obecna wartość` - `Wkład`.
     *   Wylicz `ROI`.
-    *   Sformatuj i dopisz nowe wiersze do `CSV/IKE.ts`, `CSV/Krypto.ts` i `CSV/TurtlesHistory.ts`.
+    *   Sformatuj i dopisz nowe wiersze odpowiednio do `CSV/IKE.ts`, `CSV/Krypto.ts` oraz `CSV/TurtlesHistory.ts`.
 4.  **Snapshot Gotówki:**
     *   Pobierz wartość gotówki (PLN) z pliku `OMFopen.ts`.
     *   Sformatuj i dopisz nowy wiersz do `CSV/Cash.ts`.
