@@ -98,6 +98,22 @@ const TreemapContent = (props: any) => {
           {roi > 0 ? '+' : ''}{Number(roi).toFixed(1)}%
         </text>
       )}
+      {showText && name && ['ATFBS80TR', 'ABS', 'FAST', 'ROL', 'MSFT', 'ACN', 'Reszta Krypto', 'CRWD'].includes(name) && (
+        <text
+          x={x + width - padding - 4}
+          y={y + padding + 12}
+          textAnchor="end"
+          fill="#000000"
+          stroke="none"
+          fontSize="12px"
+          fontWeight="900"
+          style={{
+            pointerEvents: 'none',
+          }}
+        >
+          S
+        </text>
+      )}
     </g>
   );
 };

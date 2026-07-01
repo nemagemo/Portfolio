@@ -363,6 +363,14 @@ export const OMFDashboard: React.FC<OMFDashboardProps> = ({
           <div className={`p-2 rounded-lg ${styles.cardHeaderIconBg}`}><LayoutTemplate className="text-cyan-600" size={20} /></div>
         </div>
         <OMFTreemapChart data={omfStructureData} themeMode={theme as any} />
+        <div className="mt-4 flex items-baseline space-x-2 text-xs border-t pt-3 border-slate-100 dark:border-slate-800/60">
+          <span className="font-black text-sm text-black flex-shrink-0 w-4 text-center">
+            S
+          </span>
+          <span className={styles.textSub}>
+            Aktywo nie jest już skupowane i zostanie sprzedane w przyszłości.
+          </span>
+        </div>
       </div>
  
       {/* Bubble Risk Map (Intraday) - Full Width - MOVED UP */}
