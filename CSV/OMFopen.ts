@@ -53,7 +53,7 @@ Otwarta,Krypto,Krypto,ALGO,,,0,2026-06-22,"1166,832000","362,83 zł","393,77 zł
 Otwarta,Żółwie,Akcje,STNG,MHY7962G1054,Oktawian,1,2026-05-06,"0,326200","84,40 zł","100,00 zł","-15,60 zł","-15,60%"
 Otwarta,Żółwie,Gotówka,PLN,,Oktawian,0,2026-05-06,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Akcje,HWBK,,Tyberiusz,0,2026-05-12,"0,7543","109,51 zł","100,00 zł","9,51 zł","9,51%"
-Otwarta,Żółwie,Gotówka,PLN,,Tyberiusz,0,2026-05-12,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Gotówka,PLN,,Tyberiusz,0,2026-07-01,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Akcje,SEK,,Kaligula,0,2026-05-15,"9,000000","106,20 zł","94,50 zł","11,70 zł","12,38%"
 Otwarta,Żółwie,Gotówka,PLN,,Kaligula,0,2026-06-25,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Akcje,ARH,,Klaudiusz,0,2026-05-15,"1,9011","97,34 zł","100,00 zł","-2,66 zł","-2,66%"
@@ -85,4 +85,4 @@ Otwarta,Gotówka,Gotówka,PLN,,,382,2026-06-03,"0,000000","0,00 zł","0,00 zł",
 
 
 
-export const OMF_LAST_UPDATED = '2026-06-30';
+export const OMF_LAST_UPDATED = '2026-07-01';
