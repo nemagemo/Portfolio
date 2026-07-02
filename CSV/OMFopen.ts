@@ -5,7 +5,7 @@ Otwarta,IKE,ETF,IUIT.L,IE00B3WJKG14,"Information Technology",416,2026-07-02,"11,
 Otwarta,IKE,ETF,NUKL.DE,IE000M7V94E1,,382,2026-07-02,"9,410600","1 880,72 zł","1 293,93 zł","586,79 zł","45,35%"
 Otwarta,IKE,ETF,ETFBS80TR,PLBSWTR00014,,416,2025-07-11,"3,674600","1 761,05 zł","1 372,02 zł","389,03 zł","28,35%"
 Otwarta,IKE,ETF,QUTM.DE,IE0007Y8Y157,"Information Technology",0,2026-07-02,"0,985500","112,39 zł","112,39 zł","0,00 zł","0,00%"
-Otwarta,IKE,Akcje,AMZN,US0231351067,"Consumer Discretionary",408,2026-02-13,"1,408500","1 268,35 zł","1 097,16 zł","171,19 zł","15,60%"
+Otwarta,IKE,Akcje,AMZN,US0231351067,"Consumer Discretionary",408,2026-07-02,"1,463000","1 317,43 zł","1 147,17 zł","170,26 zł","14,84%"
 Otwarta,IKE,Akcje,CRWD,US22788C1053,"Information Technology",412,2025-07-08,"2,597600","1 858,92 zł","847,70 zł","1 011,22 zł","119,29%"
 Otwarta,IKE,Akcje,MSFT,US5949181045,"Information Technology",416,2026-02-13,"0,584900","818,38 zł","950,67 zł","-132,29 zł","-13,92%"
 Otwarta,IKE,Akcje,PLW,PLPLAYW00015,"Communication Services",346,2025-07-18,"3,499300","859,08 zł","939,48 zł","-80,40 zł","-8,56%"
