@@ -5,7 +5,7 @@ Otwarta,IKE,ETF,IUIT.L,IE00B3WJKG14,"Information Technology",416,2025-07-09,"10,
 Otwarta,IKE,ETF,NUKL.DE,IE000M7V94E1,,382,2025-07-09,"8,851500","1 768,98 zł","1 181,43 zł","587,55 zł","49,73%"
 Otwarta,IKE,ETF,ETFBS80TR,PLBSWTR00014,,416,2025-07-11,"3,674600","1 761,05 zł","1 372,02 zł","389,03 zł","28,35%"
 Otwarta,IKE,Akcje,AMZN,US0231351067,"Consumer Discretionary",408,2026-02-13,"1,408500","1 268,35 zł","1 097,16 zł","171,19 zł","15,60%"
-Otwarta,IKE,Akcje,CRWD,US22788C1053,"Information Technology",412,2025-07-08,"0,649400","1 858,92 zł","847,70 zł","1 011,22 zł","119,29%"
+Otwarta,IKE,Akcje,CRWD,US22788C1053,"Information Technology",412,2025-07-08,"2,597600","1 858,92 zł","847,70 zł","1 011,22 zł","119,29%"
 Otwarta,IKE,Akcje,MSFT,US5949181045,"Information Technology",416,2026-02-13,"0,584900","818,38 zł","950,67 zł","-132,29 zł","-13,92%"
 Otwarta,IKE,Akcje,PLW,PLPLAYW00015,"Communication Services",346,2025-07-18,"3,499300","859,08 zł","939,48 zł","-80,40 zł","-8,56%"
 Otwarta,IKE,Akcje,SFD,PLSFD0000013,"Consumer Staples",12,2025-11-17,"266,000000","683,62 zł","789,80 zł","-106,18 zł","-13,44%"
