@@ -10,15 +10,15 @@ Otwarta,IKE,Akcje,CRWD,US22788C1053,"Information Technology",412,2025-07-08,"2,5
 Otwarta,IKE,Akcje,MSFT,US5949181045,"Information Technology",416,2026-02-13,"0,584900","818,38 zł","950,67 zł","-132,29 zł","-13,92%"
 Otwarta,IKE,Akcje,PLW,PLPLAYW00015,"Communication Services",346,2025-07-18,"3,499300","859,08 zł","939,48 zł","-80,40 zł","-8,56%"
 Otwarta,IKE,Akcje,SFD,PLSFD0000013,"Consumer Staples",12,2025-11-17,"266,000000","683,62 zł","789,80 zł","-106,18 zł","-13,44%"
-Otwarta,IKE,Akcje,CDR,PLOPTTC00011,"Communication Services",416,2025-05-06,"5,063600","1 136,27 zł","902,36 zł","233,91 zł","25,92%"
-Otwarta,IKE,Akcje,LPP,PLLPP0000011,"Consumer Discretionary",416,2025-07-04,"0,049500","904,86 zł","796,57 zł","108,29 zł","13,59%"
-Otwarta,IKE,Akcje,KRU,PLKRK0000010,Financials,412,2025-07-04,"2,327700","982,75 zł","980,71 zł","2,04 zł","0,21%"
+Otwarta,IKE,Akcje,CDR,PLOPTTC00011,"Communication Services",416,2026-07-03,"5,278400","1 184,47 zł","952,34 zł","232,13 zł","24,38%"
+Otwarta,IKE,Akcje,LPP,PLLPP0000011,"Consumer Discretionary",416,2026-07-03,"0,052100","952,39 zł","844,80 zł","107,59 zł","12,74%"
+Otwarta,IKE,Akcje,KRU,PLKRK0000010,Financials,412,2026-07-03,"2,445400","1 032,45 zł","1 030,70 zł","1,75 zł","0,17%"
 Otwarta,IKE,Akcje,ABS,PLABS0000018,"Information Technology",416,2025-07-15,"13,000000","1 073,80 zł","892,80 zł","181,00 zł","20,27%"
 Otwarta,IKE,Akcje,KLE,PLMRTIN00011,"Consumer Discretionary",172,2025-07-04,"135,000000","1 007,10 zł","939,36 zł","67,74 zł","7,21%"
-Otwarta,IKE,Akcje,KTY,PLKETY000011,Materials,416,2025-07-04,"0,913800","1 102,04 zł","717,87 zł","384,17 zł","53,52%"
+Otwarta,IKE,Akcje,KTY,PLKETY000011,Materials,416,2026-07-03,"0,954500","1 151,13 zł","767,81 zł","383,32 zł","49,92%"
 Otwarta,IKE,Akcje,ACN,IE00B4BNMY34,"Information Technology",412,2026-06-18,"1,030400","484,20 zł","1 135,45 zł","-651,25 zł","-57,36%"
 Otwarta,IKE,Akcje,FAST,US3119001044,Industrials,226,2025-05-06,"4,606400","832,80 zł","702,43 zł","130,37 zł","18,56%"
-Otwarta,IKE,Akcje,GAW,GB0003718474,"Consumer Discretionary",412,2025-07-04,"1,447000","1 561,64 zł","965,50 zł","596,14 zł","61,74%"
+Otwarta,IKE,Akcje,GAW,GB0003718474,"Consumer Discretionary",412,2026-07-03,"1,493500","1 611,83 zł","1 015,46 zł","596,37 zł","58,73%"
 Otwarta,IKE,Akcje,ROL,US7757111049,Industrials,412,2026-02-13,"4,203200","661,65 zł","855,77 zł","-194,12 zł","-22,68%"
 Otwarta,IKE,Akcje,FRO,PLFERRO00016,Industrials,286,2025-06-05,"20,000000","640,00 zł","714,00 zł","-74,00 zł","-10,36%"
 Otwarta,IKE,Gotówka,PLN-IKE,,,0,2026-07-02,"0,000000","0,00 zł","0,00 zł","0,00 zł","0,00%"
@@ -79,11 +79,13 @@ Otwarta,Żółwie,Akcje,UNT,,Trajan,0,2026-06-09,"0,615700","101,71 zł","99,37 
 Otwarta,Żółwie,Gotówka,PLN,,Trajan,0,2026-06-09,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Akcje,APE,,Hadrian,0,2026-06-16,"18,000000","84,24 zł","99,72 zł","-15,48 zł","-15,52%"
 Otwarta,Żółwie,Gotówka,PLN,,Hadrian,0,2026-06-16,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
-Otwarta,Żółwie,Akcje,TOR,,Kommodus,0,2026-06-23,"1,481400","99,55 zł","99,99 zł","-0,44 zł","-0,44%"
-Otwarta,Żółwie,Gotówka,PLN,,Kommodus,0,2026-06-23,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Akcje,TOR,,Antoninus Pius,0,2026-06-23,"1,481400","99,55 zł","99,99 zł","-0,44 zł","-0,44%"
+Otwarta,Żółwie,Gotówka,PLN,,Antoninus Pius,0,2026-06-23,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Akcje,XTB,,Marek Aureliusz,0,2026-07-03,"1,000000","116,26 zł","116,26 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Gotówka,PLN,,Marek Aureliusz,0,2026-07-03,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Gotówka,Gotówka,PLN,,,382,2026-06-03,"0,000000","0,00 zł","0,00 zł","0,00 zł","0,00%"`;
 
 
 
 
-export const OMF_LAST_UPDATED = '2026-07-02';
+export const OMF_LAST_UPDATED = '2026-07-03';
