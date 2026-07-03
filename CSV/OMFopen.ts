@@ -1,5 +1,5 @@
 export const OMF_OPEN_DATA = `Status pozycji,Portfel,Typ,Symbol,ISIN,Sektor,Okres inwestycji,Ostatni zakup,Ilość,Obecna wartość,Wartość zakupu,Zysk/Strata,ROI
-Otwarta,PPK,PPK,PPK,,,,,"90,8398","10 484,73 zł","3 629,17 zł","6 855,56 zł","188,90%"
+Otwarta,PPK,PPK,PPK,,,,,"93,0368","10 738,31 zł","3 775,93 zł","6 962,38 zł","184,39%"
 Otwarta,IKE,ETF,NDIA.L,IE00BZCQB185,,416,2026-07-02,"39,178800","1 297,78 zł","1 484,12 zł","-186,34 zł","-12,56%"
 Otwarta,IKE,ETF,IUIT.L,IE00B3WJKG14,"Information Technology",416,2026-07-02,"11,399200","2 136,83 zł","1 484,45 zł","652,38 zł","43,95%"
 Otwarta,IKE,ETF,NUKL.DE,IE000M7V94E1,,382,2026-07-02,"9,410600","1 880,72 zł","1 293,93 zł","586,79 zł","45,35%"
@@ -8,7 +8,7 @@ Otwarta,IKE,ETF,QUTM.DE,IE0007Y8Y157,"Information Technology",0,2026-07-02,"0,98
 Otwarta,IKE,Akcje,AMZN,US0231351067,"Consumer Discretionary",408,2026-07-02,"1,463000","1 317,43 zł","1 147,17 zł","170,26 zł","14,84%"
 Otwarta,IKE,Akcje,CRWD,US22788C1053,"Information Technology",412,2025-07-08,"2,597600","1 858,92 zł","847,70 zł","1 011,22 zł","119,29%"
 Otwarta,IKE,Akcje,MSFT,US5949181045,"Information Technology",416,2026-02-13,"0,584900","818,38 zł","950,67 zł","-132,29 zł","-13,92%"
-Otwarta,IKE,Akcje,PLW,PLPLAYW00015,"Communication Services",346,2025-07-18,"3,499300","859,08 zł","939,48 zł","-80,40 zł","-8,56%"
+Otwarta,IKE,Akcje,PLW,PLPLAYW00015,"Communication Services",346,2026-07-03,"3,700900","908,57 zł","990,08 zł","-81,51 zł","-8,23%"
 Otwarta,IKE,Akcje,SFD,PLSFD0000013,"Consumer Staples",12,2025-11-17,"266,000000","683,62 zł","789,80 zł","-106,18 zł","-13,44%"
 Otwarta,IKE,Akcje,CDR,PLOPTTC00011,"Communication Services",416,2026-07-03,"5,278400","1 184,47 zł","952,34 zł","232,13 zł","24,38%"
 Otwarta,IKE,Akcje,LPP,PLLPP0000011,"Consumer Discretionary",416,2026-07-03,"0,052100","952,39 zł","844,80 zł","107,59 zł","12,74%"
