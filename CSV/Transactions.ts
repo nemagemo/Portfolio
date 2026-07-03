@@ -55,4 +55,5 @@ export const TRANSACTIONS_DATA = `Data,Portfel,Typ,Symbol,Ilość,Koszt,Waluta,S
 2026-07-03,IKE,Kupno,KTY,"0,040700","49,94 zł",PLN,
 2026-07-03,IKE,Kupno,KRU,"0,117700","49,99 zł",PLN,
 2026-07-03,IKE,Kupno,LPP,"0,002600","48,23 zł",PLN,
-2026-07-03,IKE,Kupno,GAW,"0,046500","49,96 zł",PLN,`;
+2026-07-03,IKE,Kupno,GAW,"0,046500","49,96 zł",PLN,
+2026-07-03,IKE,Kupno,FRO,"1,552700","50,00 zł",PLN,`;
