@@ -83,9 +83,11 @@ Otwarta,Żółwie,Akcje,TOR,,Antoninus Pius,0,2026-06-23,"1,481400","99,55 zł",
 Otwarta,Żółwie,Gotówka,PLN,,Antoninus Pius,0,2026-06-23,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Akcje,XTB,,Marek Aureliusz,0,2026-07-03,"1,000000","116,26 zł","116,26 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Gotówka,PLN,,Marek Aureliusz,0,2026-07-03,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Akcje,MBR,,Kommodus,0,2026-07-08,"0,265200","100,25 zł","100,25 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Gotówka,PLN,,Kommodus,0,2026-07-08,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Gotówka,Gotówka,PLN,,,382,2026-06-03,"0,000000","0,00 zł","0,00 zł","0,00 zł","0,00%"`;
 
 
 
 
-export const OMF_LAST_UPDATED = '2026-07-03';
+export const OMF_LAST_UPDATED = '2026-07-08';
