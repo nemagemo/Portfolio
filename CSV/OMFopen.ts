@@ -76,7 +76,7 @@ Otwarta,Żółwie,Gotówka,PLN,,Domicjan,0,2026-06-03,0,"0,00 zł","0,00 zł","0
 Otwarta,Żółwie,Akcje,LBW,,Nerwa,0,2026-06-03,"7,000000","83,93 zł","94,50 zł","-10,57 zł","-11,19%"
 Otwarta,Żółwie,Gotówka,PLN,,Nerwa,0,2026-06-03,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Akcje,UNT,,Trajan,0,2026-06-09,"0,615700","101,71 zł","99,37 zł","2,34 zł","2,36%"
-Otwarta,Żółwie,Gotówka,PLN,,Trajan,0,2026-06-09,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Gotówka,PLN,,Trajan,0,2026-07-10,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Akcje,APE,,Hadrian,0,2026-06-16,"18,000000","84,24 zł","99,72 zł","-15,48 zł","-15,52%"
 Otwarta,Żółwie,Gotówka,PLN,,Hadrian,0,2026-06-16,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Akcje,TOR,,Antoninus Pius,0,2026-06-23,"1,481400","99,55 zł","99,99 zł","-0,44 zł","-0,44%"
@@ -90,4 +90,4 @@ Otwarta,Gotówka,Gotówka,PLN,,,382,2026-06-03,"0,000000","0,00 zł","0,00 zł",
 
 
 
-export const OMF_LAST_UPDATED = '2026-07-08';
+export const OMF_LAST_UPDATED = '2026-07-10';
