@@ -116,7 +116,17 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
 
         const liveNetInvIKE = liveTotals.IKE.inv - closedProfits.IKE - totalActiveDividendsIKE;
         const liveNetInvCrypto = liveTotals.CRYPTO.inv - closedProfits.CRYPTO;
-        const liveNetInvTurtle = liveTotals.TURTLE.inv - closedProfits.TURTLE;
+
+        // Calculate total active dividends received by Turtles portfolio
+        const totalActiveDividendsTurtle = dividends
+            .filter(d => d.portfolio === 'Żółwie' && d.isCounted)
+            .reduce((acc, row) => acc + row.value, 0);
+
+        // liveTotals.TURTLE.inv includes pre-aggregated active assets including virtual PLN-Żółwie cash positions (which equal the dividends).
+        // We subtract the dividends twice:
+        // - Once to remove the virtual cash positions' purchase cost (to get the cost of real non-cash positions).
+        // - A second time to subtract dividends from the cost basis to compute Net Invested Capital (the Snowball model).
+        const liveNetInvTurtle = liveTotals.TURTLE.inv - closedProfits.TURTLE - (2 * totalActiveDividendsTurtle);
 
         const lastDate = uniqueDates[uniqueDates.length - 1];
         

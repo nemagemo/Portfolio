@@ -20,6 +20,6 @@ export const CASH_DATA = `Data,Kwota
 2026-04-01,"1 083,20 zł"
 2026-05-01,"81,44 zł"
 2026-06-01,"0,00 zł"
-2026-07-03,"0,00 zł"`;
+2026-07-13,"0,00 zł"`;
 
-export const CASH_LAST_UPDATED = '2026-07-03';
+export const CASH_LAST_UPDATED = '2026-07-13';

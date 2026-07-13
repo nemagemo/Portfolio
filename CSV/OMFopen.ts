@@ -85,9 +85,11 @@ Otwarta,Żółwie,Akcje,XTB,,Marek Aureliusz,0,2026-07-03,"1,000000","116,26 zł
 Otwarta,Żółwie,Gotówka,PLN,,Marek Aureliusz,0,2026-07-03,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Akcje,MBR,,Kommodus,0,2026-07-08,"0,265200","100,25 zł","100,25 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Gotówka,PLN,,Kommodus,0,2026-07-08,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Akcje,OPN,,Septymiusz Sewer,0,2026-07-13,"0,984200","99,99 zł","99,99 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Gotówka,PLN,,Septymiusz Sewer,0,2026-07-13,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Gotówka,Gotówka,PLN,,,382,2026-06-03,"0,000000","0,00 zł","0,00 zł","0,00 zł","0,00%"`;
 
 
 
 
-export const OMF_LAST_UPDATED = '2026-07-10';
+export const OMF_LAST_UPDATED = '2026-07-13';

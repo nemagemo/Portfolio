@@ -2,6 +2,6 @@
 export const TURTLES_HISTORY_DATA = `Data,Wkład,Zysk,ROI
 2026-05-01,"1 016,25 zł","24,20 zł","2,38%"
 2026-06-01,"1 503,83 zł","32,02 zł","2,14%"
-2026-07-01,"1 712,21 zł","40,65 zł","2,37%"`;
+2026-07-01,"1 808,20 zł","44,65 zł","2,47%"`;
 
-export const TURTLES_HISTORY_LAST_UPDATED = '2026-07-10';
+export const TURTLES_HISTORY_LAST_UPDATED = '2026-07-13';
