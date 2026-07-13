@@ -247,6 +247,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">Strategia Żółwia</h1>
           <p className="text-slate-500 mt-1">Eksperymentalny portfel częściowo oparty na strategii Żółwia.</p>
+          <p className="text-slate-300 mt-1">Prezentowane wyniki uwzględniają dywidendy.</p>
         </div>
       </div>
 
