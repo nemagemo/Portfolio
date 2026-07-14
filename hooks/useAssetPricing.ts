@@ -126,8 +126,8 @@ export const useAssetPricing = ({ portfolioType, onlinePrices, historyPrices, di
               let newCurrentValue = 0;
               if (row.quantity > 0) {
                   newCurrentValue = row.quantity * finalPrice;
-              } else if (row.type === 'Gotówka' || row.symbol === 'PLN') {
-                  newCurrentValue = row.quantity * finalPrice; 
+              } else if (row.type === 'Gotówka' || row.symbol === 'PLN' || row.symbol === 'PLN-IKE' || row.symbol === 'PLN-ŻÓŁWIE') {
+                  newCurrentValue = row.purchaseValue; 
               } else {
                   newCurrentValue = finalPrice;
               }
