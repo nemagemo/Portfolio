@@ -116,7 +116,7 @@ export const usePortfolioData = ({
         if (portfolioType === 'TURTLES_HISTORY') return a.portfolio === 'Żółwie';
         if (portfolioType === 'IKE') {
             // Exclude virtual cash of turtles from IKE currentAssets list to avoid double counting with PLN-IKE
-            return a.portfolio === 'IKE' || (a.portfolio === 'Żółwie' && a.symbol !== 'PLN-Żółwie');
+            return a.portfolio === 'IKE' || (a.portfolio === 'Żółwie' && a.type !== 'Gotówka');
         }
         return a.portfolio === portfolioType;
     });
@@ -142,7 +142,7 @@ export const usePortfolioData = ({
             .reduce((sum, d) => sum + d.value, 0);
         liveInvestment = currentAssets.reduce((sum, a) => sum + a.purchaseValue, 0) - turtleClosedProfit - turtleDividends;
     } else if (portfolioType === 'IKE') {
-        const turtleActive = omfActiveAssets.filter(a => a.portfolio === 'Żółwie' && a.symbol !== 'PLN-Żółwie');
+        const turtleActive = omfActiveAssets.filter(a => a.portfolio === 'Żółwie' && a.type !== 'Gotówka');
         const turtleClosed = omfClosedAssets.filter(a => a.portfolio === 'Żółwie');
         const turtleClosedProfit = turtleClosed.reduce((sum, a) => sum + a.profit, 0);
         const turtleDividends = dividends

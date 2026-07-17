@@ -35,7 +35,7 @@ export const usePortfolioStats = ({
         // Recalculate Investment from active assets for precision (snapshot approach)
         // Exclude virtual PLN-Żółwie cash records to prevent double-counting of dividend cash in global OMF sums
         const assetsToSum = (excludePPK ? omfActiveAssets.filter(a => a.portfolio !== 'PPK') : omfActiveAssets)
-            .filter(a => a.symbol !== 'PLN-Żółwie');
+            .filter(a => !(a.portfolio === 'Żółwie' && a.type === 'Gotówka') && a.symbol !== 'PLN-Żółwie');
         const totalValue = assetsToSum.reduce((acc, r) => acc + r.currentValue, 0);
         
         // Calculate Net Investment (Snowball Effect)

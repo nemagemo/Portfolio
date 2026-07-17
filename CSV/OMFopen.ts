@@ -21,7 +21,7 @@ Otwarta,IKE,Akcje,FAST,US3119001044,Industrials,226,2025-05-06,"4,606400","832,8
 Otwarta,IKE,Akcje,GAW,GB0003718474,"Consumer Discretionary",412,2026-07-03,"1,493500","1 611,83 zł","1 015,46 zł","596,37 zł","58,73%"
 Otwarta,IKE,Akcje,ROL,US7757111049,Industrials,412,2026-02-13,"4,203200","661,65 zł","855,77 zł","-194,12 zł","-22,68%"
 Otwarta,IKE,Akcje,FRO,PLFERRO00016,Industrials,286,2026-07-03,"21,552700","689,69 zł","764,00 zł","-74,31 zł","-9,73%"
-Otwarta,IKE,Gotówka,PLN-IKE,,,0,2026-07-14,"0,000000","11,40 zł","11,40 zł","0,00 zł","0,00%"
+Otwarta,IKE,Gotówka,PLN-IKE,,,0,2026-07-17,"0,000000","80,79 zł","80,79 zł","0,00 zł","0,00%"
 Otwarta,Krypto,Krypto,POL,,,719,2024-10-04,"587,863288","155,14 zł","1 033,13 zł","-877,99 zł","-84,98%"
 Otwarta,Krypto,Krypto,ETH,,,997,2024-10-04,"0,098388","584,42 zł","956,50 zł","-372,08 zł","-38,90%"
 Otwarta,Krypto,Krypto,NEAR,,,934,2026-06-06,"59,619531","401,71 zł","652,06 zł","-250,35 zł","-38,39%"
@@ -80,7 +80,7 @@ Otwarta,Żółwie,Gotówka,PLN,,Trajan,0,2026-07-10,0,"0,00 zł","0,00 zł","0,0
 Otwarta,Żółwie,Akcje,APE,,Hadrian,0,2026-06-16,"18,000000","84,24 zł","99,72 zł","-15,48 zł","-15,52%"
 Otwarta,Żółwie,Gotówka,PLN,,Hadrian,0,2026-06-16,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Akcje,TOR,,Antoninus Pius,0,2026-06-23,"1,481400","99,55 zł","99,99 zł","-0,44 zł","-0,44%"
-Otwarta,Żółwie,Gotówka,PLN,,Antoninus Pius,0,2026-06-23,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Gotówka,PLN,,Antoninus Pius,0,2026-07-17,0,"5,02 zł","5,02 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Akcje,XTB,,Marek Aureliusz,0,2026-07-03,"1,000000","116,26 zł","116,26 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Gotówka,PLN,,Marek Aureliusz,0,2026-07-03,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Akcje,MBR,,Kommodus,0,2026-07-08,"0,265200","100,25 zł","100,25 zł","0,00 zł","0,00%"
@@ -92,4 +92,4 @@ Otwarta,Gotówka,Gotówka,PLN,,,382,2026-06-03,"0,000000","0,00 zł","0,00 zł",
 
 
 
-export const OMF_LAST_UPDATED = '2026-07-14';
+export const OMF_LAST_UPDATED = '2026-07-17';

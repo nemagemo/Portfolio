@@ -104,7 +104,10 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
             if (p === 'PPK') target = liveTotals.PPK;
             else if (p.includes('KRYPTO')) target = liveTotals.CRYPTO;
             else if (p.includes('IKE')) target = liveTotals.IKE;
-            else if (p.includes('ŻÓŁWIE')) target = liveTotals.TURTLE;
+            else if (p.includes('ŻÓŁWIE')) {
+                if (a.type === 'Gotówka') return;
+                target = liveTotals.TURTLE;
+            }
             
             target.inv += a.purchaseValue;
             target.val += a.currentValue;
@@ -122,11 +125,9 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
             .filter(d => d.portfolio === 'Żółwie' && d.isCounted)
             .reduce((acc, row) => acc + row.value, 0);
 
-        // liveTotals.TURTLE.inv includes pre-aggregated active assets including virtual PLN-Żółwie cash positions (which equal the dividends).
-        // We subtract the dividends twice:
-        // - Once to remove the virtual cash positions' purchase cost (to get the cost of real non-cash positions).
-        // - A second time to subtract dividends from the cost basis to compute Net Invested Capital (the Snowball model).
-        const liveNetInvTurtle = liveTotals.TURTLE.inv - closedProfits.TURTLE - (2 * totalActiveDividendsTurtle);
+        // Since liveTotals.TURTLE.inv no longer includes virtual cash rows, we only subtract the dividends once
+        // from the cost basis to compute Net Invested Capital (the Snowball model).
+        const liveNetInvTurtle = liveTotals.TURTLE.inv - closedProfits.TURTLE - totalActiveDividendsTurtle;
 
         const lastDate = uniqueDates[uniqueDates.length - 1];
         
