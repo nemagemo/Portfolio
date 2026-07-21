@@ -3,7 +3,6 @@ Otwarta,PPK,PPK,PPK,,,,,"93,0368","10 738,31 zł","3 775,93 zł","6 962,38 zł",
 Otwarta,IKE,ETF,NDIA.L,IE00BZCQB185,,416,2026-07-02,"39,178800","1 297,78 zł","1 484,12 zł","-186,34 zł","-12,56%"
 Otwarta,IKE,ETF,IUIT.L,IE00B3WJKG14,"Information Technology",416,2026-07-02,"11,399200","2 136,83 zł","1 484,45 zł","652,38 zł","43,95%"
 Otwarta,IKE,ETF,NUKL.DE,IE000M7V94E1,,382,2026-07-02,"9,410600","1 880,72 zł","1 293,93 zł","586,79 zł","45,35%"
-Otwarta,IKE,ETF,ETFBS80TR,PLBSWTR00014,,416,2025-07-11,"3,674600","1 761,05 zł","1 372,02 zł","389,03 zł","28,35%"
 Otwarta,IKE,ETF,QUTM.DE,IE0007Y8Y157,"Information Technology",0,2026-07-02,"0,985500","112,39 zł","112,39 zł","0,00 zł","0,00%"
 Otwarta,IKE,Akcje,AMZN,US0231351067,"Consumer Discretionary",408,2026-07-02,"1,463000","1 317,43 zł","1 147,17 zł","170,26 zł","14,84%"
 Otwarta,IKE,Akcje,CRWD,US22788C1053,"Information Technology",412,2025-07-08,"2,597600","1 858,92 zł","847,70 zł","1 011,22 zł","119,29%"
@@ -21,7 +20,7 @@ Otwarta,IKE,Akcje,FAST,US3119001044,Industrials,226,2025-05-06,"4,606400","832,8
 Otwarta,IKE,Akcje,GAW,GB0003718474,"Consumer Discretionary",412,2026-07-03,"1,493500","1 611,83 zł","1 015,46 zł","596,37 zł","58,73%"
 Otwarta,IKE,Akcje,ROL,US7757111049,Industrials,412,2026-02-13,"4,203200","661,65 zł","855,77 zł","-194,12 zł","-22,68%"
 Otwarta,IKE,Akcje,FRO,PLFERRO00016,Industrials,286,2026-07-03,"21,552700","689,69 zł","764,00 zł","-74,31 zł","-9,73%"
-Otwarta,IKE,Gotówka,PLN-IKE,,,0,2026-07-17,"0,000000","80,79 zł","80,79 zł","0,00 zł","0,00%"
+Otwarta,IKE,Gotówka,PLN-IKE,,,0,2026-07-21,"0,000000","1 859,30 zł","1 859,30 zł","0,00 zł","0,00%"
 Otwarta,Krypto,Krypto,POL,,,719,2024-10-04,"587,863288","155,14 zł","1 033,13 zł","-877,99 zł","-84,98%"
 Otwarta,Krypto,Krypto,ETH,,,997,2024-10-04,"0,098388","584,42 zł","956,50 zł","-372,08 zł","-38,90%"
 Otwarta,Krypto,Krypto,NEAR,,,934,2026-06-06,"59,619531","401,71 zł","652,06 zł","-250,35 zł","-38,39%"
@@ -92,4 +91,4 @@ Otwarta,Gotówka,Gotówka,PLN,,,382,2026-06-03,"0,000000","0,00 zł","0,00 zł",
 
 
 
-export const OMF_LAST_UPDATED = '2026-07-17';
+export const OMF_LAST_UPDATED = '2026-07-21';
