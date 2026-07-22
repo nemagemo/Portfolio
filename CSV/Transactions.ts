@@ -44,6 +44,7 @@ export const TRANSACTIONS_DATA = `Data,Portfel,Typ,Symbol,Ilość,Koszt,Waluta,S
 2026-06-18,IKE,Kupno,ACN,"0,203400","100,04 zł",PLN,
 2026-06-22,Krypto,Sprzedaż,USDC,"25,020000","93,07 zł",PLN,
 2026-06-22,Krypto,Kupno,ALGO,"277,722000","93,07 zł",PLN,
+2026-06-22,IKE,Kupno,AMZN,"0,053600","49,99 zł",PLN,
 2026-06-23,Żółwie,Kupno,TOR,"1,481400","99,99 zł",PLN,Antoninus Pius
 2026-07-02,IKE,Kupno,IUIT.L,"0,606400","112,45 zł",PLN,
 2026-07-02,IKE,Kupno,NUKL.DE,"0,559100","112,50 zł",PLN,
@@ -64,4 +65,15 @@ export const TRANSACTIONS_DATA = `Data,Portfel,Typ,Symbol,Ilość,Koszt,Waluta,S
 2026-07-13,Żółwie,Kupno,OPN,"0,9842","99,99 zł",PLN,Septymiusz Sewer
 2026-07-21,IKE,Sprzedaż,ETFBS80TR,"3,674600","1 778,51 zł",PLN,
 2026-07-22,IKE,Kupno,QUTM.DE,"6,712000","699,78 zł",PLN,
-2026-07-22,Żółwie,Kupno,QRS,"8,000000","109,60 zł",PLN,Geta`;
+2026-07-22,Żółwie,Kupno,QRS,"8,000000","109,60 zł",PLN,Geta
+2026-07-22,IKE,Kupno,CDR,"0,214100","49,99 zł",PLN,
+2026-07-22,IKE,Kupno,KRU,"0,119200","49,94 zł",PLN,
+2026-07-22,IKE,Kupno,GAW,"0,049200","49,97 zł",PLN,
+2026-07-22,IKE,Kupno,LPP,"0,002400","48,29 zł",PLN,
+2026-07-22,IKE,Kupno,NUKL.DE,"0,585200","112,47 zł",PLN,
+2026-07-22,IKE,Kupno,IUIT.L,"0,603700","112,46 zł",PLN,
+2026-07-22,IKE,Kupno,PLW,"0,208300","49,99 zł",PLN,
+2026-07-22,IKE,Kupno,KTY,"0,037600","49,90 zł",PLN,
+2026-07-22,IKE,Kupno,KLE,"8,000000","56,16 zł",PLN,
+2026-07-22,IKE,Kupno,FRO,"1,479200","50,00 zł",PLN,
+2026-07-22,IKE,Kupno,NDIA.L,"3,395300","112,47 zł",PLN,`;
