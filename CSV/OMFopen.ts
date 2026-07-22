@@ -20,7 +20,7 @@ Otwarta,IKE,Akcje,FAST,US3119001044,Industrials,226,2025-05-06,"4,606400","832,8
 Otwarta,IKE,Akcje,GAW,GB0003718474,"Consumer Discretionary",412,2026-07-03,"1,493500","1 611,83 zł","1 015,46 zł","596,37 zł","58,73%"
 Otwarta,IKE,Akcje,ROL,US7757111049,Industrials,412,2026-02-13,"4,203200","661,65 zł","855,77 zł","-194,12 zł","-22,68%"
 Otwarta,IKE,Akcje,FRO,PLFERRO00016,Industrials,286,2026-07-03,"21,552700","689,69 zł","764,00 zł","-74,31 zł","-9,73%"
-Otwarta,IKE,Gotówka,PLN-IKE,,,0,2026-07-22,"0,000000","1 159,52 zł","1 159,52 zł","0,00 zł","0,00%"
+Otwarta,IKE,Gotówka,PLN-IKE,,,0,2026-07-22,"0,000000","1 049,92 zł","1 049,92 zł","0,00 zł","0,00%"
 Otwarta,Krypto,Krypto,POL,,,719,2024-10-04,"587,863288","155,14 zł","1 033,13 zł","-877,99 zł","-84,98%"
 Otwarta,Krypto,Krypto,ETH,,,997,2024-10-04,"0,098388","584,42 zł","956,50 zł","-372,08 zł","-38,90%"
 Otwarta,Krypto,Krypto,NEAR,,,934,2026-06-06,"59,619531","401,71 zł","652,06 zł","-250,35 zł","-38,39%"
@@ -86,6 +86,8 @@ Otwarta,Żółwie,Akcje,MBR,,Kommodus,0,2026-07-08,"0,265200","100,25 zł","100,
 Otwarta,Żółwie,Gotówka,PLN,,Kommodus,0,2026-07-08,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Akcje,OPN,,Septymiusz Sewer,0,2026-07-13,"0,984200","99,99 zł","99,99 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Gotówka,PLN,,Septymiusz Sewer,0,2026-07-13,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Akcje,QRS,,Geta,0,2026-07-22,"8,000000","109,60 zł","109,60 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Gotówka,PLN,,Geta,0,2026-07-22,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Gotówka,Gotówka,PLN,,,382,2026-06-03,"0,000000","0,00 zł","0,00 zł","0,00 zł","0,00%"`;
 
 

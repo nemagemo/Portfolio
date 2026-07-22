@@ -63,4 +63,5 @@ export const TRANSACTIONS_DATA = `Data,Portfel,Typ,Symbol,Ilość,Koszt,Waluta,S
 2026-07-08,Żółwie,Kupno,MBR,"0,265200","100,25 zł",PLN,Kommodus
 2026-07-13,Żółwie,Kupno,OPN,"0,9842","99,99 zł",PLN,Septymiusz Sewer
 2026-07-21,IKE,Sprzedaż,ETFBS80TR,"3,674600","1 778,51 zł",PLN,
-2026-07-22,IKE,Kupno,QUTM.DE,"6,712000","699,78 zł",PLN,`;
+2026-07-22,IKE,Kupno,QUTM.DE,"6,712000","699,78 zł",PLN,
+2026-07-22,Żółwie,Kupno,QRS,"8,000000","109,60 zł",PLN,Geta`;

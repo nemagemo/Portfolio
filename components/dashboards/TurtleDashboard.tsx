@@ -60,7 +60,7 @@ export const TurtleDashboard: React.FC<TurtleDashboardProps> = ({
     if (t.endsWith('.L')) return 'https://flagcdn.com/w40/gb.png';
     if (t.endsWith('.DE')) return 'https://flagcdn.com/w40/de.png';
     // Check common polish symbols
-    const polishSymbols = ['ARH', 'ODL', 'CMP', 'LBW', 'MBR', 'VRG', 'XTB', 'ORL', 'SEK', 'APE', 'TOR', 'OPN', 'UNT'];
+    const polishSymbols = ['ARH', 'ODL', 'CMP', 'LBW', 'MBR', 'VRG', 'XTB', 'ORL', 'QRS', 'SEK', 'APE', 'TOR', 'OPN', 'UNT'];
     if (polishSymbols.includes(t)) return 'https://flagcdn.com/w40/pl.png';
     const ukSymbols = ['RPI'];
     if (ukSymbols.includes(t)) return 'https://flagcdn.com/w40/gb.png';
