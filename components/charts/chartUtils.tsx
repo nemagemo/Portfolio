@@ -15,6 +15,7 @@ import { KRULogo } from '../../logos/KRULogo';
 import { PLWLogo } from '../../logos/PLWLogo';
 import { ROLLogo } from '../../logos/ROLLogo';
 import { NUKL_DELogo } from '../../logos/NUKL_DELogo';
+import { QUTM_DELogo } from '../../logos/QUTM_DELogo';
 import { NDIA_LLogo } from '../../logos/NDIA_LLogo';
 import { IUIT_LLogo } from '../../logos/IUIT_LLogo';
 import { SFDLogo } from '../../logos/SFDLogo';
@@ -202,6 +203,7 @@ const LOGO_MAP: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
   PLW: PLWLogo,
   ROL: ROLLogo,
   'NUKL.DE': NUKL_DELogo,
+  'QUTM.DE': QUTM_DELogo,
   'NDIA.L': NDIA_LLogo,
   'IUIT.L': IUIT_LLogo,
   SFD: SFDLogo,
