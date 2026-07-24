@@ -162,6 +162,7 @@ Aplikacja stosuje hybrydowy model wyceny w czasie rzeczywistym:
 **Procedura:**
 1.  Analiza języka naturalnego użytkownika.
 2.  Edycja `CSV/OMFopen.ts` (Kupno/Sprzedaż częściowa) lub przeniesienie do `CSV/OMFclosed.ts` (Sprzedaż całkowita).
+    *   **KRYTYCZNE (Kupno):** Przy dodawaniu aktywów/zakupie do pozycji w `OMFopen.ts` musisz zaktualizować nie tylko `Ilość` i `Wartość zakupu`, ale **obowiązkowo przeliczyć też `Obecną wartość`** (stara `Obecna wartość` + kwota nowego zakupu) oraz przeliczyć na nowo `Zysk/Strata` (`Obecna wartość` - `Wartość zakupu`) i `ROI` (`Zysk/Strata` / `Wartość zakupu`).
 3.  **Dla portfeli IKE/Krypto/PPK:** Synchronizacja historii w `CSV/PPK.ts`, `CSV/Krypto.ts`, `CSV/IKE.ts`.
 4.  **Dla portfela Żółwie:** Po dodaniu transakcji, zaktualizuj i przelicz plik historyczny `CSV/TurtlesHistory.ts` na podstawie aktualnego stanu aktywów Żółwi w `OMFopen.ts` i `OMFclosed.ts`, zachowując **ZASADĘ JEDNEJ LINII NA MIESIĄC** (nadpisz istniejącą linię z bieżącego miesiąca najnowszymi zsumowanymi wartościami wkładu, zysku i ROI, używając daty pierwszego dnia miesiąca `YYYY-MM-01` dla spójności skali czasowej).
 5.  Logowanie w `CSV/Transactions.ts`.
@@ -249,7 +250,10 @@ Zawsze sprawdzaj kolumnę "Sektor" (używaną jako pole dla imienia żółwia w 
 ### Polecenie: `ZakupIKE` (Reinwestycja lub Zakup)
 **Wyzwalacz:** "Kupiłem X za kwotę Y na IKE"
 **Procedura:**
-1.  Dodaj/Zaktualizuj pozycję aktywa w `CSV/OMFopen.ts` (zwiększ `Wartość zakupu` i `Ilość` wyliczoną z ceny).
+1.  Dodaj/Zaktualizuj pozycję aktywa w `CSV/OMFopen.ts`:
+    *   Zwiększ `Wartość zakupu` o kwotę zakupu Y.
+    *   Zwiększ `Ilość` o wyliczoną z ceny liczbę jednostek.
+    *   **KRYTYCZNE:** Zwiększ **`Obecną wartość`** o kwotę zakupu Y (nowa `Obecna wartość` = stara `Obecna wartość` + Y) oraz przelicz na nowo `Zysk/Strata` (`Obecna wartość` - `Wartość zakupu`) i `ROI` (`Zysk/Strata` / `Wartość zakupu`).
 2.  Zmniejsz pozycję `PLN-IKE` w `CSV/OMFopen.ts` o kwotę zakupu.
 3.  **Zasada:** Nie ma znaczenia czy gotówka pochodziła z dywidend czy wpłaty. Jest to transfer wewnątrz portfela (Gotówka -> Aktywo). Suma `Wartość zakupu` portfela IKE pozostaje bez zmian (wzrost na aktywie, spadek na gotówce).
 

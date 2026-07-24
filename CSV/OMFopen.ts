@@ -8,7 +8,7 @@ Otwarta,IKE,Akcje,AMZN,US0231351067,"Consumer Discretionary",408,2026-07-02,"1,5
 Otwarta,IKE,Akcje,CRWD,US22788C1053,"Information Technology",412,2025-07-08,"2,597600","1 858,92 zł","847,70 zł","1 011,22 zł","119,29%"
 Otwarta,IKE,Akcje,MSFT,US5949181045,"Information Technology",416,2026-02-13,"0,584900","818,38 zł","950,67 zł","-132,29 zł","-13,92%"
 Otwarta,IKE,Akcje,PLW,PLPLAYW00015,"Communication Services",346,2026-07-22,"3,909200","958,56 zł","1 040,07 zł","-81,51 zł","-8,23%"
-Otwarta,IKE,Akcje,SFD,PLSFD0000013,"Consumer Staples",12,2026-07-24,"305,000000","732,45 zł","892,22 zł","-106,37 zł","-12,68%"
+Otwarta,IKE,Akcje,SFD,PLSFD0000013,"Consumer Staples",12,2026-07-24,"305,000000","785,85 zł","892,22 zł","-106,37 zł","-11,92%"
 Otwarta,IKE,Akcje,CDR,PLOPTTC00011,"Communication Services",416,2026-07-22,"5,492500","1 234,46 zł","1 002,33 zł","232,13 zł","24,38%"
 Otwarta,IKE,Akcje,LPP,PLLPP0000011,"Consumer Discretionary",416,2026-07-22,"0,054500","1 000,68 zł","893,09 zł","107,59 zł","12,74%"
 Otwarta,IKE,Akcje,KRU,PLKRK0000010,Financials,412,2026-07-22,"2,564600","1 082,39 zł","1 080,64 zł","1,75 zł","0,17%"
