@@ -8,7 +8,7 @@ Otwarta,IKE,Akcje,AMZN,US0231351067,"Consumer Discretionary",408,2026-07-02,"1,5
 Otwarta,IKE,Akcje,CRWD,US22788C1053,"Information Technology",412,2025-07-08,"2,597600","1 858,92 zł","847,70 zł","1 011,22 zł","119,29%"
 Otwarta,IKE,Akcje,MSFT,US5949181045,"Information Technology",416,2026-02-13,"0,584900","818,38 zł","950,67 zł","-132,29 zł","-13,92%"
 Otwarta,IKE,Akcje,PLW,PLPLAYW00015,"Communication Services",346,2026-07-22,"3,909200","958,56 zł","1 040,07 zł","-81,51 zł","-8,23%"
-Otwarta,IKE,Akcje,SFD,PLSFD0000013,"Consumer Staples",12,2026-07-03,"285,000000","732,45 zł","838,82 zł","-106,37 zł","-12,68%"
+Otwarta,IKE,Akcje,SFD,PLSFD0000013,"Consumer Staples",12,2026-07-24,"305,000000","732,45 zł","892,22 zł","-106,37 zł","-12,68%"
 Otwarta,IKE,Akcje,CDR,PLOPTTC00011,"Communication Services",416,2026-07-22,"5,492500","1 234,46 zł","1 002,33 zł","232,13 zł","24,38%"
 Otwarta,IKE,Akcje,LPP,PLLPP0000011,"Consumer Discretionary",416,2026-07-22,"0,054500","1 000,68 zł","893,09 zł","107,59 zł","12,74%"
 Otwarta,IKE,Akcje,KRU,PLKRK0000010,Financials,412,2026-07-22,"2,564600","1 082,39 zł","1 080,64 zł","1,75 zł","0,17%"
@@ -20,7 +20,7 @@ Otwarta,IKE,Akcje,FAST,US3119001044,Industrials,226,2025-05-06,"4,606400","832,8
 Otwarta,IKE,Akcje,GAW,GB0003718474,"Consumer Discretionary",412,2026-07-22,"1,542700","1 661,80 zł","1 065,43 zł","596,37 zł","58,73%"
 Otwarta,IKE,Akcje,ROL,US7757111049,Industrials,412,2026-02-13,"4,203200","661,65 zł","855,77 zł","-194,12 zł","-22,68%"
 Otwarta,IKE,Akcje,FRO,PLFERRO00016,Industrials,286,2026-07-22,"23,031900","739,69 zł","814,00 zł","-74,31 zł","-9,73%"
-Otwarta,IKE,Gotówka,PLN-IKE,,,0,2026-07-22,"0,000000","258,29 zł","258,29 zł","0,00 zł","0,00%"
+Otwarta,IKE,Gotówka,PLN-IKE,,,0,2026-07-24,"0,000000","204,89 zł","204,89 zł","0,00 zł","0,00%"
 Otwarta,Krypto,Krypto,POL,,,719,2024-10-04,"587,863288","155,14 zł","1 033,13 zł","-877,99 zł","-84,98%"
 Otwarta,Krypto,Krypto,ETH,,,997,2024-10-04,"0,098388","584,42 zł","956,50 zł","-372,08 zł","-38,90%"
 Otwarta,Krypto,Krypto,NEAR,,,934,2026-06-06,"59,619531","401,71 zł","652,06 zł","-250,35 zł","-38,39%"
@@ -92,4 +92,4 @@ Otwarta,Gotówka,Gotówka,PLN,,,382,2026-06-03,"0,000000","0,00 zł","0,00 zł",
 
 
 
-export const OMF_LAST_UPDATED = '2026-07-23';
+export const OMF_LAST_UPDATED = '2026-07-24';
