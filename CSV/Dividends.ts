@@ -51,4 +51,6 @@ export const DIVIDENDS_DATA = `Data,Portfel,Symbol,Kwota,Status
 2026-07-10,Żółwie,UNT,"4,00 zł",Aktywna
 2026-07-14,IKE,SFD,"11,40 zł",Aktywna
 2026-07-17,Żółwie,TOR,"5,02 zł",Aktywna
-2026-07-17,IKE,PLW,"64,37 zł",Aktywna`
+2026-07-17,IKE,PLW,"64,37 zł",Aktywna
+2026-07-31,Żółwie,ODL,"1,80 zł",Aktywna
+2026-07-31,Żółwie,ARH,"3,42 zł",Aktywna`
