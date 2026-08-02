@@ -1,4 +1,4 @@
-{
+export const FALLBACK_PRICES: Record<string, number> = {
   "PPK": 120.81,
   "NDIA.L": 33.342713,
   "IUIT.L": 178.685615,
@@ -70,4 +70,4 @@
   "MBR": 380,
   "OPN": 101,
   "QRS": 13.62
-}
+};
