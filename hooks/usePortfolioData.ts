@@ -60,47 +60,6 @@ export const usePortfolioData = ({
   const data = useMemo(() => {
     let baseRows = [...rawData];
 
-    // Merge IKE with TurtlesHistory for accurate charts representation
-    if (portfolioType === 'IKE') {
-        const turtlesHistoryRes = parseCSV(TURTLES_HISTORY_DATA, 'TURTLES_HISTORY', 'Offline');
-        const turtlesHistoryRows = turtlesHistoryRes.data as CryptoDataRow[];
-        
-        const getMonthFirstDay = (dateStr: string) => {
-            if (!dateStr || dateStr.length < 7) return dateStr;
-            return `${dateStr.substring(0, 7)}-01`;
-        };
-
-        const turtleHistoryMap = new Map<string, CryptoDataRow>();
-        turtlesHistoryRows.forEach(row => {
-            if (row && row.date) {
-                turtleHistoryMap.set(getMonthFirstDay(row.date), row);
-            }
-        });
-
-        baseRows = baseRows.map(r => {
-            const normDate = getMonthFirstDay((r as any).date);
-            const matchedTurtle = turtleHistoryMap.get(normDate);
-            if (matchedTurtle) {
-                const matchedTurtleInv = matchedTurtle.investment ?? (matchedTurtle.totalValue - matchedTurtle.profit);
-                const matchedTurtleProfit = matchedTurtle.profit;
-
-                const combinedInv = (r as IKEDataRow).investment + matchedTurtleInv;
-                const combinedProfit = (r as IKEDataRow).profit + matchedTurtleProfit;
-                const combinedTotal = combinedInv + combinedProfit;
-                const combinedRoi = combinedInv > 0 ? (combinedProfit / combinedInv) * 100 : 0;
-
-                return {
-                    ...r,
-                    investment: combinedInv,
-                    profit: combinedProfit,
-                    totalValue: combinedTotal,
-                    roi: combinedRoi
-                } as IKEDataRow;
-            }
-            return r;
-        });
-    }
-
     // Skip patching for OMF (handled by useGlobalHistory) or non-asset types
     if (portfolioType === 'OMF' || portfolioType === 'CASH' || portfolioType === 'DIVIDENDS') {
         return baseRows;
@@ -141,15 +100,6 @@ export const usePortfolioData = ({
             .filter(d => d.portfolio === 'Żółwie' && d.isCounted)
             .reduce((sum, d) => sum + d.value, 0);
         liveInvestment = currentAssets.reduce((sum, a) => sum + a.purchaseValue, 0) - turtleClosedProfit - turtleDividends;
-    } else if (portfolioType === 'IKE') {
-        const turtleActive = omfActiveAssets.filter(a => a.portfolio === 'Żółwie' && a.type !== 'Gotówka');
-        const turtleClosed = omfClosedAssets.filter(a => a.portfolio === 'Żółwie');
-        const turtleClosedProfit = turtleClosed.reduce((sum, a) => sum + a.profit, 0);
-        const turtleDividends = dividends
-             .filter(d => d.portfolio === 'Żółwie' && d.isCounted)
-             .reduce((sum, d) => sum + d.value, 0);
-        const turtleInvestment = turtleActive.reduce((sum, a) => sum + a.purchaseValue, 0) - turtleClosedProfit - turtleDividends;
-        liveInvestment += turtleInvestment;
     } else if (portfolioType === 'PPK') {
         const r = rawLastRow as PPKDataRow;
         const liveEmployeeContrib = currentAssets.reduce((sum, a) => sum + a.purchaseValue, 0);
