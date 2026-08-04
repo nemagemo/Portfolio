@@ -166,7 +166,8 @@ export const useAssetPricing = ({ portfolioType, onlinePrices, historyPrices, di
       
       const openIKE = omfOpenRows.filter(r => r.portfolio === 'IKE').reduce((sum, r) => sum + r.purchaseValue, 0);
       const closedIKE = omfClosedRows.filter(r => r.portfolio === 'IKE').reduce((sum, r) => sum + r.profit, 0);
-      const calcIKE = openIKE - closedIKE;
+      const divsIKE = dividends.filter(d => (d.portfolio === 'IKE' || d.portfolio === 'Żółwie') && d.isCounted).reduce((sum, r) => sum + r.value, 0);
+      const calcIKE = openIKE - closedIKE - divsIKE;
 
       if (ikeHistoryRaw.length > 0) {
           const lastRecIKE = ikeHistoryRaw[ikeHistoryRaw.length - 1].investment;

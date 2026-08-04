@@ -147,7 +147,10 @@ export const usePortfolioData = ({
     if (portfolioType === 'TURTLES_HISTORY') {
         const turtleClosed = omfClosedAssets.filter(a => a.portfolio === 'Żółwie');
         const turtleClosedProfit = turtleClosed.reduce((sum, a) => sum + a.profit, 0);
-        liveInvestment = currentAssets.reduce((sum, a) => sum + a.purchaseValue, 0) - turtleClosedProfit;
+        const turtleDividends = dividends
+            .filter(d => d.portfolio === 'Żółwie' && d.isCounted)
+            .reduce((sum, d) => sum + d.value, 0);
+        liveInvestment = currentAssets.reduce((sum, a) => sum + a.purchaseValue, 0) - turtleClosedProfit - turtleDividends;
     } else if (portfolioType === 'PPK') {
         const r = rawLastRow as PPKDataRow;
         const liveEmployeeContrib = currentAssets.reduce((sum, a) => sum + a.purchaseValue, 0);

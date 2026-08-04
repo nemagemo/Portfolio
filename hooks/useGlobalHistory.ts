@@ -113,9 +113,17 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
             target.val += a.currentValue;
         });
 
-        const liveNetInvIKE = liveTotals.IKE.inv - closedProfits.IKE;
+        const totalActiveDividendsIKE = dividends
+            .filter(d => d.portfolio === 'IKE' && d.isCounted)
+            .reduce((acc, row) => acc + row.value, 0);
+
+        const totalActiveDividendsTurtle = dividends
+            .filter(d => d.portfolio === 'Żółwie' && d.isCounted)
+            .reduce((acc, row) => acc + row.value, 0);
+
+        const liveNetInvIKE = liveTotals.IKE.inv - closedProfits.IKE - totalActiveDividendsIKE;
         const liveNetInvCrypto = liveTotals.CRYPTO.inv - closedProfits.CRYPTO;
-        const liveNetInvTurtle = liveTotals.TURTLE.inv - closedProfits.TURTLE;
+        const liveNetInvTurtle = liveTotals.TURTLE.inv - closedProfits.TURTLE - totalActiveDividendsTurtle;
 
         const lastDate = uniqueDates[uniqueDates.length - 1];
         

@@ -53,7 +53,7 @@ export const usePortfolioStats = ({
             closedProfitOffset = closedRelevant.reduce((acc, r) => acc + r.profit, 0);
         }
 
-        const otherNetInvested = otherOpenPurchase - closedProfitOffset;
+        const otherNetInvested = otherOpenPurchase - closedProfitOffset - totalActiveDividendsIKE;
         
         const totalInvestedSnapshot = ppkInvested + cashInvested + otherNetInvested;
         
