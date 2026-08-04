@@ -113,21 +113,9 @@ export const useGlobalHistory = ({ portfolioType, omfActiveAssets, omfClosedAsse
             target.val += a.currentValue;
         });
 
-        const totalActiveDividendsIKE = dividends
-            .filter(d => (d.portfolio === 'IKE' || d.portfolio === 'Żółwie') && d.isCounted)
-            .reduce((acc, row) => acc + row.value, 0);
-
-        const liveNetInvIKE = liveTotals.IKE.inv - closedProfits.IKE - totalActiveDividendsIKE;
+        const liveNetInvIKE = liveTotals.IKE.inv - closedProfits.IKE;
         const liveNetInvCrypto = liveTotals.CRYPTO.inv - closedProfits.CRYPTO;
-
-        // Calculate total active dividends received by Turtles portfolio
-        const totalActiveDividendsTurtle = dividends
-            .filter(d => d.portfolio === 'Żółwie' && d.isCounted)
-            .reduce((acc, row) => acc + row.value, 0);
-
-        // Since liveTotals.TURTLE.inv no longer includes virtual cash rows, we only subtract the dividends once
-        // from the cost basis to compute Net Invested Capital (the Snowball model).
-        const liveNetInvTurtle = liveTotals.TURTLE.inv - closedProfits.TURTLE - totalActiveDividendsTurtle;
+        const liveNetInvTurtle = liveTotals.TURTLE.inv - closedProfits.TURTLE;
 
         const lastDate = uniqueDates[uniqueDates.length - 1];
         

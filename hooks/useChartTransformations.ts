@@ -189,7 +189,7 @@ export const useChartTransformations = ({
     let totalVal = 0;
 
     omfActiveAssets.forEach(asset => {
-        if (asset.portfolio === 'Gotówka') return; // Optionally exclude cash
+        if (asset.portfolio === 'Gotówka' || asset.portfolio === 'Żółwie') return; // Exclude cash and Żółwie subportfolio
 
         let sectorName = asset.sector;
         
