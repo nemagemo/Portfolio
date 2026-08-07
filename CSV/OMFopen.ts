@@ -1,5 +1,5 @@
 export const OMF_OPEN_DATA = `Status pozycji,Portfel,Typ,Symbol,ISIN,Sektor,Okres inwestycji,Ostatni zakup,Ilość,Obecna wartość,Wartość zakupu,Zysk/Strata,ROI
-Otwarta,PPK,PPK,PPK,,,,,"93,0368","11 239,78 zł","3 775,93 zł","7 463,85 zł","197,67%"
+Otwarta,PPK,PPK,PPK,,,,"2026-08-03","95,1878","11 502,44 zł","3 926,02 zł","7 576,42 zł","192,98%"
 Otwarta,IKE,ETF,NDIA.L,IE00BZCQB185,,416,2026-07-22,"42,574100","1 419,54 zł","1 596,59 zł","-177,05 zł","-11,09%"
 Otwarta,IKE,ETF,IUIT.L,IE00B3WJKG14,"Information Technology",416,2026-07-22,"12,002900","2 144,75 zł","1 596,91 zł","547,84 zł","34,31%"
 Otwarta,IKE,ETF,NUKL.DE,IE000M7V94E1,,382,2026-07-22,"9,995800","1 849,23 zł","1 406,40 zł","442,83 zł","31,49%"
@@ -16,11 +16,11 @@ Otwarta,IKE,Akcje,ABS,PLABS0000018,"Information Technology",416,2025-07-15,"13,0
 Otwarta,IKE,Akcje,KLE,PLMRTIN00011,"Consumer Discretionary",172,2026-07-22,"150,000000","1 056,00 zł","1 046,90 zł","9,10 zł","0,87%"
 Otwarta,IKE,Akcje,KTY,PLKETY000011,Materials,416,2026-07-22,"0,992100","1 240,13 zł","817,71 zł","422,41 zł","51,66%"
 Otwarta,IKE,Akcje,ACN,IE00B4BNMY34,"Information Technology",412,2026-06-18,"1,030400","637,63 zł","1 135,45 zł","-497,82 zł","-43,84%"
-Otwarta,IKE,Akcje,FAST,US3119001044,Industrials,226,2025-05-06,"4,606400","819,66 zł","702,43 zł","117,23 zł","16,69%"
+Otwarta,IKE,Akcje,FAST,US3119001044,Industrials,226,2025-05-06,"2,303200","409,83 zł","351,21 zł","58,62 zł","16,69%"
 Otwarta,IKE,Akcje,GAW,GB0003718474,"Consumer Discretionary",412,2026-07-22,"1,542700","1 483,49 zł","1 065,43 zł","418,06 zł","39,24%"
 Otwarta,IKE,Akcje,ROL,US7757111049,Industrials,412,2026-02-13,"4,203200","595,23 zł","855,77 zł","-260,54 zł","-30,45%"
 Otwarta,IKE,Akcje,FRO,PLFERRO00016,Industrials,286,2026-07-22,"23,031900","766,96 zł","814,00 zł","-47,04 zł","-5,78%"
-Otwarta,IKE,Gotówka,PLN-IKE,,,0,2026-07-31,"0,000000","210,11 zł","210,11 zł","0,00 zł","0,00%"
+Otwarta,IKE,Gotówka,PLN-IKE,,,0,2026-08-06,"0,000000","642,01 zł","642,01 zł","0,00 zł","0,00%"
 Otwarta,Krypto,Krypto,POL,,,719,2024-10-04,"587,863288","159,72 zł","1 033,13 zł","-873,41 zł","-84,54%"
 Otwarta,Krypto,Krypto,ETH,,,997,2024-10-04,"0,098388","689,19 zł","956,50 zł","-267,31 zł","-27,95%"
 Otwarta,Krypto,Krypto,NEAR,,,934,2026-06-06,"59,619531","378,01 zł","652,06 zł","-274,05 zł","-42,03%"
@@ -92,4 +92,4 @@ Otwarta,Gotówka,Gotówka,PLN,,,382,2026-06-03,"0,000000","0,00 zł","0,00 zł",
 
 
 
-export const OMF_LAST_UPDATED = '2026-08-02';
+export const OMF_LAST_UPDATED = '2026-08-06';
