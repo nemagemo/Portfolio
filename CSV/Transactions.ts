@@ -88,4 +88,5 @@ export const TRANSACTIONS_DATA = `Data,Portfel,Typ,Symbol,Ilość,Koszt,Waluta,S
 2026-08-07,Żółwie,Kupno,ULG,"7,000000","98,00 zł",PLN,Karakalla
 2026-08-07,IKE,Kupno,PLW,"0,200800","49,90 zł",PLN,
 2026-08-07,IKE,Kupno,KLE,"8,000000","57,60 zł",PLN,
-2026-08-07,IKE,Kupno,IUIT.L,"0,583100","112,31 zł",PLN,`;
+2026-08-07,IKE,Kupno,IUIT.L,"0,583100","112,31 zł",PLN,
+2026-08-07,IKE,Kupno,GAW,"0,052100","49,88 zł",PLN,`;
