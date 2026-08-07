@@ -1,26 +1,26 @@
 export const OMF_OPEN_DATA = `Status pozycji,Portfel,Typ,Symbol,ISIN,Sektor,Okres inwestycji,Ostatni zakup,Ilość,Obecna wartość,Wartość zakupu,Zysk/Strata,ROI
 Otwarta,PPK,PPK,PPK,,,,"2026-08-03","95,1878","11 502,44 zł","3 926,02 zł","7 576,42 zł","192,98%"
-Otwarta,IKE,ETF,NDIA.L,IE00BZCQB185,,416,2026-07-22,"42,574100","1 419,54 zł","1 596,59 zł","-177,05 zł","-11,09%"
+Otwarta,IKE,ETF,NDIA.L,IE00BZCQB185,,416,2026-08-07,"45,893700","1 532,04 zł","1 709,09 zł","-177,05 zł","-10,36%"
 Otwarta,IKE,ETF,IUIT.L,IE00B3WJKG14,"Information Technology",416,2026-07-22,"12,002900","2 144,75 zł","1 596,91 zł","547,84 zł","34,31%"
 Otwarta,IKE,ETF,NUKL.DE,IE000M7V94E1,,382,2026-07-22,"9,995800","1 849,23 zł","1 406,40 zł","442,83 zł","31,49%"
 Otwarta,IKE,ETF,QUTM.DE,IE0007Y8Y157,"Information Technology",0,2026-07-22,"7,697500","799,54 zł","812,17 zł","-12,63 zł","-1,56%"
 Otwarta,IKE,Akcje,AMZN,US0231351067,"Consumer Discretionary",408,2026-07-02,"1,516600","1 536,15 zł","1 197,16 zł","338,99 zł","28,32%"
 Otwarta,IKE,Akcje,CRWD,US22788C1053,"Information Technology",412,2025-07-08,"2,597600","1 849,06 zł","847,70 zł","1 001,36 zł","118,13%"
 Otwarta,IKE,Akcje,MSFT,US5949181045,"Information Technology",416,2026-02-13,"0,584900","1 013,76 zł","950,67 zł","63,09 zł","6,64%"
-Otwarta,IKE,Akcje,PLW,PLPLAYW00015,"Communication Services",346,2026-07-22,"3,909200","949,94 zł","1 040,07 zł","-90,13 zł","-8,67%"
+Otwarta,IKE,Akcje,PLW,PLPLAYW00015,"Communication Services",346,2026-08-07,"4,110000","999,84 zł","1 089,97 zł","-90,13 zł","-8,27%"
 Otwarta,IKE,Akcje,SFD,PLSFD0000013,"Consumer Staples",12,2026-07-24,"305,000000","814,35 zł","892,22 zł","-77,87 zł","-8,73%"
 Otwarta,IKE,Akcje,CDR,PLOPTTC00011,"Communication Services",416,2026-07-22,"5,492500","1 372,58 zł","1 002,33 zł","370,25 zł","36,94%"
-Otwarta,IKE,Akcje,LPP,PLLPP0000011,"Consumer Discretionary",416,2026-07-22,"0,054500","1 183,74 zł","893,09 zł","290,65 zł","32,54%"
-Otwarta,IKE,Akcje,KRU,PLKRK0000010,Financials,412,2026-07-22,"2,564600","1 091,49 zł","1 080,64 zł","10,85 zł","1,00%"
+Otwarta,IKE,Akcje,LPP,PLLPP0000011,"Consumer Discretionary",416,2026-08-07,"0,056700","1 232,58 zł","941,93 zł","290,65 zł","30,86%"
+Otwarta,IKE,Akcje,KRU,PLKRK0000010,Financials,412,2026-08-07,"2,680700","1 141,45 zł","1 130,60 zł","10,85 zł","0,96%"
 Otwarta,IKE,Akcje,ABS,PLABS0000018,"Information Technology",416,2025-07-15,"13,000000","1 144,00 zł","892,80 zł","251,20 zł","28,14%"
 Otwarta,IKE,Akcje,KLE,PLMRTIN00011,"Consumer Discretionary",172,2026-07-22,"150,000000","1 056,00 zł","1 046,90 zł","9,10 zł","0,87%"
-Otwarta,IKE,Akcje,KTY,PLKETY000011,Materials,416,2026-07-22,"0,992100","1 240,13 zł","817,71 zł","422,41 zł","51,66%"
+Otwarta,IKE,Akcje,KTY,PLKETY000011,Materials,416,2026-08-07,"1,030800","1 290,05 zł","867,63 zł","422,42 zł","48,69%"
 Otwarta,IKE,Akcje,ACN,IE00B4BNMY34,"Information Technology",412,2026-06-18,"1,030400","637,63 zł","1 135,45 zł","-497,82 zł","-43,84%"
 Otwarta,IKE,Akcje,FAST,US3119001044,Industrials,226,2025-05-06,"2,303200","409,83 zł","351,21 zł","58,62 zł","16,69%"
 Otwarta,IKE,Akcje,GAW,GB0003718474,"Consumer Discretionary",412,2026-07-22,"1,542700","1 483,49 zł","1 065,43 zł","418,06 zł","39,24%"
 Otwarta,IKE,Akcje,ROL,US7757111049,Industrials,412,2026-02-13,"4,203200","595,23 zł","855,77 zł","-260,54 zł","-30,45%"
 Otwarta,IKE,Akcje,FRO,PLFERRO00016,Industrials,286,2026-07-22,"23,031900","766,96 zł","814,00 zł","-47,04 zł","-5,78%"
-Otwarta,IKE,Gotówka,PLN-IKE,,,0,2026-08-06,"0,000000","642,01 zł","642,01 zł","0,00 zł","0,00%"
+Otwarta,IKE,Gotówka,PLN-IKE,,,0,2026-08-07,"0,000000","1 232,89 zł","1 232,89 zł","0,00 zł","0,00%"
 Otwarta,Krypto,Krypto,POL,,,719,2024-10-04,"587,863288","159,72 zł","1 033,13 zł","-873,41 zł","-84,54%"
 Otwarta,Krypto,Krypto,ETH,,,997,2024-10-04,"0,098388","689,19 zł","956,50 zł","-267,31 zł","-27,95%"
 Otwarta,Krypto,Krypto,NEAR,,,934,2026-06-06,"59,619531","378,01 zł","652,06 zł","-274,05 zł","-42,03%"
@@ -87,9 +87,11 @@ Otwarta,Żółwie,Akcje,OPN,,"Septymiusz Sewer",0,2026-07-13,"0,984200","99,40 z
 Otwarta,Żółwie,Gotówka,PLN,,Septymiusz Sewer,0,2026-07-13,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Akcje,QRS,,Geta,0,2026-07-22,"8,000000","108,96 zł","109,60 zł","-0,64 zł","-0,58%"
 Otwarta,Żółwie,Gotówka,PLN,,Geta,0,2026-07-22,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Akcje,ULG,,Karakalla,0,2026-08-07,"7,000000","98,00 zł","98,00 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Gotówka,PLN,,Karakalla,0,2026-08-07,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Gotówka,Gotówka,PLN,,,382,2026-06-03,"0,000000","0,00 zł","0,00 zł","0,00 zł","0,00%"`;
 
 
 
 
-export const OMF_LAST_UPDATED = '2026-08-06';
+export const OMF_LAST_UPDATED = '2026-08-07';
