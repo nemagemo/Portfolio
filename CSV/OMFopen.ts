@@ -20,7 +20,7 @@ Otwarta,IKE,Akcje,FAST,US3119001044,Industrials,226,2025-05-06,"2,303200","409,8
 Otwarta,IKE,Akcje,GAW,GB0003718474,"Consumer Discretionary",412,2026-08-07,"1,594800","1 533,37 zł","1 115,31 zł","418,06 zł","37,48%"
 Otwarta,IKE,Akcje,ROL,US7757111049,Industrials,412,2026-02-13,"4,203200","595,23 zł","855,77 zł","-260,54 zł","-30,45%"
 Otwarta,IKE,Akcje,FRO,PLFERRO00016,Industrials,286,2026-08-07,"24,506800","816,96 zł","864,00 zł","-47,04 zł","-5,44%"
-Otwarta,IKE,Gotówka,PLN-IKE,,,0,2026-08-14,"0,000000","596,01 zł","596,01 zł","0,00 zł","0,00%"
+Otwarta,IKE,Gotówka,PLN-IKE,,,0,2026-08-14,"0,000000","496,01 zł","496,01 zł","0,00 zł","0,00%"
 Otwarta,Krypto,Krypto,POL,,,719,2024-10-04,"587,863288","159,72 zł","1 033,13 zł","-873,41 zł","-84,54%"
 Otwarta,Krypto,Krypto,ETH,,,997,2024-10-04,"0,098388","689,19 zł","956,50 zł","-267,31 zł","-27,95%"
 Otwarta,Krypto,Krypto,NEAR,,,934,2026-06-06,"59,619531","378,01 zł","652,06 zł","-274,05 zł","-42,03%"
@@ -89,9 +89,11 @@ Otwarta,Żółwie,Akcje,QRS,,Geta,0,2026-07-22,"8,000000","108,96 zł","109,60 z
 Otwarta,Żółwie,Gotówka,PLN,,Geta,0,2026-07-22,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Akcje,ULG,,Karakalla,0,2026-08-07,"7,000000","98,00 zł","98,00 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Gotówka,PLN,,Karakalla,0,2026-08-07,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Akcje,DAD,,Makrynus,0,2026-08-14,"1,219500","100,00 zł","100,00 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Gotówka,PLN,,Makrynus,0,2026-08-14,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Gotówka,Gotówka,PLN,,,382,2026-06-03,"0,000000","0,00 zł","0,00 zł","0,00 zł","0,00%"`;
 
 
 
 
-export const OMF_LAST_UPDATED = '2026-08-12';
+export const OMF_LAST_UPDATED = '2026-08-14';

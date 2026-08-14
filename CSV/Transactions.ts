@@ -95,4 +95,5 @@ export const TRANSACTIONS_DATA = `Data,Portfel,Typ,Symbol,Ilość,Koszt,Waluta,S
 2026-08-10,IKE,Kupno,SFD,"20,000000","53,00 zł",PLN,
 2026-08-10,IKE,Kupno,QUTM.DE,"1,008200","112,44 zł",PLN,
 2026-08-11,IKE,Kupno,AMZN,"0,048500","49,89 zł",PLN,
-2026-08-14,IKE,Kupno,CDR,"0,198400","51,78 zł",PLN,`;
+2026-08-14,IKE,Kupno,CDR,"0,198400","51,78 zł",PLN,
+2026-08-14,Żółwie,Kupno,DAD,"1,219500","100,00 zł",PLN,Makrynus`;
