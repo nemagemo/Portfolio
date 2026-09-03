@@ -20,7 +20,7 @@ Otwarta,IKE,Akcje,FAST,US3119001044,"Industrials",226,2025-05-06,"2,303200","420
 Otwarta,IKE,Akcje,GAW,GB0003718474,"Consumer Discretionary",412,2026-08-07,"1,594800","1 476,63 zł","1 115,31 zł","361,32 zł","32,40%"
 Otwarta,IKE,Akcje,ROL,US7757111049,"Industrials",412,2026-02-13,"4,203200","569,30 zł","855,77 zł","-286,47 zł","-33,48%"
 Otwarta,IKE,Akcje,FRO,PLFERRO00016,"Industrials",286,2026-08-07,"24,506800","894,50 zł","864,00 zł","30,50 zł","3,53%"
-Otwarta,IKE,Gotówka,PLN-IKE,,,0,2026-08-25,"0,000000","168,82 zł","168,82 zł","0,00 zł","0,00%"
+Otwarta,IKE,Gotówka,PLN-IKE,,,0,2026-09-03,"0,000000","186,18 zł","186,18 zł","0,00 zł","0,00%"
 Otwarta,Krypto,Krypto,POL,,,719,2024-10-04,"587,863288","198,56 zł","1 033,13 zł","-834,57 zł","-80,78%"
 Otwarta,Krypto,Krypto,ETH,,,997,2024-10-04,"0,098388","888,60 zł","956,50 zł","-67,90 zł","-7,10%"
 Otwarta,Krypto,Krypto,NEAR,,,934,2026-06-06,"59,619531","423,95 zł","652,06 zł","-228,11 zł","-34,98%"
@@ -50,7 +50,7 @@ Otwarta,Krypto,Krypto,5IRE,,,688,2024-04-14,"80,090420","0,01 zł","56,89 zł","
 Otwarta,Krypto,Krypto,BTC,,,0,2026-02-15,"0,00278901","806,27 zł","711,71 zł","94,56 zł","13,29%"
 Otwarta,Krypto,Krypto,ALGO,,,0,2026-07-23,"1889,529700","625,21 zł","622,27 zł","2,94 zł","0,47%"
 Otwarta,Żółwie,Akcje,STNG,MHY7962G1054,"Oktawian",1,2026-05-06,"0,326200","97,19 zł","100,00 zł","-2,81 zł","-2,81%"
-Otwarta,Żółwie,Gotówka,PLN,,"Oktawian",0,2026-05-06,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
+Otwarta,Żółwie,Gotówka,PLN,,"Oktawian",0,2026-08-31,0,"0,54 zł","0,54 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Akcje,HWBK,,"Tyberiusz",0,2026-05-12,"0,7543","109,36 zł","100,00 zł","9,36 zł","9,36%"
 Otwarta,Żółwie,Gotówka,PLN,,"Tyberiusz",0,2026-07-01,0,"0,00 zł","0,00 zł","0,00 zł","0,00%"
 Otwarta,Żółwie,Akcje,SEK,,"Kaligula",0,2026-05-15,"9,000000","100,35 zł","94,50 zł","5,85 zł","6,19%"
@@ -97,4 +97,4 @@ Otwarta,Gotówka,Gotówka,PLN,,,382,2026-06-03,"0,000000","0,00 zł","0,00 zł",
 
 
 
-export const OMF_LAST_UPDATED = '2026-09-01';
+export const OMF_LAST_UPDATED = '2026-09-03';
