@@ -1,5 +1,5 @@
 export const OMF_OPEN_DATA = `Status pozycji,Portfel,Typ,Symbol,ISIN,Sektor,Okres inwestycji,Ostatni zakup,Ilość,Obecna wartość,Wartość zakupu,Zysk/Strata,ROI
-Otwarta,PPK,PPK,PPK,,,,2026-08-03,"95,1878","11 833,75 zł","3 926,02 zł","7 907,73 zł","201,42%"
+Otwarta,PPK,PPK,PPK,,,,2026-08-27,"97,2565","12 090,93 zł","4 072,01 zł","8 018,92 zł","196,93%"
 Otwarta,IKE,ETF,NDIA.L,IE00BZCQB185,,416,2026-08-07,"45,893700","1 528,67 zł","1 709,09 zł","-180,42 zł","-10,56%"
 Otwarta,IKE,ETF,IUIT.L,IE00B3WJKG14,"Information Technology",416,2026-08-07,"12,586000","2 399,94 zł","1 709,22 zł","690,72 zł","40,41%"
 Otwarta,IKE,ETF,NUKL.DE,IE000M7V94E1,,382,2026-08-07,"10,551700","2 112,91 zł","1 518,86 zł","594,05 zł","39,11%"
