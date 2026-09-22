@@ -29,6 +29,7 @@ import { ETFBS80TRLogo } from '../../logos/ETFBS80TRLogo';
 import { ETHLogo } from '../../logos/ETHLogo';
 import { LINKLogo } from '../../logos/LINKLogo';
 import { SEKLogo } from '../../logos/SEKLogo';
+import { NEARLogo } from '../../logos/NEARLogo';
 import { TurtleLogo } from '../../logos/TurtleLogo';
 import { AnyDataRow } from '../../types';
 
@@ -217,6 +218,7 @@ const LOGO_MAP: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
   ETFBS80TR: ETFBS80TRLogo,
   ETH: ETHLogo,
   LINK: LINKLogo,
+  NEAR: NEARLogo,
   SEK: SEKLogo,
   'Żółwie': TurtleLogo
 };
