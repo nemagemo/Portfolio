@@ -23,4 +23,9 @@
   - `Zysk/Strata` = `Obecna wartość` - `Wartość zakupu`
   - `ROI` = `Zysk/Strata` / `Wartość zakupu`
 
+## Rozdzielność IKE i Żółwi w Plikach Historycznych
+- **Czysty IKE w IKE.ts:** Plik `CSV/IKE.ts` zawiera historię **wyłącznie czystego portfela IKE** (`portfolio === 'IKE'`).
+- **Żółwie w TurtlesHistory.ts:** Podportfel Żółwie ma własny plik historyczny `CSV/TurtlesHistory.ts` (`portfolio === 'Żółwie'`).
+- **KRYTYCZNE - Zakaz Mieszania w IKE.ts:** Przy procedurach `AktualizujCeny` i `ZamknijMiesiac`, do wyliczania `Obecna wartość`, `Zysk` i `ROI` w `CSV/IKE.ts` sumuj **wyłącznie** aktywa z `portfolio === 'IKE'` (oraz `PLN-IKE`). **NIGDY nie wliczaj aktywów Żółwi do `CSV/IKE.ts`**, ponieważ aplikacja w kodzie (`hooks/usePortfolioData.ts`) automatycznie łączy dane z `IKE.ts` i `TurtlesHistory.ts`. Wliczenie aktywów Żółwi do `IKE.ts` powoduje sztuczne zawyżenie zysku o wkład Żółwi i spadek wyceny po wczytaniu widoku Live.
+
 

@@ -199,7 +199,14 @@ Zawsze sprawdzaj kolumnę "Sektor" (używaną jako pole dla imienia żółwia w 
     *   Wylicz: `ROI`.
     *   Zaktualizuj datę `OMF_LAST_UPDATED`.
 4.  **Synchronizacja Historii (Weryfikacja TRIPLE CHECK wymagana):**
-    *   Na podstawie nowych wartości w `OMFopen.ts`, zsumuj wartość każdego portfela (PPK, IKE, Krypto) oraz pobierz wartość Gotówki.
+    *   Na podstawie nowych wartości w `OMFopen.ts`, zsumuj wartość każdego portfela (PPK, IKE, Krypto, Żółwie) oraz pobierz wartość Gotówki.
+    *   **KRYTYCZNA ROZDZIELNOŚĆ IKE I ŻÓŁWI:**
+        *   **`CSV/IKE.ts` przechowuje historię WYŁĄCZNIE czystego portfela IKE (`portfolio === 'IKE'`).**
+        *   Podportfel Żółwie ma swój własny dedykowany plik historyczny `CSV/TurtlesHistory.ts`.
+        *   Aplikacja w kodzie (`hooks/usePortfolioData.ts`) **sama dynamicznie łączy (merge)** wiersze z `CSV/IKE.ts` i `CSV/TurtlesHistory.ts` na wykresach i w statystykach.
+        *   **BŁĄD DO UNIKNIĘCIA:** NIGDY nie wliczaj aktywów z portfela Żółwie do `Obecna wartość` w `CSV/IKE.ts`! Wliczenie aktywów Żółwi bez ich wkładu sztucznie zawyża zysk w pliku `IKE.ts` o kapitał Żółwi (~2.2k zł), co powodowało spadek zysku przy wczytaniu widoku Live.
+        *   Dla `CSV/IKE.ts`: `Obecna wartość` = suma pozycji `portfolio === 'IKE'`. `Zysk` = `Obecna wartość` - `Wkład IKE`. `ROI` = `Zysk` / `Wkład IKE`.
+        *   Dla `CSV/TurtlesHistory.ts`: `Obecna wartość` = suma pozycji `portfolio === 'Żółwie'`. `Zysk` = `Obecna wartość` - `Wkład Żółwi`. `ROI` = `Zysk` / `Wkład Żółwi`.
     *   Zaktualizuj wartości oraz datę w **ostatnim wierszu** plików `CSV/PPK.ts`, `CSV/IKE.ts`, `CSV/Krypto.ts`, `CSV/TurtlesHistory.ts` **oraz `CSV/Cash.ts`**, aby wszystkie wykresy historyczne kończyły się tą samą datą i wartościami odpowiadającymi aktualnemu stanowi ("Teraz"). Zapobiegnie to rozjeżdżaniu się osi czasu na wykresach (np. "dwa razy listopad").
     *   **ZASADA JEDNEJ LINII NA MIESIĄC:** Jeśli w pliku historycznym (IKE, PPK, Krypto, Cash, TurtlesHistory) istnieje już wpis z tego samego miesiąca co aktualizowana data, **nie twórz nowej linii**. Nadpisz istniejącą linię najnowszymi danymi. Jedyne odstępstwo to sytuacja, gdy użytkownik wyraźnie poleci rozpoczęcie nowego miesiąca.
 
@@ -219,7 +226,10 @@ Zawsze sprawdzaj kolumnę "Sektor" (używaną jako pole dla imienia żółwia w 
     *   Sformatuj i dopisz nowy wiersz do `CSV/PPK.ts`.
 3.  **Snapshot IKE, Krypto i Żółwie:**
     *   Dla każdego z tych portfeli (IKE, Krypto, Żółwie) wykonaj następujące kroki:
-    *   Pobierz sumę `Obecna wartość` wszystkich aktywów danego portfela z `OMFopen.ts` (dla IKE uwzględniaj też Żółwie z wyjątkiem wirtualnej gotówki `PLN-Żółwie`, dla Żółwi filtruj po `portfolio === 'Żółwie'`).
+    *   Pobierz sumę `Obecna wartość` aktywów danego portfela z `OMFopen.ts`:
+        *   **Dla IKE filtruj WYŁĄCZNIE po `portfolio === 'IKE'`** (NIE wliczaj aktywów Żółwi – Żółwie zapisujemy osobno w `TurtlesHistory.ts`, a aplikacja sama je łączy w widoku IKE).
+        *   Dla Żółwi filtruj po `portfolio === 'Żółwie'`.
+        *   Dla Krypto filtruj po `portfolio === 'Krypto'`.
     *   **ZASADA STABILNEGO WKŁADU (Kapitał Zewnętrzny):**
         *   `Gotówka` = Suma pozycji typu "Gotówka" w `OMFopen.ts` dla tego portfela.
         *   `Wartość Zakupu Otwartych` = Suma kolumny "Wartość zakupu" dla pozycji "Otwarta" w `OMFopen.ts` dla tego portfela.
