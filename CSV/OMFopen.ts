@@ -20,7 +20,7 @@ Otwarta,IKE,Akcje,FAST,US3119001044,"Industrials",226,2025-05-06,"2,303200","471
 Otwarta,IKE,Akcje,GAW,GB0003718474,"Consumer Discretionary",412,2026-08-07,"1,594800","1 329,22 zł","1 115,31 zł","213,91 zł","19,18%"
 Otwarta,IKE,Akcje,ROL,US7757111049,"Industrials",412,2026-02-13,"4,203200","575,05 zł","855,77 zł","-280,72 zł","-32,80%"
 Otwarta,IKE,Akcje,FRO,PLFERRO00016,"Industrials",286,2026-09-11,"26,506800","744,84 zł","928,00 zł","-183,16 zł","-19,74%"
-Otwarta,IKE,Gotówka,PLN-IKE,,,0,2026-10-30,"0,000000","233,69 zł","233,69 zł","0,00 zł","0,00%"
+Otwarta,IKE,Gotówka,PLN-IKE,,,0,2026-11-04,"0,000000","267,34 zł","267,34 zł","0,00 zł","0,00%"
 Otwarta,Krypto,Krypto,POL,,,719,2024-10-04,"587,863288","212,44 zł","1 033,13 zł","-820,69 zł","-79,44%"
 Otwarta,Krypto,Krypto,ETH,,,997,2024-10-04,"0,098388","880,49 zł","956,50 zł","-76,01 zł","-7,95%"
 Otwarta,Krypto,Krypto,NEAR,,,934,2026-06-06,"59,619531","1 018,99 zł","652,06 zł","366,93 zł","56,27%"
@@ -97,4 +97,4 @@ Otwarta,Gotówka,Gotówka,PLN,,,382,2026-06-03,"0,000000","0,00 zł","0,00 zł",
 
 
 
-export const OMF_LAST_UPDATED = '2026-11-01';
+export const OMF_LAST_UPDATED = '2026-11-04';
