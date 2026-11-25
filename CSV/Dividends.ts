@@ -69,4 +69,7 @@ export const DIVIDENDS_DATA = `Data,Portfel,Symbol,Kwota,Status
 2026-10-05,IKE,GAW,"11,49 zł",Aktywna
 2026-10-08,IKE,FRO,"62,56 zł",Aktywna
 2026-10-30,IKE,LPP,"28,35 zł",Aktywna
-2026-11-04,IKE,KTY,"33,65 zł",Aktywna`;
+2026-11-04,IKE,KTY,"33,65 zł",Aktywna
+2026-11-13,IKE,ACN,"5,24 zł",Aktywna
+2026-11-13,Żółwie,COST,"0,12 zł",Aktywna
+2026-11-25,IKE,FAST,"2,07 zł",Aktywna`;
